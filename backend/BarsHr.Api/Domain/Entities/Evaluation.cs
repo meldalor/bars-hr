@@ -4,27 +4,40 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BarsHr.Api.Domain.Entities;
 
+[Table("evaluations")]
 public class Evaluation
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column("id")]
     public int Id { get; set; }
 
+    [Column("interview_id")]
     public int InterviewId { get; set; }
-    public Interview? Interview { get; set; }
 
+    [Column("competency_id")]
     public int CompetencyId { get; set; }
-    public Competency? Competency { get; set; }
 
-    /// <summary>
-    /// Score given for this competency in this interview.
-    /// Should be between 0 and Competency.MaxScore (enforce in validation / UI).
-    /// </summary>
+    [Column("score")]
     public int Score { get; set; }
 
-    public string Comment { get; set; } = string.Empty;
+    [Column("comment")]
+    public string? Comment { get; set; }
 
+    [Column("evaluated_by_id")]
     public int EvaluatedById { get; set; }
-    public User? EvaluatedBy { get; set; }
 
+    [Column("evaluated_at")]
     public DateTime EvaluatedAt { get; set; } = DateTime.UtcNow;
+
+    // ==================== Навигационные свойства ====================
+
+    [ForeignKey(nameof(InterviewId))]
+    public Interview? Interview { get; set; }
+
+    [ForeignKey(nameof(CompetencyId))]
+    public Competency? Competency { get; set; }
+
+    [ForeignKey(nameof(EvaluatedById))]
+    public User? EvaluatedBy { get; set; }
 }

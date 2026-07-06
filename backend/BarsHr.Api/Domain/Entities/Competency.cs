@@ -1,39 +1,36 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BarsHr.Api.Domain.Entities;
 
+[Table("competencies")]
 public class Competency
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column("id")]
     public int Id { get; set; }
 
     [Required]
     [MaxLength(150)]
+    [Column("name")]
     public string Name { get; set; } = string.Empty;
 
-    public string Description { get; set; } = string.Empty;
+    [Column("description")]
+    public string? Description { get; set; }
 
     [MaxLength(100)]
-    public string Category { get; set; } = string.Empty; // "Hard Skills", "Soft Skills", "Culture Fit" etc.
+    [Column("category")]
+    public string? Category { get; set; } // Hard Skills / Soft Skills / Culture Fit и т.д.
 
-    /// <summary>
-    /// Maximum possible score for this competency (default 5).
-    /// Allows different scales per competency if needed.
-    /// </summary>
+    [Column("max_score")]
     public int MaxScore { get; set; } = 5;
 
+    [Column("is_active")]
     public bool IsActive { get; set; } = true;
 
-    // ============================================
-    // NAVIGATION
-    // ============================================
+    // ==================== Навигационные свойства ====================
 
-    /// <summary>
-    /// All evaluations ever made for this competency (across all interviews).
-    /// Useful for analytics (average score per competency, trends).
-    /// </summary>
     public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
 }
