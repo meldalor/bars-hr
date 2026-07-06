@@ -4,35 +4,45 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BarsHr.Api.Domain.Entities;
 
+[Table("audit_logs")]
 public class AuditLog
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column("id")]
     public int Id { get; set; }
 
     [Required]
     [MaxLength(100)]
-    public string EntityName { get; set; } = string.Empty; // "Candidate", "Interview", "Vacancy", etc.
+    [Column("entity_name")]
+    public string EntityName { get; set; } = string.Empty;
 
+    [Column("entity_id")]
     public int EntityId { get; set; }
 
+    [Required]
     [MaxLength(50)]
-    public string Action { get; set; } = string.Empty; // "Create", "Update", "Delete", "DecisionMade"...
+    [Column("action")]
+    public string Action { get; set; } = string.Empty;
 
-    /// <summary>
-    /// JSONB snapshot of values before the change.
-    /// </summary>
-    public string OldValues { get; set; } = "{}";
+    [Column("old_values")]
+    public string? OldValues { get; set; }          // JSONB
 
-    /// <summary>
-    /// JSONB snapshot of values after the change.
-    /// </summary>
-    public string NewValues { get; set; } = "{}";
+    [Column("new_values")]
+    public string? NewValues { get; set; }          // JSONB
 
-    public int UserId { get; set; }
-    public User? User { get; set; }
+    [Column("user_id")]
+    public int? UserId { get; set; }
 
+    [Column("timestamp")]
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
     [MaxLength(50)]
-    public string IpAddress { get; set; } = string.Empty;
+    [Column("ip_address")]
+    public string? IpAddress { get; set; }
+
+    // ==================== Навигационные свойства ====================
+
+    [ForeignKey(nameof(UserId))]
+    public User? User { get; set; }
 }
