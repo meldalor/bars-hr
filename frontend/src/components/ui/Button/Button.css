@@ -1,0 +1,34 @@
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 42px;
+    padding: 0 18px;
+
+    border: none;
+    border-radius: 10px;
+
+    background-color: #2563eb;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.button:hover:not(:disabled) {
+    background-color: #1d4ed8;
+}
+
+.button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.button:disabled {
+    background-color: #cbd5e1;
+    cursor: not-allowed;
+}
