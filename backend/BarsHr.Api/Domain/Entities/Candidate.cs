@@ -43,7 +43,9 @@ public class Candidate
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [Column("created_by")]
-    public int CreatedById { get; set; }
+    //нужно вернуть, ставлю тест 
+    //public int CreatedById { get; set; }
+    public int? CreatedById { get; set; }
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
