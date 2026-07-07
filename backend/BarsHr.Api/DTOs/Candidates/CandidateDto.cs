@@ -8,7 +8,6 @@ public record CandidateDto(
     string? Education,
     string? PreviousWork,
     string? Skills,
-    string Status,
     bool IsArchived,
     DateTime CreatedAt
 );

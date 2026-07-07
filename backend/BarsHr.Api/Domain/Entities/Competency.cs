@@ -30,7 +30,11 @@ public class Competency
     [Column("is_active")]
     public bool IsActive { get; set; } = true;
 
-    // ==================== Навигационные свойства ====================
+    [Column("vacancy_id")]
+    public int VacancyId { get; set; }
+
+    [ForeignKey(nameof(VacancyId))]
+    public Vacancy? Vacancy { get; set; }
 
     public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
 }

@@ -45,10 +45,7 @@ public class User
     [Column("last_login_at")]
     public DateTime? LastLoginAt { get; set; }
 
-    // ==================== Навигационные свойства (связи) ====================
-
     public ICollection<Candidate> CreatedCandidates { get; set; } = new List<Candidate>();
-    public ICollection<Candidate> UpdatedCandidates { get; set; } = new List<Candidate>();
 
     public ICollection<Vacancy> CreatedVacancies { get; set; } = new List<Vacancy>();
 

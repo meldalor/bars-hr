@@ -4,7 +4,7 @@ public record CandidateListItemDto(
     int Id,
     string FullName,
     string? City,
-    string Status,
+    int ApplicationsCount,
     int InterviewsCount,
     DateTime CreatedAt
 );

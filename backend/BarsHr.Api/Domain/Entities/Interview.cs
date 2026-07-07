@@ -13,11 +13,9 @@ public class Interview
     [Column("id")]
     public int Id { get; set; }
 
-    [Column("candidate_id")]
-    public int CandidateId { get; set; }
-
-    [Column("vacancy_id")]
-    public int VacancyId { get; set; }
+    // собеседование всегда в контексте отклика: кандидат и вакансия доступны через него
+    [Column("application_id")]
+    public int ApplicationId { get; set; }
 
     [Column("scheduled_at")]
     public DateTime ScheduledAt { get; set; }
@@ -54,13 +52,8 @@ public class Interview
     [Column("interviewer_id")]
     public int? InterviewerId { get; set; }
 
-    // ==================== Навигационные свойства ====================
-
-    [ForeignKey(nameof(CandidateId))]
-    public Candidate? Candidate { get; set; }
-
-    [ForeignKey(nameof(VacancyId))]
-    public Vacancy? Vacancy { get; set; }
+    [ForeignKey(nameof(ApplicationId))]
+    public Application? Application { get; set; }
 
     [ForeignKey(nameof(InterviewerId))]
     public User? Interviewer { get; set; }

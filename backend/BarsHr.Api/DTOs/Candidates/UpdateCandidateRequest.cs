@@ -7,6 +7,5 @@ public record UpdateCandidateRequest(
     string? Education,
     string? PreviousWork,
     string? Skills,
-    string? Status,
     bool? IsArchived
 );
