@@ -1,6 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 
 import Login from "../pages/login/login.jsx";
+import Landing from "../pages/landing/Landing.jsx";
+
 import Overview from "../pages/overview/overview.jsx";
 import Vacancies from "../pages/vacancies/vacancies.jsx";
 import Candidates from "../pages/candidates/candidates.jsx";
@@ -11,16 +13,14 @@ import Layout from "../components/layout/layout";
 function App_Router() {
   return (
     <Routes>
-      
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
-      
-      <Route path="/" element={<Layout />}>
+      <Route path="/app" element={<Layout />}>
         <Route path="overview" element={<Overview />} />
         <Route path="vacancies" element={<Vacancies />} />
         <Route path="candidates" element={<Candidates />} />
         <Route path="meetings" element={<Meetings />} />
       </Route>
-
     </Routes>
   );
 }
