@@ -20,48 +20,47 @@ function Layout() {
   };
 
   return (
-    <div style={{ 
-      display: "flex", 
-      flexDirection: "column", 
-      height: "100vh", 
-      backgroundColor: "#f1f1f1",
-      position: "relative"
+    <div style={{
+      minHeight: "100vh",
+      backgroundColor: "#f1f1f1"
     }}>
 
       <div style={{
-        position: "absolute",
-        top: "20px",
-        left: "40px",
-        zIndex: 1000,
-        fontSize: "24px",
-        fontWeight: "700",
-        color: "#1a1a1a",
-        fontFamily: "inherit",
-        display: "flex",
-        alignItems: "center",
-        height: "40px"
+        position: "relative",
+        height: "80px"
       }}>
-        Huntly
+
+        <div style={{
+          position: "absolute",
+          top: "20px",
+          left: "40px",
+          fontSize: "24px",
+          fontWeight: "700",
+          color: "#1a1a1a",
+          fontFamily: "inherit",
+          display: "flex",
+          alignItems: "center",
+          height: "40px"
+        }}>
+          Huntly
+        </div>
+
+        <div style={{
+          position: "absolute",
+          top: "20px",
+          left: "50%",
+          width: "auto"
+        }}>
+          <Navigation_Bar
+            items={menuItems}
+            activeItem={activeItem}
+            onItemClick={handleItemClick}
+          />
+        </div>
       </div>
 
-      <div style={{
-        position: "absolute",
-        top: "20px",
-        right: "360px",
-        width: "auto",
-        zIndex: 1000
-      }}>
-        <Navigation_Bar
-          items={menuItems}
-          activeItem={activeItem}
-          onItemClick={handleItemClick}
-        />
-      </div>
-
-      <main style={{ 
-        flex: 1, 
-        padding: "100px 40px 40px", 
-        overflow: "auto",
+      <main style={{
+        padding: "20px 40px 40px",
         backgroundColor: "#f1f1f1"
       }}>
         <Outlet />
