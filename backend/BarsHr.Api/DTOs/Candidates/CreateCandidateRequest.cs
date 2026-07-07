@@ -10,8 +10,5 @@ public record CreateCandidateRequest(
     string? City,
     string? Education,
     string? PreviousWork,
-    string? Skills,
-
-    [MaxLength(50)]
-    string Status = "New"
+    string? Skills
 );

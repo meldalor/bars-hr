@@ -35,10 +35,6 @@ public class Candidate
     [Column("skills")]
     public string? Skills { get; set; } // JSONB (массив или объект)
 
-    [MaxLength(50)]
-    [Column("status")]
-    public string Status { get; set; } = "New";
-
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -53,12 +49,9 @@ public class Candidate
     [Column("is_archived")]
     public bool IsArchived { get; set; } = false;
 
-    // ==================== Навигационные свойства ====================
-
     [ForeignKey(nameof(CreatedById))]
     public User? CreatedBy { get; set; }
 
-    public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
-
+    // собеседования кандидата доступны через Applications: интервью всегда в контексте отклика
     public ICollection<Application> Applications { get; set; } = new List<Application>();
 }
