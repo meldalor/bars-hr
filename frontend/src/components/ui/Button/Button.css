@@ -1,15 +1,16 @@
 .button {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
 
+    min-width: 120px;
     height: 42px;
     padding: 0 18px;
 
     border: none;
     border-radius: 10px;
 
-    background-color: #2563eb;
+    background: #2563eb;
     color: #ffffff;
 
     font-size: 14px;
@@ -21,7 +22,7 @@
 }
 
 .button:hover:not(:disabled) {
-    background-color: #1d4ed8;
+    background: #1d4ed8;
 }
 
 .button:active:not(:disabled) {
@@ -29,6 +30,6 @@
 }
 
 .button:disabled {
-    background-color: #cbd5e1;
+    background: #cbd5e1;
     cursor: not-allowed;
 }
