@@ -1,0 +1,281 @@
+.ct-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+
+    margin: 18px 0;
+}
+
+.ct-card {
+    padding: 6px 20px;
+
+    background: #ffffff;
+    border: 1px solid #ececf0;
+    border-radius: 16px;
+}
+
+.ct-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ct-table th {
+    padding: 16px 12px;
+
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+
+    border-bottom: 1px solid #eceef1;
+}
+
+.ct-table td {
+    padding: 14px 12px;
+
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f2f4;
+}
+
+.ct-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ct-table tbody tr:hover {
+    background: #fafafb;
+}
+
+.ct-col-check {
+    width: 44px;
+    text-align: center;
+}
+
+.ct-table input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+
+    position: relative;
+    box-sizing: border-box;
+
+    width: 18px;
+    height: 18px;
+    margin: 0;
+
+    border: 1.5px solid #1a1a1a;
+    border-radius: 4px;
+    background: #ffffff;
+
+    cursor: pointer;
+}
+
+.ct-table input[type="checkbox"]:checked::after {
+    content: "";
+
+    position: absolute;
+    left: 5px;
+    top: 1px;
+
+    width: 4px;
+    height: 9px;
+
+    border: solid #1a1a1a;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.ct-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: 0;
+
+    border: none;
+    background: transparent;
+
+    color: #6b7280;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.ct-sort-icon {
+    display: inline-flex;
+    transition: transform 0.2s ease;
+}
+
+.ct-sort-icon.desc {
+    transform: rotate(180deg);
+}
+
+.ct-person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ct-avatar {
+    flex-shrink: 0;
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    background: #e5e7eb;
+
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.ct-person-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.ct-person-city {
+    font-size: 13px;
+    color: #8a94a6;
+}
+
+.ct-rating {
+    font-size: 15px;
+    color: #374151;
+}
+
+.ct-specialty {
+    max-width: 280px;
+    font-size: 15px;
+    color: #374151;
+}
+
+.ct-date {
+    white-space: nowrap;
+    font-size: 14px;
+    color: #374151;
+}
+
+.ct-time {
+    font-size: 13px;
+    color: #8a94a6;
+}
+
+.ct-status {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ct-status-wrap {
+    position: relative;
+}
+
+.ct-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    height: 30px;
+    padding: 0 11px;
+
+    border: none;
+    border-radius: 999px;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+.ct-pill svg {
+    flex-shrink: 0;
+}
+
+.ct-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 50;
+
+    min-width: 210px;
+    padding: 6px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(16, 32, 64, 0.16);
+}
+
+.ct-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 10px;
+
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+
+    color: #1a1a1a;
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+.ct-menu-item:hover {
+    background: #f3f4f6;
+}
+
+.ct-menu-icon {
+    display: inline-flex;
+}
+
+.ct-print {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    height: 30px;
+    padding: 0 12px;
+
+    border: none;
+    border-radius: 999px;
+    background: #2563eb;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.ct-print:hover {
+    background: #1d4ed8;
+}
+
+.ct-empty {
+    padding: 40px;
+    text-align: center;
+    color: #8a94a6;
+    font-size: 15px;
+}
