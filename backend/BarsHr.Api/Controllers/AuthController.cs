@@ -1,4 +1,4 @@
-﻿using BarsHr.Api.Data;
+using BarsHr.Api.Data;
 using BarsHr.Api.Domain.Entities;
 using BarsHr.Api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -14,15 +14,18 @@ namespace BarsHr.Api.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BarsHrDbContext _context;
         private readonly IConfiguration _config;
 
-        public AuthController(AppDbContext context, IConfiguration config)
+        public AuthController(BarsHrDbContext context, IConfiguration config)
         {
             _context = context;
             _config = config;
         }
 
+        // TODO: временный эндпоинт, чтобы завести первого пользователя.
+        // По ТЗ самостоятельной регистрации нет — когда появится сид пользователей,
+        // удалить или закрыть [Authorize(Roles = "Admin")].
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto model)
         {
@@ -38,10 +41,11 @@ namespace BarsHr.Api.Controllers
             var user = new User
             {
                 Login = model.Username,
+                FullName = model.Username,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password)
             };
 
-            _context.Users.Add(user); 
+            _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Пользователь зарегистрирован!" });
@@ -55,30 +59,34 @@ namespace BarsHr.Api.Controllers
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == model.Username);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+            // Ответ одинаковый для «нет пользователя» и «неверный пароль» —
+            // чтобы перебором нельзя было выяснить существующие логины
+            if (user == null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
                 return Unauthorized("Неверный логин или пароль");
 
-            var jwtSettings = _config.GetSection("JwtSettings");
-            var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+            var jwt = _config.GetSection("Jwt");
+            var key = Encoding.UTF8.GetBytes(jwt["Key"]!);
 
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Login)
+                new Claim(ClaimTypes.Name, user.Login),
+                // без claim'а роли [Authorize(Roles = ...)] работать не будет
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             var token = new JwtSecurityToken(
-                issuer: jwtSettings["Issuer"],
-                audience: jwtSettings["Audience"],
+                issuer: jwt["Issuer"],
+                audience: jwt["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
+                expires: DateTime.UtcNow.AddMinutes(int.Parse(jwt["LifetimeMinutes"] ?? "120")),
                 signingCredentials: new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256)
             );
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-            return Ok(new { token = tokenString });
+            return Ok(new { token = tokenString, role = user.Role, fullName = user.FullName });
         }
     }
 }
