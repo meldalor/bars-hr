@@ -10,6 +10,23 @@ export const TAG_COLORS = {
     city: "#c41e8f",
 };
 
+export const LANG_BY_REQUIREMENT = {
+    "Язык C#": "csharp",
+    "Язык JS": "js",
+    "Язык Py": "python",
+};
+
+export function requirementStyle(requirement) {
+    const langKey = LANG_BY_REQUIREMENT[requirement];
+    if (langKey) {
+        return {
+            backgroundColor: LANGUAGES[langKey].color,
+            color: LANGUAGES[langKey].text,
+        };
+    }
+    return { backgroundColor: "#565b66", color: "#ffffff" };
+}
+
 export const VACANCIES = [
     {
         id: "1",
@@ -208,6 +225,39 @@ export function addVacancy(data) {
     };
     VACANCIES.unshift(vacancy);
     return vacancy;
+}
+
+export function updateVacancy(id, patch) {
+    const vacancy = VACANCIES.find((item) => item.id === id);
+    if (vacancy) {
+        Object.assign(vacancy, patch);
+    }
+    return vacancy;
+}
+
+export function duplicateVacancy(id) {
+    const source = getVacancyById(id);
+    if (!source) {
+        return null;
+    }
+
+    return addVacancy({
+        lang: source.lang,
+        title: `${source.title} (копия)`,
+        experience: source.experience,
+        employment: source.employment,
+        city: source.city,
+        salaryFrom: source.salaryFrom,
+        salaryTo: source.salaryTo,
+        createdAt: source.createdAt,
+        updatedAt: source.updatedAt,
+        format: source.format,
+        department: source.department,
+        peopleCount: source.peopleCount,
+        requirements: [...source.requirements],
+        description: source.description,
+        responsibilities: [...source.responsibilities],
+    });
 }
 
 export function formatSalary(from, to) {

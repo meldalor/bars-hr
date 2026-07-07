@@ -1,28 +1,19 @@
 import "./vacancies.css";
 import "./vacancy_create.css";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import Input from "../../components/ui/Input/Input.jsx";
 import Select from "../../components/ui/Select/Select.jsx";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 
-import { addVacancy } from "../../mocks/vacancies.js";
+import {
+    addVacancy,
+    updateVacancy,
+    getVacancyById,
+    LANG_BY_REQUIREMENT,
+} from "../../mocks/vacancies.js";
 import { IconPlus, IconXCircle, IconCheckCircle } from "./icons.jsx";
-
-const DEFAULT_REQUIREMENTS = [
-    "Язык C#",
-    "Язык JS",
-    "Язык Py",
-    "Язык Kotlin",
-    "Знания Git",
-    "Английский",
-];
-
-const LANG_BY_REQUIREMENT = {
-    "Язык C#": "csharp",
-    "Язык JS": "js",
-    "Язык Py": "python",
-};
 
 const REQUIRED_FIELDS = [
     "title",
@@ -35,13 +26,27 @@ const REQUIRED_FIELDS = [
     "peopleCount",
 ];
 
+const EMPTY_FORM = {
+    title: "",
+    city: "",
+    employment: "",
+    experience: "",
+    format: "",
+    salaryFrom: "",
+    salaryTo: "",
+    peopleCount: "",
+    department: "",
+    description: "",
+    responsibilities: "",
+};
+
 function deriveLang(requirements) {
     for (const requirement of requirements) {
         if (LANG_BY_REQUIREMENT[requirement]) {
             return LANG_BY_REQUIREMENT[requirement];
         }
     }
-    return "js";
+    return null;
 }
 
 function nowStamp() {
@@ -49,6 +54,22 @@ function nowStamp() {
     const date = now.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
     const time = now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
     return `${date} ${time}`;
+}
+
+function formFromVacancy(vacancy) {
+    return {
+        title: vacancy.title,
+        city: vacancy.city,
+        employment: vacancy.employment,
+        experience: vacancy.experience,
+        format: vacancy.format,
+        salaryFrom: String(vacancy.salaryFrom),
+        salaryTo: String(vacancy.salaryTo),
+        peopleCount: String(vacancy.peopleCount),
+        department: vacancy.department === "—" ? "" : vacancy.department,
+        description: vacancy.description,
+        responsibilities: vacancy.responsibilities.join("\n"),
+    };
 }
 
 function Field({ label, required, children }) {
@@ -65,25 +86,20 @@ function Field({ label, required, children }) {
 
 export default function VacancyCreate() {
     const navigate = useNavigate();
+    const { id } = useParams();
 
-    const [form, setForm] = useState({
-        title: "",
-        city: "",
-        employment: "",
-        experience: "",
-        format: "",
-        salaryFrom: "",
-        salaryTo: "",
-        peopleCount: "",
-        department: "",
-        description: "",
-        responsibilities: "",
-    });
+    const source = id ? getVacancyById(id) : null;
+    const editing = Boolean(source);
 
-    const [availableReqs, setAvailableReqs] = useState(DEFAULT_REQUIREMENTS);
-    const [selectedReqs, setSelectedReqs] = useState([]);
+    const [form, setForm] = useState(() =>
+        source ? formFromVacancy(source) : { ...EMPTY_FORM }
+    );
+    const [requirements, setRequirements] = useState(() =>
+        source ? [...source.requirements] : []
+    );
     const [adding, setAdding] = useState(false);
     const [newReq, setNewReq] = useState("");
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const [errors, setErrors] = useState({});
 
     const update = (key) => (event) =>
@@ -91,27 +107,19 @@ export default function VacancyCreate() {
 
     const invalid = (key) => (errors[key] ? "vcreate-invalid" : "");
 
-    const toggleReq = (requirement) => {
-        setSelectedReqs((prev) =>
-            prev.includes(requirement)
-                ? prev.filter((item) => item !== requirement)
-                : [...prev, requirement]
-        );
-    };
-
     const addReq = () => {
         const value = newReq.trim();
         if (!value) {
             return;
         }
-        if (!availableReqs.includes(value)) {
-            setAvailableReqs((prev) => [...prev, value]);
-        }
-        if (!selectedReqs.includes(value)) {
-            setSelectedReqs((prev) => [...prev, value]);
-        }
+        setRequirements((prev) => (prev.includes(value) ? prev : [...prev, value]));
         setNewReq("");
         setAdding(false);
+    };
+
+    const confirmDelete = () => {
+        setRequirements((prev) => prev.filter((item) => item !== deleteTarget));
+        setDeleteTarget(null);
     };
 
     const handleSubmit = (event) => {
@@ -123,7 +131,7 @@ export default function VacancyCreate() {
                 newErrors[key] = true;
             }
         });
-        if (selectedReqs.length === 0) {
+        if (requirements.length === 0) {
             newErrors.requirements = true;
         }
 
@@ -133,29 +141,32 @@ export default function VacancyCreate() {
         }
 
         const stamp = nowStamp();
-
-        addVacancy({
-            lang: deriveLang(selectedReqs),
+        const data = {
+            lang: deriveLang(requirements),
             title: form.title.trim(),
             experience: form.experience,
             employment: form.employment,
             city: form.city.trim(),
             salaryFrom: Number(form.salaryFrom),
             salaryTo: Number(form.salaryTo),
-            createdAt: stamp,
-            updatedAt: stamp,
             format: form.format,
             department: form.department.trim() || "—",
             peopleCount: Number(form.peopleCount),
-            requirements: selectedReqs,
+            requirements,
             description: form.description.trim(),
             responsibilities: form.responsibilities
                 .split("\n")
                 .map((line) => line.trim())
                 .filter(Boolean),
-        });
+        };
 
-        navigate("/app/vacancies");
+        if (editing) {
+            updateVacancy(id, { ...data, updatedAt: stamp });
+            navigate(`/app/vacancies/${id}`);
+        } else {
+            addVacancy({ ...data, createdAt: stamp, updatedAt: stamp });
+            navigate("/app/vacancies");
+        }
     };
 
     return (
@@ -168,7 +179,9 @@ export default function VacancyCreate() {
                 ← Назад к вакансиям
             </button>
 
-            <h1 className="vac-detail-title">Создание новой вакансии</h1>
+            <h1 className="vac-detail-title">
+                {editing ? "Редактирование вакансии" : "Создание новой вакансии"}
+            </h1>
 
             <form className="vcreate-card" onSubmit={handleSubmit} noValidate>
                 <h2 className="vcreate-section">Основная информация</h2>
@@ -264,14 +277,13 @@ export default function VacancyCreate() {
 
                         <Field label="Требования" required>
                             <div className={`vcreate-chips ${errors.requirements ? "invalid" : ""}`}>
-                                {availableReqs.map((requirement) => (
+                                {requirements.map((requirement) => (
                                     <button
                                         type="button"
                                         key={requirement}
-                                        className={`vcreate-chip ${
-                                            selectedReqs.includes(requirement) ? "selected" : ""
-                                        }`}
-                                        onClick={() => toggleReq(requirement)}
+                                        className="vcreate-chip"
+                                        title="Удалить навык"
+                                        onClick={() => setDeleteTarget(requirement)}
                                     >
                                         {requirement}
                                     </button>
@@ -372,10 +384,30 @@ export default function VacancyCreate() {
                     </button>
                     <button type="submit" className="vcreate-btn primary">
                         <IconCheckCircle size={18} />
-                        Создать вакансию
+                        {editing ? "Сохранить" : "Создать вакансию"}
                     </button>
                 </div>
             </form>
+
+            <Modal open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
+                <p className="vcreate-modal-title">Удалить навык «{deleteTarget}»?</p>
+                <div className="vcreate-modal-actions">
+                    <button
+                        type="button"
+                        className="vcreate-btn ghost"
+                        onClick={() => setDeleteTarget(null)}
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        type="button"
+                        className="vcreate-btn danger"
+                        onClick={confirmDelete}
+                    >
+                        Удалить
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }

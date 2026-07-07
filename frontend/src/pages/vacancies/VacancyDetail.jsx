@@ -68,12 +68,14 @@ export default function VacancyDetail() {
             <h1 className="vac-detail-title">{vacancy.title}</h1>
 
             <div className="vac-tags">
-                <span
-                    className="vac-tag"
-                    style={{ backgroundColor: lang.color, color: lang.text }}
-                >
-                    {lang.label}
-                </span>
+                {lang && (
+                    <span
+                        className="vac-tag"
+                        style={{ backgroundColor: lang.color, color: lang.text }}
+                    >
+                        {lang.label}
+                    </span>
+                )}
                 <span className="vac-tag" style={{ backgroundColor: TAG_COLORS.experience }}>
                     {vacancy.experience}
                 </span>

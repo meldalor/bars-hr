@@ -2,9 +2,16 @@ import "./vacancies.css";
 import "./candidates_table.css";
 import "./vacancy_description.css";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { formatSalaryFull } from "../../mocks/vacancies.js";
+import {
+    formatSalaryFull,
+    updateVacancy,
+    duplicateVacancy,
+} from "../../mocks/vacancies.js";
 import { getActivityByVacancy } from "../../mocks/activity.js";
+
+import Modal from "../../components/ui/Modal/Modal.jsx";
 
 import {
     IconBriefcase,
@@ -21,8 +28,26 @@ import {
 } from "./icons.jsx";
 
 export default function VacancyDescription({ vacancy }) {
+    const navigate = useNavigate();
+
     const [query, setQuery] = useState("");
     const [orderDesc, setOrderDesc] = useState(true);
+    const [confirmClose, setConfirmClose] = useState(false);
+
+    const handleClose = () => {
+        updateVacancy(vacancy.id, { status: "completed" });
+        setConfirmClose(false);
+        navigate("/app/vacancies");
+    };
+
+    const handleCopy = () => {
+        duplicateVacancy(vacancy.id);
+        navigate("/app/vacancies");
+    };
+
+    const handleEdit = () => {
+        navigate(`/app/vacancies/${vacancy.id}/edit`);
+    };
 
     const log = useMemo(() => getActivityByVacancy(vacancy.id), [vacancy.id]);
 
@@ -100,16 +125,25 @@ export default function VacancyDescription({ vacancy }) {
                 </div>
 
                 <div className="vdesc-actions">
-                    <button type="button" className="vdesc-btn danger">
+                    <button
+                        type="button"
+                        className="vdesc-btn danger"
+                        onClick={() => setConfirmClose(true)}
+                    >
                         Закрыть вакансию
                     </button>
-                    <button type="button" className="vdesc-btn primary">
+                    <button
+                        type="button"
+                        className="vdesc-btn primary"
+                        onClick={handleCopy}
+                    >
                         Создать копию
                     </button>
-                    <button type="button" className="vdesc-btn primary">
-                        Изменить вопросы
-                    </button>
-                    <button type="button" className="vdesc-btn primary">
+                    <button
+                        type="button"
+                        className="vdesc-btn primary"
+                        onClick={handleEdit}
+                    >
                         Изменить вакансию
                     </button>
                 </div>
@@ -182,6 +216,22 @@ export default function VacancyDescription({ vacancy }) {
                     </tbody>
                 </table>
             </div>
+
+            <Modal open={confirmClose} onClose={() => setConfirmClose(false)}>
+                <p className="vdesc-modal-title">Закрыть вакансию «{vacancy.title}»?</p>
+                <div className="vdesc-modal-actions">
+                    <button
+                        type="button"
+                        className="vdesc-btn ghost"
+                        onClick={() => setConfirmClose(false)}
+                    >
+                        Отмена
+                    </button>
+                    <button type="button" className="vdesc-btn danger" onClick={handleClose}>
+                        Закрыть
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }

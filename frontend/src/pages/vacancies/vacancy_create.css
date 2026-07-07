@@ -4,6 +4,8 @@
     background: #ffffff;
     border: 1px solid #ececf0;
     border-radius: 18px;
+
+    color-scheme: light;
 }
 
 .vcreate-section {
@@ -92,14 +94,6 @@
 
 .vcreate-chip:hover {
     background: #474c56;
-}
-
-.vcreate-chip.selected {
-    background: #2563eb;
-}
-
-.vcreate-chip.selected:hover {
-    background: #1d4ed8;
 }
 
 .vcreate-add-btn {
@@ -272,6 +266,29 @@
 
 .vcreate-btn.danger:hover {
     background: #b91c1c;
+}
+
+.vcreate-btn.ghost {
+    background: #f1f2f5;
+    color: #1a1a1a;
+}
+
+.vcreate-btn.ghost:hover {
+    background: #e5e7eb;
+}
+
+.vcreate-modal-title {
+    margin: 0 0 22px;
+
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.vcreate-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 @media (max-width: 900px) {

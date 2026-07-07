@@ -152,6 +152,29 @@
     background: #b91c1c;
 }
 
+.vdesc-btn.ghost {
+    background: #f1f2f5;
+    color: #1a1a1a;
+}
+
+.vdesc-btn.ghost:hover {
+    background: #e5e7eb;
+}
+
+.vdesc-modal-title {
+    margin: 0 0 22px;
+
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.vdesc-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
 .vdesc-log-title {
     margin: 34px 0 18px;
 
