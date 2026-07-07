@@ -18,10 +18,12 @@ public class CandidatesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<CandidateListItemDto>>> GetAll(
         [FromQuery] string? search,
+        [FromQuery] string? status,
+        [FromQuery] bool includeArchived = false,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _candidateService.GetAllAsync(search, page, pageSize);
+        var result = await _candidateService.GetAllAsync(search, status, includeArchived, page, pageSize);
         return Ok(result);
     }
 
@@ -36,28 +38,50 @@ public class CandidatesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CandidateDto>> Create([FromBody] CreateCandidateRequest request)
     {
-        // TODO: позже возьмём currentUserId из JWT
-        var currentUserId = 1; 
+        // TODO: currentUserId из JWT-клейма — появится вместе с [Authorize]
+        var currentUserId = 1;
 
-        var created = await _candidateService.CreateAsync(request, currentUserId);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        try
+        {
+            var created = await _candidateService.CreateAsync(request, currentUserId);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult<CandidateDto>> Update(int id, [FromBody] UpdateCandidateRequest request)
     {
         var currentUserId = 1; // TODO: из JWT
-        var updated = await _candidateService.UpdateAsync(id, request, currentUserId);
 
-        if (updated == null) return NotFound();
-        return Ok(updated);
+        try
+        {
+            var updated = await _candidateService.UpdateAsync(id, request, currentUserId);
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpPost("{id}/archive")]
+    public async Task<IActionResult> Archive(int id)
     {
-        var deleted = await _candidateService.DeleteAsync(id);
-        if (!deleted) return NotFound();
+        var found = await _candidateService.SetArchivedAsync(id, archived: true);
+        if (!found) return NotFound();
+        return NoContent();
+    }
+
+    [HttpPost("{id}/restore")]
+    public async Task<IActionResult> Restore(int id)
+    {
+        var found = await _candidateService.SetArchivedAsync(id, archived: false);
+        if (!found) return NotFound();
         return NoContent();
     }
 }

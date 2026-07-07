@@ -1,5 +1,4 @@
 using BarsHr.Api.Data;
-using BarsHr.Api.Domain.Entities;
 using BarsHr.Api.DTOs.Candidates;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -15,17 +14,24 @@ public class CandidateService : ICandidateService
         _context = context;
     }
 
-    public async Task<List<CandidateListItemDto>> GetAllAsync(string? search = null, int page = 1, int pageSize = 20)
+    public async Task<List<CandidateListItemDto>> GetAllAsync(
+        string? search = null, string? status = null, bool includeArchived = false,
+        int page = 1, int pageSize = 20)
     {
         var query = _context.Candidates.AsNoTracking();
 
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            query = query.Where(c => c.FullName.Contains(search) || 
-                                    (c.City != null && c.City.Contains(search)));
-        }
+        if (!includeArchived)
+            query = query.Where(c => !c.IsArchived);
 
-        var candidates = await query
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(c => c.FullName.Contains(search) ||
+                                     (c.City != null && c.City.Contains(search)));
+
+        if (!string.IsNullOrWhiteSpace(status))
+            query = query.Where(c => c.Status == status);
+
+        // проекция в SQL, а не маппер: иначе EF затянет все интервью в память ради счётчика
+        return await query
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -38,8 +44,6 @@ public class CandidateService : ICandidateService
                 c.CreatedAt
             ))
             .ToListAsync();
-
-        return candidates;
     }
 
     public async Task<CandidateDto?> GetByIdAsync(int id)
@@ -48,51 +52,17 @@ public class CandidateService : ICandidateService
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
 
-        if (candidate == null) return null;
-
-        return new CandidateDto(
-            candidate.Id,
-            candidate.FullName,
-            candidate.Phone,
-            candidate.City,
-            candidate.Education,
-            candidate.PreviousWork,
-            candidate.Skills,
-            candidate.Status,
-            candidate.IsArchived,
-            candidate.CreatedAt
-        );
+        return candidate?.ToDto();
     }
 
     public async Task<CandidateDto> CreateAsync(CreateCandidateRequest request, int currentUserId)
     {
-        var candidate = new Candidate
-        {
-            FullName = request.FullName,
-            Phone = request.Phone,
-            City = request.City,
-            Education = request.Education,
-            PreviousWork = request.PreviousWork,
-            Skills = request.Skills,
-            Status = request.Status,
-            CreatedById = currentUserId
-        };
+        var candidate = request.ToEntity(currentUserId);
 
         _context.Candidates.Add(candidate);
         await _context.SaveChangesAsync();
 
-        return new CandidateDto(
-            candidate.Id,
-            candidate.FullName,
-            candidate.Phone,
-            candidate.City,
-            candidate.Education,
-            candidate.PreviousWork,
-            candidate.Skills,
-            candidate.Status,
-            candidate.IsArchived,
-            candidate.CreatedAt
-        );
+        return candidate.ToDto();
     }
 
     public async Task<CandidateDto?> UpdateAsync(int id, UpdateCandidateRequest request, int currentUserId)
@@ -100,29 +70,19 @@ public class CandidateService : ICandidateService
         var candidate = await _context.Candidates.FindAsync(id);
         if (candidate == null) return null;
 
-        if (request.FullName != null) candidate.FullName = request.FullName;
-        if (request.Phone != null) candidate.Phone = request.Phone;
-        if (request.City != null) candidate.City = request.City;
-        if (request.Education != null) candidate.Education = request.Education;
-        if (request.PreviousWork != null) candidate.PreviousWork = request.PreviousWork;
-        if (request.Skills != null) candidate.Skills = request.Skills;
-        if (request.Status != null) candidate.Status = request.Status;
-        if (request.IsArchived.HasValue) candidate.IsArchived = request.IsArchived.Value;
-
-        candidate.UpdatedAt = DateTime.UtcNow;
-        // candidate.UpdatedById = currentUserId; // раскомментируй, когда добавишь поле
-
+        candidate.ApplyUpdate(request);
         await _context.SaveChangesAsync();
 
-        return await GetByIdAsync(id);
+        return candidate.ToDto();
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> SetArchivedAsync(int id, bool archived)
     {
         var candidate = await _context.Candidates.FindAsync(id);
         if (candidate == null) return false;
 
-        _context.Candidates.Remove(candidate);
+        candidate.IsArchived = archived;
+        candidate.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
     }
