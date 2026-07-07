@@ -30,64 +30,59 @@ public class BarsHrDbContext : DbContext
 
         // ==================== Связи с User ====================
 
-        // Candidate → User
+        // Связи с User: обратная коллекция указана явно, иначе EF создаёт
+        // вторую связь с теневой колонкой UserId
         modelBuilder.Entity<Candidate>()
             .HasOne(c => c.CreatedBy)
-            .WithMany()
+            .WithMany(u => u.CreatedCandidates)
             .HasForeignKey(c => c.CreatedById)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Vacancy → User
         modelBuilder.Entity<Vacancy>()
             .HasOne(v => v.CreatedBy)
-            .WithMany()
+            .WithMany(u => u.CreatedVacancies)
             .HasForeignKey(v => v.CreatedById)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Interview → User (3 связи)
         modelBuilder.Entity<Interview>()
             .HasOne(i => i.CreatedBy)
-            .WithMany()
+            .WithMany(u => u.CreatedInterviews)
             .HasForeignKey(i => i.CreatedById)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Interview>()
             .HasOne(i => i.UpdatedBy)
-            .WithMany()
+            .WithMany(u => u.UpdatedInterviews)
             .HasForeignKey(i => i.UpdatedById)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Interview>()
             .HasOne(i => i.Interviewer)
-            .WithMany()
+            .WithMany(u => u.ConductedInterviews)
             .HasForeignKey(i => i.InterviewerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Evaluation → User
         modelBuilder.Entity<Evaluation>()
             .HasOne(e => e.EvaluatedBy)
-            .WithMany()
+            .WithMany(u => u.MadeEvaluations)
             .HasForeignKey(e => e.EvaluatedById)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Decision → User
         modelBuilder.Entity<Decision>()
             .HasOne(d => d.MadeBy)
-            .WithMany()
+            .WithMany(u => u.MadeDecisions)
             .HasForeignKey(d => d.MadeById)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // GeneratedDocument → User
         modelBuilder.Entity<GeneratedDocument>()
             .HasOne(g => g.GeneratedBy)
-            .WithMany()
+            .WithMany(u => u.GeneratedDocuments)
             .HasForeignKey(g => g.GeneratedById)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // AuditLog → User
         modelBuilder.Entity<AuditLog>()
             .HasOne(a => a.User)
-            .WithMany()
+            .WithMany(u => u.AuditLogs)
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Restrict);
         // Interview → Application: интервью живёт в контексте отклика
