@@ -12,7 +12,6 @@ public static class CandidateMappings
         c.Education,
         c.PreviousWork,
         c.Skills,
-        c.Status,
         c.IsArchived,
         c.CreatedAt
     );
@@ -25,7 +24,6 @@ public static class CandidateMappings
         Education = request.Education,
         PreviousWork = request.PreviousWork,
         Skills = request.Skills,
-        Status = request.Status,
         CreatedById = currentUserId
     };
 
@@ -38,7 +36,6 @@ public static class CandidateMappings
         if (request.Education != null) candidate.Education = request.Education;
         if (request.PreviousWork != null) candidate.PreviousWork = request.PreviousWork;
         if (request.Skills != null) candidate.Skills = request.Skills;
-        if (request.Status != null) candidate.Status = request.Status;
         if (request.IsArchived.HasValue) candidate.IsArchived = request.IsArchived.Value;
         candidate.UpdatedAt = DateTime.UtcNow;
     }

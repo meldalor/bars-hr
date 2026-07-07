@@ -90,18 +90,19 @@ public class BarsHrDbContext : DbContext
             .WithMany()
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+        // Interview → Application: интервью живёт в контексте отклика
         modelBuilder.Entity<Interview>()
-                .HasOne(i => i.Candidate)
-                .WithMany(c => c.Interviews)
-                .HasForeignKey(i => i.CandidateId)
-                .OnDelete(DeleteBehavior.Cascade);   
+            .HasOne(i => i.Application)
+            .WithMany(a => a.Interviews)
+            .HasForeignKey(i => i.ApplicationId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Interview → Vacancy 
-        modelBuilder.Entity<Interview>()
-            .HasOne(i => i.Vacancy)
-            .WithMany(v => v.Interviews)
-            .HasForeignKey(i => i.VacancyId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // Competency → Vacancy: матрица компетенций принадлежит вакансии
+        modelBuilder.Entity<Competency>()
+            .HasOne(c => c.Vacancy)
+            .WithMany(v => v.Competencies)
+            .HasForeignKey(c => c.VacancyId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Interview → Evaluation (матрица компетенций)
         modelBuilder.Entity<Evaluation>()
@@ -125,10 +126,38 @@ public class BarsHrDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // ==================== Индексы  ====================
-        modelBuilder.Entity<Interview>()
-            .HasIndex(i => i.CandidateId);
+
+        // уникальные: гарантии целостности на уровне БД
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Login)
+            .IsUnique();
+
+        modelBuilder.Entity<Application>()
+            .HasIndex(a => new { a.CandidateId, a.VacancyId })
+            .IsUnique(); // один отклик на пару кандидат+вакансия
 
         modelBuilder.Entity<Evaluation>()
             .HasIndex(e => new { e.InterviewId, e.CompetencyId })
-            .IsUnique(); 
+            .IsUnique();
+
+        // под сортировки и фильтры списков (FK-колонки EF индексирует сам)
+        modelBuilder.Entity<Candidate>()
+            .HasIndex(c => c.CreatedAt);
+        modelBuilder.Entity<Candidate>()
+            .HasIndex(c => c.IsArchived);
+        modelBuilder.Entity<Candidate>()
+            .HasIndex(c => c.FullName);
+
+        modelBuilder.Entity<Application>()
+            .HasIndex(a => a.Status);
+
+        modelBuilder.Entity<Interview>()
+            .HasIndex(i => i.ScheduledAt);
+        modelBuilder.Entity<Interview>()
+            .HasIndex(i => i.Status);
+
+        modelBuilder.Entity<Vacancy>()
+            .HasIndex(v => v.Status);
+        modelBuilder.Entity<Vacancy>()
+            .HasIndex(v => v.IsArchived);
     }}

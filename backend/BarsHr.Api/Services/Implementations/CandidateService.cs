@@ -27,10 +27,11 @@ public class CandidateService : ICandidateService
             query = query.Where(c => c.FullName.Contains(search) ||
                                      (c.City != null && c.City.Contains(search)));
 
+        // статус живёт на отклике: фильтр — «есть отклик в этом статусе»
         if (!string.IsNullOrWhiteSpace(status))
-            query = query.Where(c => c.Status == status);
+            query = query.Where(c => c.Applications.Any(a => a.Status == status));
 
-        // проекция в SQL, а не маппер: иначе EF затянет все интервью в память ради счётчика
+        // проекция в SQL, а не маппер: иначе EF затянет все отклики в память ради счётчиков
         return await query
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -39,8 +40,8 @@ public class CandidateService : ICandidateService
                 c.Id,
                 c.FullName,
                 c.City,
-                c.Status,
-                c.Interviews.Count,
+                c.Applications.Count,
+                c.Applications.SelectMany(a => a.Interviews).Count(),
                 c.CreatedAt
             ))
             .ToListAsync();
