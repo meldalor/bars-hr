@@ -1,0 +1,94 @@
+.floating-badge {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 14px 20px;
+
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(18px);
+
+    border-radius: 40px;
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.08);
+
+    animation: float 6s ease-in-out infinite;
+
+    z-index: 2;
+}
+
+.floating-badge__icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.floating-badge__text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    white-space: nowrap;
+}
+
+.floating-badge:nth-child(2) {
+    animation-delay: .5s;
+}
+
+.floating-badge:nth-child(3) {
+    animation-delay: 1s;
+}
+
+.floating-badge:nth-child(4) {
+    animation-delay: 1.5s;
+}
+
+.floating-badge:nth-child(5) {
+    animation-delay: 2s;
+}
+
+.floating-badge:nth-child(6) {
+    animation-delay: 2.5s;
+}
+
+.floating-badge:nth-child(7) {
+    animation-delay: 3s;
+}
+
+.floating-badge:nth-child(8) {
+    animation-delay: 3.5s;
+}
+
+.floating-badge:nth-child(9) {
+    animation-delay: 4s;
+}
+
+.floating-badge:nth-child(10) {
+    animation-delay: 4.5s;
+}
+
+.floating-badge:nth-child(11) {
+    animation-delay: 5s;
+}
+
+.floating-badge:nth-child(12) {
+    animation-delay: 5.5s;
+}
+
+@keyframes float {
+
+    0% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+
+}

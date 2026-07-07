@@ -5,93 +5,92 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BarsHr.Api.Domain.Entities;
 
+[Table("vacancies")]
 public class Vacancy
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column("id")]
     public int Id { get; set; }
 
     [Required]
     [MaxLength(200)]
+    [Column("title")]
     public string Title { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Detailed description of the position.
-    /// Shown in vacancy card / public posting.
-    /// </summary>
-    public string Description { get; set; } = string.Empty;
+    [Column("description")]
+    public string? Description { get; set; }
 
-    /// <summary>
-    /// Key responsibilities (separate from description for structured display).
-    /// </summary>
-    public string Responsibilities { get; set; } = string.Empty;
+    [Column("responsibilities")]
+    public string? Responsibilities { get; set; }
 
-    public string Requirements { get; set; } = string.Empty;
+    [Column("requirements")]
+    public string? Requirements { get; set; }
+
+    [MaxLength(50)]
+    [Column("work_format")]
+    public string? WorkFormat { get; set; }
 
     [MaxLength(100)]
-    public string Location { get; set; } = string.Empty;
+    [Column("location")]
+    public string? Location { get; set; }
 
     [MaxLength(50)]
-    public string WorkFormat { get; set; } = string.Empty; // e.g. "Remote", "Hybrid", "Office"
+    [Column("employment_type")]
+    public string? EmploymentType { get; set; }
 
     [MaxLength(50)]
-    public string EmploymentType { get; set; } = string.Empty; // "Full-time", "Part-time", "Internship"
+    [Column("experience_level")]
+    public string? ExperienceLevel { get; set; }
 
-    [MaxLength(50)]
-    public string ExperienceLevel { get; set; } = string.Empty; // "Junior", "Middle", "Senior", "Lead"
-
+    [Column("salary_min")]
     public int? SalaryMin { get; set; }
+
+    [Column("salary_max")]
     public int? SalaryMax { get; set; }
 
     [MaxLength(10)]
+    [Column("currency")]
     public string Currency { get; set; } = "RUB";
 
+    [Column("positions_count")]
     public int PositionsCount { get; set; } = 1;
 
     [MaxLength(100)]
-    public string Department { get; set; } = string.Empty;
+    [Column("department")]
+    public string? Department { get; set; }
 
-    /// <summary>
-    /// Required skills as flexible JSONB array.
-    /// Example: ["C#", "ASP.NET Core", "PostgreSQL", "Docker"]
-    /// Used for matching with candidates or filtering.
-    /// </summary>
-    public List<string> Skills { get; set; } = new List<string>();
+    [Column("skills")]
+    public string? Skills { get; set; }           // JSONB
 
-    /// <summary>
-    /// Publishing platforms / sources (jsonb array).
-    /// Example: ["hh.ru", "LinkedIn", "Telegram", "Internal Career Site"]
-    /// Important for analytics (which channels bring candidates).
-    /// </summary>
-    public List<string> Platforms { get; set; } = new List<string>();
+    [Column("platforms")]
+    public string? Platforms { get; set; }        // JSONB
 
     [MaxLength(50)]
+    [Column("status")]
     public string Status { get; set; } = "Open";
 
-    /// <summary>
-    /// Planned or actual closing date of the vacancy.
-    /// Useful for реестр вакансий and dashboards.
-    /// </summary>
+    [Column("closes_at")]
     public DateTime? ClosesAt { get; set; }
 
+    [Column("created_by")]
     public int CreatedById { get; set; }
-    public User? CreatedBy { get; set; }
 
+    [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
+    [Column("is_archived")]
     public bool IsArchived { get; set; } = false;
 
-    // ============================================
-    // NAVIGATION PROPERTIES
-    // ============================================
+    // ==================== Навигационные свойства ====================
 
-    /// <summary>
-    /// All applications (отклики) received for this vacancy.
-    /// </summary>
-    public ICollection<Application> Applications { get; set; } = new List<Application>();
+    [ForeignKey(nameof(CreatedById))]
+    public User? CreatedBy { get; set; }
 
-    /// <summary>
-    /// All interviews conducted for this vacancy.
-    /// </summary>
     public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
+
+    public ICollection<Application> Applications { get; set; } = new List<Application>();
 }

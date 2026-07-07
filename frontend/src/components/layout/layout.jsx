@@ -1,20 +1,69 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import Navigation_Bar from "../ui/Navigation_Bar/Navigation_Bar";
 
 function Layout() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems = [
+    { id: "overview", label: "Обзор" },
+    { id: "vacancies", label: "Вакансии" },
+    { id: "candidates", label: "Кандидаты" },
+    { id: "meetings", label: "Встречи" },
+  ];
+
+  const pathSegments = location.pathname.split('/');
+  const activeItem = pathSegments[2] || "overview";
+
+  const handleItemClick = (itemId) => {
+    navigate(`/app/${itemId}`);
+  };
+
   return (
-    <div>
-      <header style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
-        <h2>платформа для HR-специалиста</h2>
+    <div style={{ 
+      display: "flex", 
+      flexDirection: "column", 
+      height: "100vh", 
+      backgroundColor: "#f1f1f1",
+      position: "relative"
+    }}>
 
-        <nav style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-          <NavLink to="/overview">обзор</NavLink>
-          <NavLink to="/vacancies">вакансии</NavLink>
-          <NavLink to="/candidates">кандидаты</NavLink>
-          <NavLink to="/meetings">встречи</NavLink>
-        </nav>
-      </header>
+      <div style={{
+        position: "absolute",
+        top: "20px",
+        left: "40px",
+        zIndex: 1000,
+        fontSize: "24px",
+        fontWeight: "700",
+        color: "#1a1a1a",
+        fontFamily: "inherit",
+        display: "flex",
+        alignItems: "center",
+        height: "40px"
+      }}>
+        Huntly
+      </div>
 
-      <main style={{ padding: "20px" }}>
+      <div style={{
+        position: "absolute",
+        top: "20px",
+        right: "360px",
+        width: "auto",
+        zIndex: 1000
+      }}>
+        <Navigation_Bar
+          items={menuItems}
+          activeItem={activeItem}
+          onItemClick={handleItemClick}
+        />
+      </div>
+
+      <main style={{ 
+        flex: 1, 
+        padding: "80px 20px 20px 20px", 
+        overflow: "auto",
+        backgroundColor: "#f1f1f1"
+      }}>
         <Outlet />
       </main>
     </div>

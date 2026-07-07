@@ -1,19 +1,48 @@
 using System.Text;
 using BarsHr.Api.Data;
+using BarsHr.Api.Services.Implementations;
+using BarsHr.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// === ¡¿«¿ ƒ¿ÕÕ€’ ===
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    // –ö–Ω–æ–ø–∫–∞ Authorize –≤ Swagger: –≤—Å—Ç–∞–≤–ª—è–µ–º —Ç–æ–∫–µ–Ω –∏–∑ POST /api/auth/login (–±–µ–∑ —Å–ª–æ–≤–∞ Bearer)
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT-—Ç–æ–∫–µ–Ω –∏–∑ POST /api/auth/login"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
-// === JWT ¿”“≈Õ“»‘» ¿÷»ﬂ ===
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+// –†–µ–≥–∏—Å—Ç—Ä–∞—Ü–∏—è DbContext (EF Core + PostgreSQL)
+builder.Services.AddDbContext<BarsHrDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddScoped<ICandidateService, CandidateService>();
+
+// ==================== JWT ====================
+
+var jwt = builder.Configuration.GetSection("Jwt");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -24,35 +53,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidIssuer = jwt["Issuer"],
+            ValidAudience = jwt["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!)),
             ClockSkew = TimeSpan.FromMinutes(5)
         };
     });
 
 builder.Services.AddAuthorization();
 
-// === CONTROLLERS ===
-builder.Services.AddControllers();
-
-// === SWAGGER (.NET 10 ó ˜ÂÂÁ AddOpenApi) ===
-builder.Services.AddOpenApi();
-
 var app = builder.Build();
 
-// === MIDDLEWARE ===
+// ==================== MIDDLEWARE ====================
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "BarsHr API v1");
-    });
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
-app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
 
+app.MapControllers();
 app.Run();
