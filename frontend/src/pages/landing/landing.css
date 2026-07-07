@@ -1,0 +1,118 @@
+.landing {
+    position: relative;
+
+    width: 100%;
+    height: 100vh;
+
+    overflow: hidden;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.landing-content {
+    z-index: 10;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.landing-logo {
+    position: relative;
+    display: inline-block;
+
+    margin: 0;
+    margin-right: 20px;
+
+    font-size: 90px;
+    font-weight: 700;
+
+    letter-spacing: -1px;
+
+    color: #102040;
+}
+
+.logo-star {
+    position: absolute;
+
+    top: -28px;
+    right: -30px;
+
+    color: #3d7dff;
+    font-size: 42px;
+}
+
+.landing-subtitle {
+    margin-top: 58px;
+
+    font-size: 20px;
+    font-family: inherit;
+    line-height: 1.2;
+
+    color: #667085;
+}
+
+.landing-button {
+    margin-top: 30px;
+
+    padding: 18px 42px;
+
+    border: none;
+    border-radius: 50px;
+
+    color: white;
+
+    font-size: 22px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: .25s ease;
+
+    box-shadow:
+        0 12px 30px rgba(47,111,255,.35);
+}
+
+.landing-button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 18px 40px rgba(47,111,255,.45);
+}
+
+.landing-button:active {
+    transform: translateY(0);
+}
+
+.landing-footer {
+    position: absolute;
+
+    bottom: 24px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    font-size: 14px;
+
+    color: #8b95a7;
+}
+
+.landing-exit {
+    animation: fadeSlideOut 0.4s ease forwards;
+}
+
+@keyframes fadeSlideOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
