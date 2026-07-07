@@ -33,6 +33,7 @@ builder.Services.AddDbContext<BarsHrDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ICandidateService, CandidateService>();
+builder.Services.AddScoped<IApplicationService, ApplicationService>();
 
 // ==================== JWT ====================
 
