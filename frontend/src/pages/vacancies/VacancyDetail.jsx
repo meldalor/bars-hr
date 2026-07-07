@@ -7,6 +7,7 @@ import { STATUS_ORDER, STATUSES, getCandidatesByVacancy } from "../../mocks/cand
 
 import Navigation_Bar from "../../components/ui/Navigation_Bar/Navigation_Bar";
 import CandidatesTable from "./CandidatesTable.jsx";
+import VacancyDescription from "./VacancyDescription.jsx";
 import { IconInfo } from "./icons.jsx";
 
 export default function VacancyDetail() {
@@ -104,7 +105,7 @@ export default function VacancyDetail() {
             </div>
 
             {activeTab === "description" ? (
-                <div className="vac-placeholder">Описание вакансии — в разработке</div>
+                <VacancyDescription vacancy={vacancy} />
             ) : (
                 <CandidatesTable
                     candidates={candidates}

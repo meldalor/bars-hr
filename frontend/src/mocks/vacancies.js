@@ -199,8 +199,23 @@ export function getVacancyById(id) {
     return VACANCIES.find((vacancy) => vacancy.id === id) || null;
 }
 
+export function addVacancy(data) {
+    const vacancy = {
+        id: String(Date.now()),
+        candidates: 0,
+        status: "active",
+        ...data,
+    };
+    VACANCIES.unshift(vacancy);
+    return vacancy;
+}
+
 export function formatSalary(from, to) {
     return `${Math.round(from / 1000)} - ${Math.round(to / 1000)} тыс.`;
+}
+
+export function formatSalaryFull(from, to) {
+    return `${from.toLocaleString("ru-RU")} - ${to.toLocaleString("ru-RU")} руб.`;
 }
 
 export function plural(count, forms) {
