@@ -1,11 +1,14 @@
 using BarsHr.Api.DTOs.Applications;
+using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarsHr.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class ApplicationsController : ControllerBase
 {
@@ -36,7 +39,7 @@ public class ApplicationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApplicationDto>> Create([FromBody] CreateApplicationRequest request)
     {
-        var currentUserId = 1; // TODO: из JWT
+        var currentUserId = User.GetUserId();
 
         try
         {

@@ -61,6 +61,13 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// стартовые пользователи и демо-данные: без них на чистой БД невозможно войти
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BarsHrDbContext>();
+    await DbSeeder.SeedAsync(db);
+}
+
 // ==================== MIDDLEWARE ====================
 
 if (app.Environment.IsDevelopment())

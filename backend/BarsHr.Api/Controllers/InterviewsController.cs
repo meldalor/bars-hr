@@ -1,10 +1,13 @@
 using BarsHr.Api.DTOs.Interviews;
+using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarsHr.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class InterviewsController : ControllerBase
 {
@@ -35,7 +38,7 @@ public class InterviewsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<InterviewDto>> Create([FromBody] CreateInterviewRequest request)
     {
-        var currentUserId = 1; // TODO: из JWT
+        var currentUserId = User.GetUserId();
 
         try
         {

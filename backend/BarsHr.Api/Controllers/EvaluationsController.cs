@@ -1,11 +1,14 @@
 using BarsHr.Api.DTOs.Evaluations;
 using BarsHr.Api.DTOs.Interviews;
+using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarsHr.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/interviews/{interviewId}/evaluations")]
 public class EvaluationsController : ControllerBase
 {
@@ -21,7 +24,7 @@ public class EvaluationsController : ControllerBase
         int interviewId,
         [FromBody] UpsertEvaluationsRequest request)
     {
-        var currentUserId = 1; // TODO: из JWT
+        var currentUserId = User.GetUserId();
 
         try
         {
