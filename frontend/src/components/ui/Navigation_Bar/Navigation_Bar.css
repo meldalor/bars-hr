@@ -29,6 +29,7 @@
   font-weight: 500;
   display: flex;
   align-items: center;
+  gap: 6px;
   padding:4px 14px;
   border-radius: 20px;
   cursor: pointer;
@@ -47,6 +48,11 @@
 .nav-item.active {
   color: #ffffff;
   background-color: transparent;
+}
+
+.nav-icon {
+  display: inline-flex;
+  align-items: center;
 }
 
 .nav-item:not(.active):hover {
