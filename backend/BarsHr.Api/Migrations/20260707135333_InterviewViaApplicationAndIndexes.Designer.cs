@@ -3,6 +3,7 @@ using System;
 using BarsHr.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BarsHr.Api.Migrations
 {
     [DbContext(typeof(BarsHrDbContext))]
-    partial class BarsHrDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260707135333_InterviewViaApplicationAndIndexes")]
+    partial class InterviewViaApplicationAndIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -131,9 +134,14 @@ namespace BarsHr.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("user_id");
 
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("audit_logs");
                 });
@@ -191,6 +199,12 @@ namespace BarsHr.Api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
@@ -200,6 +214,10 @@ namespace BarsHr.Api.Migrations
                     b.HasIndex("FullName");
 
                     b.HasIndex("IsArchived");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("candidates");
                 });
@@ -278,12 +296,17 @@ namespace BarsHr.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("made_by_id");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("InterviewId")
                         .IsUnique();
 
                     b.HasIndex("MadeById");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("decisions");
                 });
@@ -350,11 +373,16 @@ namespace BarsHr.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("score");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompetencyId");
 
                     b.HasIndex("EvaluatedById");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("InterviewId", "CompetencyId")
                         .IsUnique();
@@ -396,6 +424,9 @@ namespace BarsHr.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("template_id");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GeneratedById");
@@ -403,6 +434,8 @@ namespace BarsHr.Api.Migrations
                     b.HasIndex("InterviewId");
 
                     b.HasIndex("TemplateId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("generated_documents");
                 });
@@ -467,6 +500,15 @@ namespace BarsHr.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("updated_by");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UserId2")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId");
@@ -480,6 +522,12 @@ namespace BarsHr.Api.Migrations
                     b.HasIndex("Status");
 
                     b.HasIndex("UpdatedById");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
+
+                    b.HasIndex("UserId2");
 
                     b.ToTable("interviews");
                 });
@@ -639,6 +687,9 @@ namespace BarsHr.Api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("WorkFormat")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -651,6 +702,8 @@ namespace BarsHr.Api.Migrations
                     b.HasIndex("IsArchived");
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("vacancies");
                 });
@@ -691,9 +744,13 @@ namespace BarsHr.Api.Migrations
             modelBuilder.Entity("BarsHr.Api.Domain.Entities.AuditLog", b =>
                 {
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "User")
-                        .WithMany("AuditLogs")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("AuditLogs")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("User");
                 });
@@ -701,9 +758,17 @@ namespace BarsHr.Api.Migrations
             modelBuilder.Entity("BarsHr.Api.Domain.Entities.Candidate", b =>
                 {
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "CreatedBy")
-                        .WithMany("CreatedCandidates")
+                        .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("CreatedCandidates")
+                        .HasForeignKey("UserId");
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("UpdatedCandidates")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("CreatedBy");
                 });
@@ -728,10 +793,14 @@ namespace BarsHr.Api.Migrations
                         .IsRequired();
 
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "MadeBy")
-                        .WithMany("MadeDecisions")
+                        .WithMany()
                         .HasForeignKey("MadeById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("MadeDecisions")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Interview");
 
@@ -747,7 +816,7 @@ namespace BarsHr.Api.Migrations
                         .IsRequired();
 
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "EvaluatedBy")
-                        .WithMany("MadeEvaluations")
+                        .WithMany()
                         .HasForeignKey("EvaluatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -757,6 +826,10 @@ namespace BarsHr.Api.Migrations
                         .HasForeignKey("InterviewId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("MadeEvaluations")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Competency");
 
@@ -768,7 +841,7 @@ namespace BarsHr.Api.Migrations
             modelBuilder.Entity("BarsHr.Api.Domain.Entities.GeneratedDocument", b =>
                 {
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "GeneratedBy")
-                        .WithMany("GeneratedDocuments")
+                        .WithMany()
                         .HasForeignKey("GeneratedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -784,6 +857,10 @@ namespace BarsHr.Api.Migrations
                         .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("GeneratedDocuments")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("GeneratedBy");
 
@@ -801,20 +878,32 @@ namespace BarsHr.Api.Migrations
                         .IsRequired();
 
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "CreatedBy")
-                        .WithMany("CreatedInterviews")
+                        .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "Interviewer")
-                        .WithMany("ConductedInterviews")
+                        .WithMany()
                         .HasForeignKey("InterviewerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "UpdatedBy")
-                        .WithMany("UpdatedInterviews")
+                        .WithMany()
                         .HasForeignKey("UpdatedById")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("ConductedInterviews")
+                        .HasForeignKey("UserId");
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("CreatedInterviews")
+                        .HasForeignKey("UserId1");
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("UpdatedInterviews")
+                        .HasForeignKey("UserId2");
 
                     b.Navigation("Application");
 
@@ -828,10 +917,14 @@ namespace BarsHr.Api.Migrations
             modelBuilder.Entity("BarsHr.Api.Domain.Entities.Vacancy", b =>
                 {
                     b.HasOne("BarsHr.Api.Domain.Entities.User", "CreatedBy")
-                        .WithMany("CreatedVacancies")
+                        .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("BarsHr.Api.Domain.Entities.User", null)
+                        .WithMany("CreatedVacancies")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("CreatedBy");
                 });
@@ -882,6 +975,8 @@ namespace BarsHr.Api.Migrations
                     b.Navigation("MadeDecisions");
 
                     b.Navigation("MadeEvaluations");
+
+                    b.Navigation("UpdatedCandidates");
 
                     b.Navigation("UpdatedInterviews");
                 });

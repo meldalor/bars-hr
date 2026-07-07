@@ -85,12 +85,11 @@ public class Vacancy
     [Column("is_archived")]
     public bool IsArchived { get; set; } = false;
 
-    // ==================== Навигационные свойства ====================
-
     [ForeignKey(nameof(CreatedById))]
     public User? CreatedBy { get; set; }
 
-    public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
-
     public ICollection<Application> Applications { get; set; } = new List<Application>();
+
+    // матрица компетенций вакансии: HR оценивает кандидата именно по этому набору
+    public ICollection<Competency> Competencies { get; set; } = new List<Competency>();
 }

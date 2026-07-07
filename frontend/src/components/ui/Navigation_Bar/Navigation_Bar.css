@@ -1,27 +1,21 @@
 .navigation-bar {
-    width: auto;
-    background: transparent;
-    display: flex;
-    flex-direction: column;
-    pointer-events: none;
-}
-
-.navigation-bar > * {
-    pointer-events: auto;
+  width: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-list {
   position: relative;
   list-style: none;
-  padding: 0px;
+  padding: 4px;
   margin: 0;
   display: flex;
   flex-direction: row;
   gap: 2px;
   background-color: #ffffff;
-  border-radius: 24px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: none;
+  border-radius: 26px;
+  box-shadow: none;
 }
 
 .nav-item {
@@ -29,48 +23,78 @@
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding:4px 14px;
-  border-radius: 20px;
+  justify-content: center;
+  height: 44px;              
+  padding: 0 20px;
+  border-radius: 22px;
   cursor: pointer;
   background-color: transparent;
-  color: #000000;
+  color: #111827;            
   font-size: 16px;
-  font-weight: 500;
   user-select: none;
   white-space: nowrap;
   position: relative;
   z-index: 1;
-  transition: color 0.1s ease;
-  margin: 0;
+  transition: color 0.2s ease;
+  box-sizing: border-box;
 }
 
+/* Активная кнопка — текст белый */
 .nav-item.active {
   color: #ffffff;
-  background-color: transparent;
+}
+
+/* Наведение на НЕактивную кнопку — текст СИНИЙ */
+.nav-item:not(.active):hover {
+  color: #2563eb; 
+  background-color: transparent; 
+}
+
+/* Синяя плашка-индикатор (двигается) */
+.nav-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 0;
+  height: calc(100% - 8px);
+  background-color: #2563eb;
+  border-radius: 22px;
+  transition: transform 0.35s cubic-bezier(0.4, 0.0, 0.2, 1), 
+              width 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .nav-icon {
+  margin-right: 6px;
   display: inline-flex;
-  align-items: center;
 }
 
-.nav-item:not(.active):hover {
-  background-color: #eaeaea;
-  color: #000000;
+.nav-badge {
+  margin-left: 6px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  font-size: 12px;
+  padding: 0 6px;
+  border-radius: 10px;
+  line-height: 18px;
 }
 
-.nav-indicator {
-  position: absolute;
-  top: 0px;
-  left: 4px;
-  width: 0;
-  height: 100%;
-  background-color: #2563eb;
-  border-radius: 20px;
-  transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), 
-              width 0.4s cubic-bezier(0.4, 0.0, 0.2, 1),
-              background-color 0.1s ease;
-  pointer-events: none;
-  z-index: 0;
+/* Адаптивность для маленьких экранов */
+@media (max-width: 768px) {
+  .nav-item {
+    height: 40px;
+    padding: 0 14px;
+    font-size: 14px;
+  }
+  .nav-list {
+    padding: 2px;
+    border-radius: 22px;
+  }
+  .nav-indicator {
+    top: 2px;
+    left: 2px;
+    height: calc(100% - 4px);
+    border-radius: 20px;
+  }
 }
