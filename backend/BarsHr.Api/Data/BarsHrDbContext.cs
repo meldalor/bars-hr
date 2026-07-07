@@ -90,9 +90,45 @@ public class BarsHrDbContext : DbContext
             .WithMany()
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Interview>()
+                .HasOne(i => i.Candidate)
+                .WithMany(c => c.Interviews)
+                .HasForeignKey(i => i.CandidateId)
+                .OnDelete(DeleteBehavior.Cascade);   
 
-        // ==================== Индексы ====================
-        modelBuilder.Entity<User>()
-            .HasIndex(u => u.Login)
-            .IsUnique();
-        }}
+        // Interview → Vacancy 
+        modelBuilder.Entity<Interview>()
+            .HasOne(i => i.Vacancy)
+            .WithMany(v => v.Interviews)
+            .HasForeignKey(i => i.VacancyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Interview → Evaluation (матрица компетенций)
+        modelBuilder.Entity<Evaluation>()
+            .HasOne(e => e.Interview)
+            .WithMany(i => i.Evaluations)
+            .HasForeignKey(e => e.InterviewId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Evaluation → Competency
+        modelBuilder.Entity<Evaluation>()
+            .HasOne(e => e.Competency)
+            .WithMany(c => c.Evaluations)
+            .HasForeignKey(e => e.CompetencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Interview → Decision (одно решение на собеседование)
+        modelBuilder.Entity<Decision>()
+            .HasOne(d => d.Interview)
+            .WithOne(i => i.Decision)
+            .HasForeignKey<Decision>(d => d.InterviewId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ==================== Индексы  ====================
+        modelBuilder.Entity<Interview>()
+            .HasIndex(i => i.CandidateId);
+
+        modelBuilder.Entity<Evaluation>()
+            .HasIndex(e => new { e.InterviewId, e.CompetencyId })
+            .IsUnique(); 
+    }}
