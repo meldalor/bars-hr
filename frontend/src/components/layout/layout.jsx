@@ -60,7 +60,7 @@ function Layout() {
 
       <main style={{ 
         flex: 1, 
-        padding: "80px 20px 20px 20px", 
+        padding: "100px 40px 40px", 
         overflow: "auto",
         backgroundColor: "#f1f1f1"
       }}>
