@@ -1,3 +1,4 @@
+using BarsHr.Api.Domain;
 using BarsHr.Api.Domain.Entities;
 using BarsHr.Api.DTOs.Evaluations;
 using BarsHr.Api.DTOs.Decisions;
@@ -20,6 +21,7 @@ public static class InterviewMappings
         i.GeneralNotes,
         i.InterviewerId,
         i.Interviewer?.FullName,
+        InterviewDefaults.Questions,
         i.Evaluations.Select(e => e.ToDto()).ToList(),
         i.Decision?.ToDto()
     );

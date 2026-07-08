@@ -17,6 +17,7 @@ public record InterviewDto(
     string? GeneralNotes,
     int? InterviewerId,
     string? InterviewerName,
+    IReadOnlyList<string> DefaultQuestions,
     List<EvaluationDto> Evaluations,
     DecisionDto? Decision
 );
