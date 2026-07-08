@@ -4,7 +4,6 @@
     padding: 24px;
     box-sizing: border-box;
     height: 100%;
-    /* Добавлено: чтобы блок растягивался и контент внутри распределялся */
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -41,7 +40,7 @@
 .interview-item {
     width: 100%;
     display: flex;
-    align-items: center;
+    align-items: stretch; 
     border: none;
     border-bottom: 1px solid #ededed;
     background: transparent;
@@ -49,19 +48,24 @@
     font-family: inherit;
     text-align: left;
     cursor: pointer;
+    transition: background 0.2s ease;
+    padding: 6px 0; 
 }
 
 .interview-item:last-child {
     border-bottom: none;
 }
 
+.interview-item:hover .interview-time,
 .interview-item:hover .interview-name,
-.interview-item:focus-visible .interview-name {
-    color: #2563eb;
+.interview-item:hover .interview-vacancy,
+.interview-item:hover .interview-arrow {
+    color: #106AFF;
 }
 
 .interview-item:focus-visible {
-    outline: none;
+    outline: 2px solid #106AFF;
+    outline-offset: 2px;
 }
 
 .interview-time {
@@ -69,6 +73,9 @@
     font-size: 16px;
     font-weight: 500;
     color: #666666;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center; 
 }
 
 .interview-info {
@@ -76,22 +83,31 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    justify-content: center;
 }
 
 .interview-name {
     font-size: 16px;
     font-weight: 600;
     color: #1a1a1a;
-    transition: color .18s ease;
+    transition: color 0.2s ease;
 }
 
 .interview-vacancy {
     font-size: 14px;
     color: #7b7b7b;
+    transition: color 0.2s ease;
 }
 
 .interview-arrow {
-    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%; 
+    width: 40px;
+    font-size: 32px;
     font-weight: 400;
     color: #7b7b7b;
+    transition: color 0.2s ease;
+    flex-shrink: 0;
 }

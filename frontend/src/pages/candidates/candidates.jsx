@@ -242,8 +242,8 @@ export default function Candidates() {
 
   return (
     <div className="candidates-page">
-      <h1 className="candidates-title">
-        База кандидатов: <span>{candidates.length} человек</span>
+      <h1 className="overview-title">
+        База кандидатов: <span className="overview-title-count">{candidates.length} человек</span>
       </h1>
 
       <div className="candidates-tabs">

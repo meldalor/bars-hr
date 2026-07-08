@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import Navigation_Bar from "../ui/Navigation_Bar/Navigation_Bar";
 import "./layout.css";
 
-// Импорт иконок картинками
 import settingsIcon from "../../assets/icons/settings.svg";
 import bellIcon from "../../assets/icons/bell.svg";
 import chevronIcon from "../../assets/icons/chevron-down.svg";
@@ -14,8 +13,7 @@ function Layout() {
   const location = useLocation();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
-
-  // Состояние для кнопки "Наверх"
+  
   const [showScrollButton, setShowScrollButton] = useState(false);
 
   const menuItems = [
@@ -77,8 +75,14 @@ function Layout() {
       <div className="app-wrapper">
         
         <header className="header">
-          {/* ЛЕВО (Логотип) */}
-          <div className="header-logo">Huntly</div>
+          {/* ЛЕВО (Логотип) - теперь кликабельный */}
+          <div 
+            className="header-logo" 
+            onClick={() => navigate("/app/overview")}
+            style={{ cursor: "pointer" }}
+          >
+            Huntly
+          </div>
 
           {/* ПРАВО (ВСЁ ОСТАЛЬНОЕ) */}
           <div className="header-actions">
