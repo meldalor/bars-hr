@@ -22,9 +22,10 @@ builder.Services.AddSwaggerGen(options =>
         BearerFormat = "JWT",
         Description = "JWT-токен из POST /api/auth/login"
     });
-    options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+    // ссылке на схему нужен сам документ, иначе security сериализуется пустым и UI не шлёт токен
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference("Bearer")] = new List<string>()
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
     });
 });
 
@@ -73,7 +74,8 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    // токен из Authorize сохраняется в localStorage и переживает обновление страницы
+    app.UseSwaggerUI(options => options.EnablePersistAuthorization());
 }
 
 app.UseAuthentication();
