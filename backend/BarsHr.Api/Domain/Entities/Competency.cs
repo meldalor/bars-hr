@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-
 namespace BarsHr.Api.Domain.Entities;
 
 [Table("competencies")]
@@ -12,17 +11,11 @@ public class Competency
     [Column("id")]
     public int Id { get; set; }
 
-    [Required]
-    [MaxLength(150)]
-    [Column("name")]
-    public string Name { get; set; } = string.Empty;
+    [Column("skill_id")]
+    public int SkillId { get; set; }
 
-    [Column("description")]
-    public string? Description { get; set; }
-
-    [MaxLength(100)]
-    [Column("category")]
-    public string? Category { get; set; } // Hard Skills / Soft Skills / Culture Fit и т.д.
+    [ForeignKey(nameof(SkillId))]
+    public Skill? Skill { get; set; }
 
     [Column("max_score")]
     public int MaxScore { get; set; } = 5;

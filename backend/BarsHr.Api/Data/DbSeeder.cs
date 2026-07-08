@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BarsHr.Api.Data;
 
-// идемпотентный сид: на чистой БД без него невозможно войти (register закрыт под админа)
 public static class DbSeeder
 {
     public static async Task SeedAsync(BarsHrDbContext context)
@@ -31,20 +30,40 @@ public static class DbSeeder
             }
             else if (existing.Role != role)
             {
-                // ранний register заводил всех с ролью HR — выравниваем под сид
                 existing.Role = role;
             }
         }
 
         await context.SaveChangesAsync();
 
-        // демо-вакансия с матрицей компетенций — только на пустой БД, рабочие данные не трогаем
+        if (!await context.Skills.AnyAsync())
+        {
+            var hardSkills = new[] { "C#", "SQL", "Алгоритмы и структуры данных", "Git" };
+            var softSkills = new[] { "Коммуникация", "Работа в команде", "Самостоятельность", "Обучаемость" };
+            var cultureFitSkills = new[] { "Совпадение ценностей", "Гибкость", "Инициативность", "Клиентоориентированность" };
+
+            foreach (var name in hardSkills)
+                context.Skills.Add(new Skill { Name = name, Type = SkillTypes.Hard });
+
+            foreach (var name in softSkills)
+                context.Skills.Add(new Skill { Name = name, Type = SkillTypes.Soft });
+
+            foreach (var name in cultureFitSkills)
+                context.Skills.Add(new Skill { Name = name, Type = SkillTypes.CultureFit });
+
+            await context.SaveChangesAsync();
+        }
+
         if (!await context.Vacancies.AnyAsync())
         {
             var adminId = await context.Users
                 .Where(u => u.Login == "admin")
                 .Select(u => u.Id)
                 .FirstAsync();
+
+            var csharpSkill = await context.Skills.FirstAsync(s => s.Name == "C#");
+            var sqlSkill = await context.Skills.FirstAsync(s => s.Name == "SQL");
+            var communicationSkill = await context.Skills.FirstAsync(s => s.Name == "Коммуникация");
 
             context.Vacancies.Add(new Vacancy
             {
@@ -53,9 +72,9 @@ public static class DbSeeder
                 CreatedById = adminId,
                 Competencies =
                 {
-                    new Competency { Name = "C# basics", Category = "Hard Skills" },
-                    new Competency { Name = "SQL", Category = "Hard Skills" },
-                    new Competency { Name = "Communication", Category = "Soft Skills" }
+                    new Competency { SkillId = csharpSkill.Id, MaxScore = 5, IsActive = true },
+                    new Competency { SkillId = sqlSkill.Id, MaxScore = 5, IsActive = true },
+                    new Competency { SkillId = communicationSkill.Id, MaxScore = 5, IsActive = true }
                 }
             });
 

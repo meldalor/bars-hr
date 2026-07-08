@@ -8,7 +8,7 @@ public static class EvaluationMappings
     public static EvaluationDto ToDto(this Evaluation e) => new(
         e.Id,
         e.CompetencyId,
-        e.Competency?.Name ?? string.Empty,
+        e.Competency?.Skill?.Name ?? string.Empty,
         e.Score,
         e.Competency?.MaxScore ?? 5,
         e.Comment,

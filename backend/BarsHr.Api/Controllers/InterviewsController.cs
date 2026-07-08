@@ -1,3 +1,4 @@
+using BarsHr.Api.DTOs.Decisions;
 using BarsHr.Api.DTOs.Interviews;
 using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
@@ -50,4 +51,20 @@ public class InterviewsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    
+    [HttpPost("{interviewId}/decision")]
+    public async Task<ActionResult<DecisionDto>> MakeDecision(
+        int interviewId, 
+        [FromBody] CreateDecisionRequest request)
+    {
+        var currentUserId = User.GetUserId();
+
+        var result = await _interviewService.MakeDecisionAsync(interviewId, request, currentUserId);
+
+        if (result == null)
+            return NotFound(new { message = "Интервью не найдено" });
+
+        return Ok(result);
+    }
+
 }
