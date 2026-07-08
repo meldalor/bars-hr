@@ -1,6 +1,7 @@
 using BarsHr.Api.Data;
 using BarsHr.Api.DTOs.Interviews;
 using BarsHr.Api.DTOs.Decisions;
+using BarsHr.Api.Domain;
 using BarsHr.Api.Domain.Entities;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -89,7 +90,12 @@ public class InterviewService : IInterviewService
         CreateDecisionRequest request, 
         int currentUserId)
     {
+        if (!DecisionTypes.All.Contains(request.DecisionType))
+            throw new ArgumentException(
+                $"Тип решения должен быть одним из: {string.Join(", ", DecisionTypes.All)}");
+
         var interview = await _context.Interviews
+            .Include(i => i.Application)
             .Include(i => i.Decision)
                 .ThenInclude(d => d!.MadeBy)
             .FirstOrDefaultAsync(i => i.Id == interviewId);
@@ -113,13 +119,23 @@ public class InterviewService : IInterviewService
             decision.MadeById = currentUserId;
             decision.MadeAt = DateTime.UtcNow;
         }
-        interview.Status = request.DecisionType == "Accepted" ? "Completed" : 
-                        request.DecisionType == "Rejected" ? "Rejected" : interview.Status;
 
+        interview.Status = request.DecisionType == DecisionTypes.Accepted ? "Completed" : "Rejected";
         interview.UpdatedAt = DateTime.UtcNow;
+
+        // решение по интервью двигает статус отклика в финальный
+        if (interview.Application != null)
+            interview.Application.Status =
+                request.DecisionType == DecisionTypes.Accepted ? "Approved" : "Rejected";
 
         await _context.SaveChangesAsync();
 
-        return decision.ToDto();
+        // перезагрузка с автором: у только что созданного решения nav MadeBy ещё не подтянут
+        var saved = await _context.Decisions
+            .AsNoTracking()
+            .Include(d => d.MadeBy)
+            .FirstAsync(d => d.Id == decision.Id);
+
+        return saved.ToDto();
     }
 }

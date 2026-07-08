@@ -1,3 +1,4 @@
+using BarsHr.Api.Domain;
 using BarsHr.Api.DTOs.Decisions;
 using BarsHr.Api.DTOs.Interviews;
 using BarsHr.Api.Extensions;
@@ -52,19 +53,28 @@ public class InterviewsController : ControllerBase
         }
     }
     
+    // итоговое решение выносит DecisionMaker (админу тоже разрешаем)
+    [Authorize(Roles = Roles.DecisionMaker + "," + Roles.Admin)]
     [HttpPost("{interviewId}/decision")]
     public async Task<ActionResult<DecisionDto>> MakeDecision(
-        int interviewId, 
+        int interviewId,
         [FromBody] CreateDecisionRequest request)
     {
         var currentUserId = User.GetUserId();
 
-        var result = await _interviewService.MakeDecisionAsync(interviewId, request, currentUserId);
+        try
+        {
+            var result = await _interviewService.MakeDecisionAsync(interviewId, request, currentUserId);
 
-        if (result == null)
-            return NotFound(new { message = "Интервью не найдено" });
+            if (result == null)
+                return NotFound(new { message = "Интервью не найдено" });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
 }
