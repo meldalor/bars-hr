@@ -428,6 +428,13 @@ export function getAllCandidates() {
 }
 
 export function getCandidateById(id) {
-    const candidate = CANDIDATES.find((item) => item.id === id);
-    return candidate ? { ...candidate } : null;
+    const found = CANDIDATES.find((candidate) => candidate.id === id);
+    return found ? { ...found } : null;
+}
+
+export function setCandidateSubstatus(id, substatus) {
+    const found = CANDIDATES.find((candidate) => candidate.id === id);
+    if (found) {
+        found.substatus = substatus;
+    }
 }

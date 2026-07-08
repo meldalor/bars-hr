@@ -154,25 +154,63 @@
     color: #4b5563;
 }
 
-.iv-link-btn {
+.iv-link-notice {
     margin-top: 16px;
-    height: 38px;
-    padding: 0 18px;
+    padding: 10px 14px;
 
-    border: none;
-    border-radius: 999px;
-    background: #2563eb;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 10px;
 
-    color: #ffffff;
-    font-family: inherit;
+    color: #047857;
     font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
 }
 
-.iv-link-btn:hover {
-    background: #1d4ed8;
+.iv-cand-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+
+    margin-top: 18px;
+}
+
+.iv-slot-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    height: 46px;
+    padding: 0 18px;
+
+    border-radius: 999px;
+    background: #fceef5;
+
+    color: #db2777;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.iv-slot-badge svg {
+    flex-shrink: 0;
+}
+
+.iv-modal-title {
+    margin: 0 0 22px;
+
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.iv-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.iv-modal-actions .iv-btn {
+    height: 42px;
 }
 
 .iv-card {

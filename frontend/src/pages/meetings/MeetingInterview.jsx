@@ -7,10 +7,14 @@ import {
     getMeetingById,
     getInterview,
     saveInterview,
+    removeMeeting,
+    formatMeetingSlot,
     INTERVIEW_QUESTION_HINT,
     MATRIX_GROUP_TITLES,
 } from "../../mocks/interviews.js";
-import { IconDocument } from "../vacancies/icons.jsx";
+import { setCandidateSubstatus } from "../../mocks/candidates.js";
+import { IconDocument, IconCalendar } from "../vacancies/icons.jsx";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 
 const MATRIX_KEYS = ["hard", "soft", "culture"];
 
@@ -61,6 +65,7 @@ export default function MeetingInterview() {
     const [newSkill, setNewSkill] = useState("");
     const [finalScore, setFinalScore] = useState(initial.finalScore);
     const [finalComment, setFinalComment] = useState(initial.finalComment);
+    const [confirmCancel, setConfirmCancel] = useState(false);
 
     const back = () => navigate("/app/meetings");
 
@@ -74,6 +79,22 @@ export default function MeetingInterview() {
             </div>
         );
     }
+
+    const handleCancelMeeting = () => {
+        if (meeting.candidateId) {
+            setCandidateSubstatus(meeting.candidateId, "Интервью не назначено");
+        }
+        removeMeeting(meeting.id);
+        navigate("/app/meetings");
+    };
+
+    const confirmCancelMeeting = () => {
+        setConfirmCancel(false);
+        handleCancelMeeting();
+    };
+
+    const handleReschedule = () =>
+        navigate("/app/meetings", { state: { reschedule: { meetingId: meeting.id } } });
 
     const setQuestionRating = (index, rating) =>
         setQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, rating } : q)));
@@ -207,9 +228,29 @@ export default function MeetingInterview() {
                 </div>
                 <div className="iv-cand-info">{meeting.additionalInfo}</div>
 
-                <button type="button" className="iv-link-btn">
-                    Ссылка на встречу
-                </button>
+                <div className="iv-cand-actions">
+                    <span className="iv-slot-badge">
+                        <IconCalendar size={16} />
+                        {formatMeetingSlot(meeting)}
+                    </span>
+                    <button
+                        type="button"
+                        className="iv-btn danger"
+                        onClick={() => setConfirmCancel(true)}
+                    >
+                        Отменить встречу
+                    </button>
+                    <button type="button" className="iv-btn primary">
+                        Ссылка на встречу
+                    </button>
+                    <button
+                        type="button"
+                        className="iv-btn primary"
+                        onClick={handleReschedule}
+                    >
+                        Изменить время
+                    </button>
+                </div>
             </div>
 
             {step === 1 && (
@@ -223,7 +264,9 @@ export default function MeetingInterview() {
                                     <span className="iv-q-num">{index + 1}</span>
                                     <div>
                                         <div className="iv-q-text">{question.text}</div>
-                                        <div className="iv-q-hint">{INTERVIEW_QUESTION_HINT}</div>
+                                        <div className="iv-q-hint">
+                                            {question.hint || INTERVIEW_QUESTION_HINT}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -395,6 +438,28 @@ export default function MeetingInterview() {
                     </div>
                 </>
             )}
+
+            <Modal open={confirmCancel} onClose={() => setConfirmCancel(false)}>
+                <p className="iv-modal-title">
+                    Отменить встречу с {meeting.fullName}?
+                </p>
+                <div className="iv-modal-actions">
+                    <button
+                        type="button"
+                        className="iv-btn ghost"
+                        onClick={() => setConfirmCancel(false)}
+                    >
+                        Нет
+                    </button>
+                    <button
+                        type="button"
+                        className="iv-btn danger"
+                        onClick={confirmCancelMeeting}
+                    >
+                        Отменить встречу
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }
