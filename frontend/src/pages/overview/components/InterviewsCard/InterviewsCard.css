@@ -2,27 +2,21 @@
     background: #ffffff;
     border-radius: 24px;
     padding: 24px;
-
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .interviews-title {
     margin: 0;
-
     text-align: center;
-
     font-size: 20px;
     font-weight: 700;
-
     color: #1a1a1a;
 }
 
 .interviews-date {
     margin: 14px 0 10px;
-
     font-size: 16px;
     font-weight: 500;
-
     color: #1a1a1a;
 }
 
@@ -32,31 +26,42 @@
 }
 
 .interview-item {
+    width: 100%;
     display: flex;
     align-items: center;
     gap: 18px;
-
     padding: 18px 0;
-
+    border: none;
     border-bottom: 1px solid #ededed;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
 }
 
 .interview-item:last-child {
     border-bottom: none;
 }
 
+.interview-item:hover .interview-name,
+.interview-item:focus-visible .interview-name {
+    color: #2563eb;
+}
+
+.interview-item:focus-visible {
+    outline: none;
+}
+
 .interview-time {
     width: 62px;
-
     font-size: 16px;
     font-weight: 500;
-
     color: #666666;
 }
 
 .interview-info {
     flex: 1;
-
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -65,19 +70,17 @@
 .interview-name {
     font-size: 16px;
     font-weight: 600;
-
     color: #1a1a1a;
+    transition: color .18s ease;
 }
 
 .interview-vacancy {
     font-size: 14px;
-
     color: #7b7b7b;
 }
 
 .interview-arrow {
     font-size: 28px;
     font-weight: 400;
-
     color: #7b7b7b;
 }

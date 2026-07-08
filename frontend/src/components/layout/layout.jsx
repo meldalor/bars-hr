@@ -1,7 +1,7 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import Navigation_Bar from "../ui/Navigation_Bar/Navigation_Bar";
-import "./Layout.css";
+import "./layout.css";
 
 // Импорт иконок картинками
 import settingsIcon from "../../assets/icons/settings.svg";
@@ -91,7 +91,7 @@ function Layout() {
             />
 
             {/* Круглая кнопка Настройки */}
-            <button className="header-btn" aria-label="Настройки">
+            <button className="header-btn" aria-label="Настройки" onClick={() => navigate("/app/admin")}>
               <img src={settingsIcon} alt="Настройки" className="header-btn-icon" />
             </button>
 
