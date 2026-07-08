@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IMaskInput } from "react-imask";
-import "../../pages/candidates/CreateCandidate.css"; // Путь к CSS (можно оставить или скопировать CSS в components)
+import "../../pages/candidates/CreateCandidate.css"; // Путь к CSS
 
 const MOCK_SKILLS = ["Язык C#", "Язык JS", "Язык Py", "Язык Kotlin", "Знания Git", "Английский"];
 const REQUIRED_FIELDS = ["lastName", "firstName", "middleName", "city", "phone", "vacancy"];
@@ -11,6 +11,53 @@ const nextId = () => `row-${Date.now()}-${uidCounter++}`;
 
 const emptyEducation = () => ({ id: nextId(), level: "", institution: "", faculty: "", start: "", end: "" });
 const emptyExperience = () => ({ id: nextId(), company: "", position: "", start: "", end: "", info: "" });
+
+// --- ФУНКЦИЯ РАСЧЕТА ОБЩЕГО СТАЖА ---
+const calculateTotalExperience = (experienceList) => {
+  let totalMonths = 0;
+
+  experienceList.forEach((exp) => {
+    if (!exp.start) return;
+
+    let startDate = null;
+    if (exp.start.includes('.')) {
+      const [d, m, y] = exp.start.split('.');
+      startDate = new Date(`${y}-${m}-${d}`);
+    } else {
+      startDate = new Date(exp.start);
+    }
+
+    if (isNaN(startDate.getTime())) return;
+
+    let endDate = null;
+    if (exp.end) {
+      if (exp.end.includes('.')) {
+        const [d, m, y] = exp.end.split('.');
+        endDate = new Date(`${y}-${m}-${d}`);
+      } else {
+        endDate = new Date(exp.end);
+      }
+    } else {
+      endDate = new Date();
+    }
+
+    if (startDate <= endDate) {
+      const diffMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+                         (endDate.getMonth() - startDate.getMonth());
+      totalMonths += diffMonths;
+    }
+  });
+
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+
+  let result = "";
+  if (years > 0) result += `${years} ${years === 1 ? 'год' : 'года'}`;
+  if (months > 0) result += ` ${months} ${months === 1 ? 'месяц' : 'месяца'}`;
+  if (!result) return "Опыт не указан";
+
+  return result.trim();
+};
 
 // ---------- Мелкие переиспользуемые поля ----------
 const FieldError = ({ id, message }) =>
@@ -196,8 +243,19 @@ export default function CandidateForm({
   const updateExperience = (id, field, value) =>
     setExperience((prev) => prev.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
 
+  const progress = () => {
+    const total = REQUIRED_FIELDS.length + 1;
+    const filled =
+      REQUIRED_FIELDS.filter((f) => formData[f].trim() !== "").length +
+      (formData.selectedSkills.length > 0 ? 1 : 0);
+    return Math.round((filled / total) * 100);
+  };
+
   const mainSectionDone =
     REQUIRED_FIELDS.every((f) => formData[f].trim() !== "") && formData.selectedSkills.length > 0;
+
+  // --- ВЫЧИСЛЯЕМ ОБЩИЙ СТАЖ ---
+  const totalExperience = calculateTotalExperience(experience);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -249,7 +307,7 @@ export default function CandidateForm({
         }
       }}
     >
-      {/* --- БЛОК 1 --- */}
+      {/* --- БЛОК 1: ОСНОВНАЯ ИНФОРМАЦИЯ --- */}
       <div className="form-section">
         <div className="section-header-left">
           <h2 className="section-title">
@@ -266,70 +324,13 @@ export default function CandidateForm({
           <InputField id="telegram" label="Телеграм" placeholder="Введите @никнейм" name="telegram" value={formData.telegram} onChange={handleChange} />
         </div>
         <div className="section-grid">
-          <InputField id="vacancy" label="Вакансия" required placeholder="Введите название" name="vacancy" value={formData.vacancy} onChange={handleChange} error={errors.vacancy} />
+          {/* ИЗМЕНЕНО: Вакансия -> Специальность */}
+          <InputField id="vacancy" label="Специальность" required placeholder="Введите специальность" name="vacancy" value={formData.vacancy} onChange={handleChange} error={errors.vacancy} />
           <TextAreaField id="info" label="Дополнительная информация" value={formData.info} onChange={handleChange} name="info" placeholder="Например: готов к переезду, доступен с понедельника" maxLength={2000} />
-        </div>
-
-        <div className="skills-block">
-          <label className="form-label section-label-left">
-            Навыки <span className="required-star">*</span>
-          </label>
-          <div className="skills-list">
-            {MOCK_SKILLS.map((skill) => {
-              const isSelected = formData.selectedSkills.includes(skill);
-              return (
-                <span
-                  key={skill}
-                  className={`skill-tag ${isSelected ? "active" : ""}`}
-                  onClick={() => toggleSkill(skill)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleSkill(skill))}
-                >
-                  {skill}
-                  {isSelected && <span className="skill-remove">×</span>}
-                </span>
-              );
-            })}
-            {formData.selectedSkills
-              .filter((s) => !MOCK_SKILLS.includes(s))
-              .map((skill) => (
-                <span
-                  key={skill}
-                  className="skill-tag active"
-                  onClick={() => toggleSkill(skill)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleSkill(skill))}
-                >
-                  {skill}
-                  <span className="skill-remove">×</span>
-                </span>
-              ))}
-
-            <div className="add-skill-wrapper">
-              {isAddingSkill && (
-                <input
-                  type="text"
-                  className="skill-input-hidden"
-                  value={newSkillInput}
-                  onChange={(e) => setNewSkillInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addNewSkill())}
-                  autoFocus
-                  placeholder="Навык..."
-                  aria-label="Название нового навыка"
-                />
-              )}
-              <button type="button" className="skill-add-btn-large" onClick={addNewSkill}>
-                + Добавить
-              </button>
-            </div>
-          </div>
-          <FieldError message={errors.selectedSkills} />
         </div>
       </div>
 
-      {/* --- БЛОК 2 --- */}
+      {/* --- БЛОК 2: ОБРАЗОВАНИЕ --- */}
       <div className="form-section">
         <div className="section-header">
           <h2 className="section-title">
@@ -398,11 +399,11 @@ export default function CandidateForm({
         ))}
       </div>
 
-      {/* --- БЛОК 3 --- */}
+      {/* --- БЛОК 3: ОПЫТ РАБОТЫ И НАВЫКИ --- */}
       <div className="form-section experience-section">
         <div className="section-header">
           <h2 className="section-title">
-            Опыт работы <span className="section-optional">необязательно</span>
+            Опыт работы и навыки <span className="section-optional">необязательно</span>
           </h2>
           <button type="button" className="add-btn" onClick={addExperience}>
             + Добавить место работы
@@ -463,6 +464,87 @@ export default function CandidateForm({
             />
           </RemovableBlock>
         ))}
+
+        {/* --- БЛОК НАВЫКОВ (ПЕРЕМЕЩЕН В КОНЕЦ) --- */}
+        <div className="skills-block" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--cc-card-border)' }}>
+          <label className="form-label section-label-left">
+            Навыки <span className="required-star">*</span>
+          </label>
+          <div className="skills-list">
+            {MOCK_SKILLS.map((skill) => {
+              const isSelected = formData.selectedSkills.includes(skill);
+              return (
+                <span
+                  key={skill}
+                  className={`skill-tag ${isSelected ? "active" : ""}`}
+                  onClick={() => toggleSkill(skill)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleSkill(skill))}
+                >
+                  {skill}
+                  {isSelected && <span className="skill-remove">×</span>}
+                </span>
+              );
+            })}
+            {formData.selectedSkills
+              .filter((s) => !MOCK_SKILLS.includes(s))
+              .map((skill) => (
+                <span
+                  key={skill}
+                  className="skill-tag active"
+                  onClick={() => toggleSkill(skill)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleSkill(skill))}
+                >
+                  {skill}
+                  <span className="skill-remove">×</span>
+                </span>
+              ))}
+
+            <div className="add-skill-wrapper">
+              {isAddingSkill && (
+                <input
+                  type="text"
+                  className="skill-input-hidden"
+                  value={newSkillInput}
+                  onChange={(e) => setNewSkillInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addNewSkill())}
+                  autoFocus
+                  placeholder="Навык..."
+                  aria-label="Название нового навыка"
+                />
+              )}
+              <button type="button" className="skill-add-btn-large" onClick={addNewSkill}>
+                + Добавить
+              </button>
+            </div>
+
+            {/* СТАЖ КАК ПОЛНОЦЕННЫЙ НАВЫК */}
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                height: '32px',
+                padding: '0 16px',
+                boxSizing: 'border-box',
+                background: '#FF8800',
+                color: '#ffffff',
+                border: '1px solid transparent',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: '500',
+                lineHeight: 1,
+                userSelect: 'none',
+              }}
+            >
+              Опыт: {totalExperience}
+            </span>
+
+          </div>
+          <FieldError message={errors.selectedSkills} />
+        </div>
 
         <div className="form-actions-right">
           <button type="button" className="btn-cancel" onClick={handleCancel}>

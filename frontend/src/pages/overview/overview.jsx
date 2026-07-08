@@ -10,12 +10,12 @@ function Overview() {
         <main className="overview-page">
             <h1 className="overview-title">Обзор</h1>
 
-            <StatisticsCards />
-
             <section className="overview-top">
                 <ProfileCard />
                 <InterviewsCard />
             </section>
+
+            <StatisticsCards />
 
             <ActivityTable />
         </main>

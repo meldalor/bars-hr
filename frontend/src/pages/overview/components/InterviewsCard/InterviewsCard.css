@@ -2,19 +2,32 @@
     background: #ffffff;
     border-radius: 24px;
     padding: 24px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+    height: 100%;
+    /* Добавлено: чтобы блок растягивался и контент внутри распределялся */
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .interviews-title {
     margin: 0;
-    text-align: center;
+    text-align: left;
     font-size: 20px;
     font-weight: 700;
     color: #1a1a1a;
 }
 
+.interviews-group {
+    margin-top: 14px;
+}
+
+.interviews-group:first-of-type {
+    margin-top: 14px;
+}
+
 .interviews-date {
-    margin: 14px 0 10px;
+    margin: 0 0 6px;
     font-size: 16px;
     font-weight: 500;
     color: #1a1a1a;
@@ -29,8 +42,6 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 18px;
-    padding: 18px 0;
     border: none;
     border-bottom: 1px solid #ededed;
     background: transparent;

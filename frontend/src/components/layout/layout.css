@@ -8,13 +8,14 @@
   box-sizing: border-box;
 }
 
-/* Центральный контейнер 1800px */
+/* Центральный контейнер 1700px */
 .app-wrapper {
   width: 100%;
-  max-width: 1800px;
+  max-width: 1700px; /* ИЗМЕНЕНО: 1600px -> 1700px */
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  padding: 0 20px;
 }
 
 /* Шапка - прозрачная */
@@ -199,6 +200,7 @@
   overflow: auto;
   box-sizing: border-box;
 }
+
 /* Адаптивность */
 @media (max-width: 1024px) {
   .header-logo {

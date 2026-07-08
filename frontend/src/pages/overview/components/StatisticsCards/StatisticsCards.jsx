@@ -1,8 +1,10 @@
 import "./StatisticsCards.css";
+import { useNavigate } from "react-router-dom";
 
 import freeIcon from "../../../../assets/overview/free.svg";
 import workIcon from "../../../../assets/overview/work.svg";
 import testingIcon from "../../../../assets/overview/testing.svg";
+import pendingIcon from "../../../../assets/overview/pending.svg";
 import interviewIcon from "../../../../assets/overview/interview.svg";
 import offerIcon from "../../../../assets/overview/offer.svg";
 import acceptedIcon from "../../../../assets/overview/accepted.svg";
@@ -16,16 +18,28 @@ const statistics = [
         icon: freeIcon,
     },
     {
-        title: "В работе",
-        value: 80,
-        change: "+10 за неделю",
-        icon: workIcon,
-    },
-    {
         title: "Тестирование",
         value: 40,
         change: "+12 за неделю",
         icon: testingIcon,
+    },
+    {
+        title: "Ожидание решения",
+        value: 16,
+        change: "+5 за неделю",
+        icon: pendingIcon,
+    },
+    {
+        title: "Принят",
+        value: 14,
+        change: "+7 за неделю",
+        icon: acceptedIcon,
+    },
+    {
+        title: "В работе",
+        value: 80,
+        change: "+10 за неделю",
+        icon: workIcon,
     },
     {
         title: "Интервью",
@@ -40,12 +54,6 @@ const statistics = [
         icon: offerIcon,
     },
     {
-        title: "Принят",
-        value: 14,
-        change: "+7 за неделю",
-        icon: acceptedIcon,
-    },
-    {
         title: "Отказ",
         value: 6,
         change: "+2 за неделю",
@@ -54,33 +62,43 @@ const statistics = [
 ];
 
 function StatisticsCards() {
+    const navigate = useNavigate();
+
+    const handleCardClick = () => {
+        navigate("/app/candidates");
+    };
+
     return (
-        <section className="statistics-cards">
-            {statistics.map((card) => (
-                <div
-                    className="statistics-card"
-                    key={card.title}
-                >
-                    <img
-                        src={card.icon}
-                        alt={card.title}
-                        className="statistics-icon"
-                    />
+        <div className="statistics-container">
+            <section className="statistics-cards">
+                {statistics.map((card) => (
+                    <div
+                        className="statistics-card"
+                        key={card.title}
+                        onClick={handleCardClick}
+                        style={{ cursor: "pointer" }}
+                    >
+                        <img
+                            src={card.icon}
+                            alt={card.title}
+                            className="statistics-icon"
+                        />
 
-                    <div className="statistics-info">
-                        <h3>{card.title}</h3>
+                        <div className="statistics-info">
+                            <h3>{card.title}</h3>
 
-                        <span className="statistics-value">
-                            {card.value}
-                        </span>
+                            <span className="statistics-value">
+                                {card.value}
+                            </span>
 
-                        <span className="statistics-change">
-                            {card.change}
-                        </span>
+                            <span className="statistics-change">
+                                {card.change}
+                            </span>
+                        </div>
                     </div>
-                </div>
-            ))}
-        </section>
+                ))}
+            </section>
+        </div>
     );
 }
 
