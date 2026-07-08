@@ -1,10 +1,13 @@
 using BarsHr.Api.DTOs.Candidates;
+using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarsHr.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class CandidatesController : ControllerBase
 {
@@ -38,8 +41,7 @@ public class CandidatesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CandidateDto>> Create([FromBody] CreateCandidateRequest request)
     {
-        // TODO: currentUserId из JWT-клейма — появится вместе с [Authorize]
-        var currentUserId = 1;
+        var currentUserId = User.GetUserId();
 
         try
         {
@@ -55,7 +57,7 @@ public class CandidatesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<CandidateDto>> Update(int id, [FromBody] UpdateCandidateRequest request)
     {
-        var currentUserId = 1; // TODO: из JWT
+        var currentUserId = User.GetUserId();
 
         try
         {
