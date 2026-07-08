@@ -1,0 +1,299 @@
+.vcreate-card {
+    padding: 28px 32px;
+
+    background: #ffffff;
+    border: 1px solid #ececf0;
+    border-radius: 18px;
+
+    color-scheme: light;
+}
+
+.vcreate-section {
+    margin: 0 0 24px;
+
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.vcreate-cols {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+.vcreate-col {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.vcreate-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vcreate-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.vcreate-req-mark {
+    color: #dc2626;
+}
+
+.vcreate-salary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.vcreate-salary .input {
+    flex: 1;
+}
+
+.vcreate-salary-unit {
+    white-space: nowrap;
+    font-size: 15px;
+    color: #374151;
+}
+
+.vcreate-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.vcreate-chips.invalid {
+    padding: 6px;
+    outline: 1px solid #dc2626;
+    border-radius: 10px;
+}
+
+.vcreate-chip {
+    height: 30px;
+    padding: 0 14px;
+
+    border: none;
+    border-radius: 8px;
+    background: #565b66;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.vcreate-chip:hover {
+    background: #474c56;
+}
+
+.vcreate-add-btn {
+    align-self: flex-start;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    height: 30px;
+    padding: 0 12px;
+
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.vcreate-add-btn:hover {
+    background: #1d4ed8;
+}
+
+.vcreate-add-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vcreate-add-input {
+    flex: 1;
+
+    height: 36px;
+    padding: 0 12px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    outline: none;
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.vcreate-add-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.vcreate-add-confirm {
+    height: 36px;
+    padding: 0 14px;
+
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.vcreate-add-confirm:hover {
+    background: #1d4ed8;
+}
+
+.vcreate-textarea-wrap {
+    position: relative;
+}
+
+.vcreate-textarea {
+    width: 100%;
+    min-height: 190px;
+    padding: 12px 14px 28px;
+    box-sizing: border-box;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #ffffff;
+
+    color: #111827;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vcreate-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.vcreate-textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.vcreate-counter {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+
+    font-size: 12px;
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.input.vcreate-invalid,
+.select.vcreate-invalid {
+    border-color: #dc2626;
+}
+
+.vcreate-error-note {
+    margin-top: 18px;
+
+    text-align: right;
+    color: #dc2626;
+    font-size: 14px;
+}
+
+.vcreate-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+
+    margin-top: 24px;
+}
+
+.vcreate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    height: 46px;
+    padding: 0 22px;
+
+    border: none;
+    border-radius: 999px;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.vcreate-btn.primary {
+    background: #2563eb;
+}
+
+.vcreate-btn.primary:hover {
+    background: #1d4ed8;
+}
+
+.vcreate-btn.danger {
+    background: #dc2626;
+}
+
+.vcreate-btn.danger:hover {
+    background: #b91c1c;
+}
+
+.vcreate-btn.ghost {
+    background: #f1f2f5;
+    color: #1a1a1a;
+}
+
+.vcreate-btn.ghost:hover {
+    background: #e5e7eb;
+}
+
+.vcreate-modal-title {
+    margin: 0 0 22px;
+
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.vcreate-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+@media (max-width: 900px) {
+    .vcreate-cols {
+        flex-direction: column;
+        gap: 18px;
+    }
+}

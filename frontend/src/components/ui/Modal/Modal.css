@@ -1,0 +1,48 @@
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(16, 24, 40, 0.45);
+    animation: modal-fade 0.15s ease;
+}
+
+.modal-dialog {
+    width: 100%;
+    max-width: 420px;
+
+    padding: 24px;
+    box-sizing: border-box;
+
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(16, 32, 64, 0.24);
+
+    animation: modal-pop 0.15s ease;
+}
+
+@keyframes modal-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modal-pop {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}

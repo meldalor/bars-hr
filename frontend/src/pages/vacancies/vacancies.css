@@ -288,33 +288,33 @@
 
 .vd-desc-btn {
     flex-shrink: 0;
-    margin-left: auto;
 
     display: inline-flex;
     align-items: center;
     gap: 6px;
 
-    padding: 7px 16px;
+    height: 44px;
+    padding: 0 20px;
+    box-sizing: border-box;
 
-    border: 1px solid #d5d7de;
-    border-radius: 999px;
+    border: none;
+    border-radius: 26px;
     background: #ffffff;
 
-    color: #1a1a1a;
+    color: #111827;
     font-family: inherit;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 500;
 
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.vd-desc-btn:hover {
-    background: #f7f7f9;
+.vd-desc-btn:not(.active):hover {
+    color: #2563eb;
 }
 
 .vd-desc-btn.active {
-    border-color: #2563eb;
     background: #2563eb;
     color: #ffffff;
 }

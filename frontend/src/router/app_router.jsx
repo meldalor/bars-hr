@@ -23,6 +23,7 @@ function App_Router() {
         <Route path="overview" element={<Overview />} />
         <Route path="vacancies" element={<Vacancies />} />
         <Route path="vacancies/new" element={<VacancyCreate />} />
+        <Route path="vacancies/:id/edit" element={<VacancyCreate />} />
         <Route path="vacancies/:id" element={<VacancyDetail />} />
         <Route path="candidates" element={<Candidates />} />
         <Route path="candidates/create" element={<CreateCandidate />} />
