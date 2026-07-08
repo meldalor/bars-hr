@@ -8,7 +8,7 @@ namespace BarsHr.Api.Pdf;
 // единый каркас страницы A4: поля, шрифт, шапка и подвал; тело задаёт документ
 public static class PdfLayout
 {
-    public static void Page(IDocumentContainer container, string title, Action<IContainer> body)
+    public static void Page(IDocumentContainer container, string? title, Action<IContainer> body)
     {
         container.Page(page =>
         {

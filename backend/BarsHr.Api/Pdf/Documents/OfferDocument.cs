@@ -14,7 +14,7 @@ public class OfferDocument : IDocument
 
     public void Compose(IDocumentContainer container)
     {
-        PdfLayout.Page(container, "Предложение о работе", body =>
+        PdfLayout.Page(container, null, body =>
         {
             body.Column(col =>
             {

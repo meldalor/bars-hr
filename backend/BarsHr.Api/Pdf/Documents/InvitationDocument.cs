@@ -14,7 +14,7 @@ public class InvitationDocument : IDocument
 
     public void Compose(IDocumentContainer container)
     {
-        PdfLayout.Page(container, "Приглашение на собеседование", body =>
+        PdfLayout.Page(container, null, body =>
         {
             body.Column(col =>
             {

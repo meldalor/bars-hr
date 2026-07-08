@@ -14,7 +14,7 @@ public class RejectionDocument : IDocument
 
     public void Compose(IDocumentContainer container)
     {
-        PdfLayout.Page(container, "Ответ по отклику", body =>
+        PdfLayout.Page(container, null, body =>
         {
             body.Column(col =>
             {
