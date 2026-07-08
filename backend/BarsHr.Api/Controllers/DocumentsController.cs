@@ -24,4 +24,20 @@ public class DocumentsController : ControllerBase
         if (pdf == null) return NotFound();
         return File(pdf, "application/pdf", $"otkaz-{applicationId}.pdf");
     }
+
+    [HttpGet("invitation/{applicationId}")]
+    public async Task<IActionResult> Invitation(int applicationId)
+    {
+        var pdf = await _documentService.GenerateInvitationAsync(applicationId, User.GetUserId());
+        if (pdf == null) return NotFound();
+        return File(pdf, "application/pdf", $"priglashenie-{applicationId}.pdf");
+    }
+
+    [HttpGet("offer/{applicationId}")]
+    public async Task<IActionResult> Offer(int applicationId)
+    {
+        var pdf = await _documentService.GenerateOfferAsync(applicationId, User.GetUserId());
+        if (pdf == null) return NotFound();
+        return File(pdf, "application/pdf", $"offer-{applicationId}.pdf");
+    }
 }

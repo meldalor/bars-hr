@@ -1,3 +1,4 @@
+using BarsHr.Api.Pdf.Components;
 using BarsHr.Api.Pdf.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -38,10 +39,7 @@ public class RejectionDocument : IDocument
                     });
                 }
 
-                col.Item().PaddingTop(24).Text("С уважением,");
-                col.Item().Text(_model.HrName).Bold();
-                col.Item().Text("БАРС Груп");
-                col.Item().PaddingTop(4).Text(PdfFormat.Date(_model.Date)).FontColor(PdfTheme.Muted);
+                col.Item().PaddingTop(24).Element(c => Signature.Compose(c, _model.HrName, _model.Date));
             });
         });
     }
