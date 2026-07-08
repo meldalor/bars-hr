@@ -40,4 +40,12 @@ public class DocumentsController : ControllerBase
         if (pdf == null) return NotFound();
         return File(pdf, "application/pdf", $"offer-{applicationId}.pdf");
     }
+
+    [HttpGet("interview-protocol/{interviewId}")]
+    public async Task<IActionResult> InterviewProtocol(int interviewId)
+    {
+        var pdf = await _documentService.GenerateInterviewProtocolAsync(interviewId);
+        if (pdf == null) return NotFound();
+        return File(pdf, "application/pdf", $"protokol-{interviewId}.pdf");
+    }
 }

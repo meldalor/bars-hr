@@ -1,4 +1,5 @@
 using BarsHr.Api.Data;
+using BarsHr.Api.Domain;
 using BarsHr.Api.Pdf;
 using BarsHr.Api.Pdf.Documents;
 using BarsHr.Api.Pdf.Models;
@@ -108,6 +109,41 @@ public class DocumentService : IDocumentService
             DateTime.Now);
 
         return new OfferDocument(model).GeneratePdf();
+    }
+
+    public async Task<byte[]?> GenerateInterviewProtocolAsync(int interviewId)
+    {
+        var interview = await _context.Interviews
+            .AsNoTracking()
+            .Include(i => i.Application)!.ThenInclude(a => a!.Candidate)
+            .Include(i => i.Application)!.ThenInclude(a => a!.Vacancy)!
+                .ThenInclude(v => v!.Competencies.Where(c => c.IsActive))!
+                .ThenInclude(c => c.Skill)
+            .Include(i => i.Interviewer)
+            .FirstOrDefaultAsync(i => i.Id == interviewId);
+
+        if (interview == null)
+            return null;
+
+        var vacancyCompetencies = interview.Application?.Vacancy?.Competencies;
+        var competencies = vacancyCompetencies == null
+            ? new List<ProtocolCompetency>()
+            : vacancyCompetencies
+                .OrderBy(c => c.Skill!.Type)
+                .ThenBy(c => c.Skill!.Name)
+                .Select(c => new ProtocolCompetency(c.Skill!.Name, c.Skill.Type, c.MaxScore))
+                .ToList();
+
+        var model = new InterviewProtocolModel(
+            interview.Application?.Candidate?.FullName ?? "—",
+            interview.Application?.Vacancy?.Title ?? "—",
+            interview.Interviewer?.FullName,
+            interview.ScheduledAt,
+            interview.Plan,
+            InterviewDefaults.Questions,
+            competencies);
+
+        return new InterviewProtocolDocument(model).GeneratePdf();
     }
 
     private async Task<string> GetHrNameAsync(int userId) =>
