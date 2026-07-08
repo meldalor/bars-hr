@@ -71,6 +71,28 @@ public class VacanciesController : ControllerBase
         }
     }
 
+    [HttpPut("{id}/competencies")]
+    public async Task<ActionResult<VacancyDto>> SetCompetencies(
+        int id,
+        [FromBody] List<CompetencyItem> competencies)
+    {
+        try
+        {
+            var updated = await _vacancyService.SetCompetenciesAsync(id, competencies);
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            // попытка убрать компетенцию, по которой уже есть оценки
+            return Conflict(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("{id}/archive")]
     public async Task<IActionResult> Archive(int id)
     {

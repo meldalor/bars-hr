@@ -24,5 +24,6 @@ public record VacancyDto(
     bool IsArchived,
     int CreatedById,
     string? CreatedByName,
-    int ApplicationsCount
+    int ApplicationsCount,
+    List<CompetencyDto> Competencies
 );

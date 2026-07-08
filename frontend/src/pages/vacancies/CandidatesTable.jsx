@@ -1,11 +1,16 @@
 import "./vacancies.css";
 import "./candidates_table.css";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { STATUSES, STATUS_ORDER, SUBSTATUSES } from "../../mocks/candidates.js";
+import {
+    STATUSES,
+    STATUS_ORDER,
+    SUBSTATUSES,
+    setCandidateSubstatus,
+} from "../../mocks/candidates.js";
 import {
     getMeetingForCandidate,
-    scheduleInterview,
     cancelInterview,
     formatMeetingSlot,
 } from "../../mocks/interviews.js";
@@ -172,6 +177,8 @@ function StatusCell({
 }
 
 export default function CandidatesTable({ candidates, setCandidates, statusFilter, vacancy }) {
+    const navigate = useNavigate();
+
     const [query, setQuery] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
     const [selected, setSelected] = useState(() => new Set());
@@ -179,12 +186,23 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
     const [, setScheduleTick] = useState(0);
 
     const scheduleCandidate = (candidate) => {
-        scheduleInterview(candidate, vacancy);
-        setScheduleTick((value) => value + 1);
+        navigate("/app/meetings", {
+            state: {
+                schedule: { candidateId: candidate.id, vacancyId: vacancy.id },
+            },
+        });
     };
 
     const cancelCandidate = (candidateId) => {
         cancelInterview(candidateId);
+        setCandidateSubstatus(candidateId, "Интервью не назначено");
+        setCandidates((prev) =>
+            prev.map((candidate) =>
+                candidate.id === candidateId
+                    ? { ...candidate, substatus: "Интервью не назначено" }
+                    : candidate
+            )
+        );
         setScheduleTick((value) => value + 1);
     };
 

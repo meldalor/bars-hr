@@ -172,7 +172,7 @@ export default function VacancyAssessment() {
 
     const save = () => {
         updateVacancy(id, { assessment: { questions, matrix } });
-        backToVacancy();
+        navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
     };
 
     return (

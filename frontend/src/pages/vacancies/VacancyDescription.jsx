@@ -33,6 +33,7 @@ export default function VacancyDescription({ vacancy }) {
     const [query, setQuery] = useState("");
     const [orderDesc, setOrderDesc] = useState(true);
     const [confirmClose, setConfirmClose] = useState(false);
+    const [confirmCopy, setConfirmCopy] = useState(false);
 
     const handleClose = () => {
         updateVacancy(vacancy.id, { status: "completed" });
@@ -42,6 +43,7 @@ export default function VacancyDescription({ vacancy }) {
 
     const handleCopy = () => {
         duplicateVacancy(vacancy.id);
+        setConfirmCopy(false);
         navigate("/app/vacancies");
     };
 
@@ -139,7 +141,7 @@ export default function VacancyDescription({ vacancy }) {
                     <button
                         type="button"
                         className="vdesc-btn primary"
-                        onClick={handleCopy}
+                        onClick={() => setConfirmCopy(true)}
                     >
                         Создать копию
                     </button>
@@ -240,6 +242,22 @@ export default function VacancyDescription({ vacancy }) {
                     </button>
                     <button type="button" className="vdesc-btn danger" onClick={handleClose}>
                         Закрыть
+                    </button>
+                </div>
+            </Modal>
+
+            <Modal open={confirmCopy} onClose={() => setConfirmCopy(false)}>
+                <p className="vdesc-modal-title">Создать копию вакансии «{vacancy.title}»?</p>
+                <div className="vdesc-modal-actions">
+                    <button
+                        type="button"
+                        className="vdesc-btn ghost"
+                        onClick={() => setConfirmCopy(false)}
+                    >
+                        Отмена
+                    </button>
+                    <button type="button" className="vdesc-btn primary" onClick={handleCopy}>
+                        Создать копию
                     </button>
                 </div>
             </Modal>

@@ -28,7 +28,12 @@ public static class VacancyMappings
         v.IsArchived,
         v.CreatedById,
         v.CreatedBy?.FullName,
-        v.Applications.Count
+        v.Applications.Count,
+        // матрица оценки: только активные компетенции, навык подгружен через Include
+        v.Competencies
+            .Where(c => c.IsActive)
+            .Select(c => new CompetencyDto(c.Id, c.SkillId, c.Skill!.Name, c.Skill.Type, c.MaxScore))
+            .ToList()
     );
 
     public static Vacancy ToEntity(this CreateVacancyRequest request, int currentUserId) => new()
