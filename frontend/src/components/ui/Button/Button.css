@@ -1,11 +1,10 @@
 .button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-    min-width: 120px;
-    height: 42px;
-    padding: 26px 22px;
+  height: 50px; 
+  padding: 0 24px;
 
   border: none;
   border-radius: 10px;
