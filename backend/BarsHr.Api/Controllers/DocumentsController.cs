@@ -48,4 +48,12 @@ public class DocumentsController : ControllerBase
         if (pdf == null) return NotFound();
         return File(pdf, "application/pdf", $"protokol-{interviewId}.pdf");
     }
+
+    [HttpGet("candidate-card/{candidateId}")]
+    public async Task<IActionResult> CandidateCard(int candidateId)
+    {
+        var pdf = await _documentService.GenerateCandidateCardAsync(candidateId);
+        if (pdf == null) return NotFound();
+        return File(pdf, "application/pdf", $"kartochka-{candidateId}.pdf");
+    }
 }

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BarsHr.Api.Data;
 using BarsHr.Api.Domain;
 using BarsHr.Api.Pdf;
@@ -144,6 +145,52 @@ public class DocumentService : IDocumentService
             competencies);
 
         return new InterviewProtocolDocument(model).GeneratePdf();
+    }
+
+    public async Task<byte[]?> GenerateCandidateCardAsync(int candidateId)
+    {
+        var candidate = await _context.Candidates
+            .AsNoTracking()
+            .Include(c => c.Applications).ThenInclude(a => a.Vacancy)
+            .FirstOrDefaultAsync(c => c.Id == candidateId);
+
+        if (candidate == null)
+            return null;
+
+        var applications = candidate.Applications
+            .OrderByDescending(a => a.AppliedAt)
+            .Select(a => new CandidateApplication(a.Vacancy?.Title ?? "—", a.Status, a.AppliedAt))
+            .ToList();
+
+        var model = new CandidateCardModel(
+            candidate.FullName,
+            candidate.Phone,
+            candidate.City,
+            candidate.Education,
+            candidate.PreviousWork,
+            ParseSkills(candidate.Skills),
+            applications);
+
+        return new CandidateCardDocument(model).GeneratePdf();
+    }
+
+    // навыки хранятся в JSONB: обычно массив строк, но терпим и произвольный текст
+    private static List<string> ParseSkills(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return new List<string>();
+
+        try
+        {
+            var skills = JsonSerializer.Deserialize<List<string>>(json);
+            if (skills != null)
+                return skills.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+        }
+        catch (JsonException)
+        {
+        }
+
+        return new List<string> { json };
     }
 
     private async Task<string> GetHrNameAsync(int userId) =>

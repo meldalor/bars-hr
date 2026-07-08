@@ -7,4 +7,5 @@ public interface IDocumentService
     Task<byte[]?> GenerateInvitationAsync(int applicationId, int currentUserId);
     Task<byte[]?> GenerateOfferAsync(int applicationId, int currentUserId);
     Task<byte[]?> GenerateInterviewProtocolAsync(int interviewId);
+    Task<byte[]?> GenerateCandidateCardAsync(int candidateId);
 }
