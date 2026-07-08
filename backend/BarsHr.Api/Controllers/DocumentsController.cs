@@ -1,3 +1,4 @@
+using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,11 @@ public class DocumentsController : ControllerBase
         _documentService = documentService;
     }
 
-    [HttpGet("sample")]
-    public IActionResult Sample()
+    [HttpGet("rejection/{applicationId}")]
+    public async Task<IActionResult> Rejection(int applicationId)
     {
-        var pdf = _documentService.GenerateSample();
-        return File(pdf, "application/pdf", "sample.pdf");
+        var pdf = await _documentService.GenerateRejectionAsync(applicationId, User.GetUserId());
+        if (pdf == null) return NotFound();
+        return File(pdf, "application/pdf", $"otkaz-{applicationId}.pdf");
     }
 }
