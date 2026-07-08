@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BarsHr.Api.Migrations
 {
     [DbContext(typeof(BarsHrDbContext))]
-    [Migration("20260708131758_AddSkillPoolAndRefactorCompetencies")]
+    [Migration("20260708140136_AddSkillPoolAndRefactorCompetencies")]
     partial class AddSkillPoolAndRefactorCompetencies
     {
         /// <inheritdoc />
