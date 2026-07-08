@@ -1,0 +1,39 @@
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.overview-top {
+
+    display: grid;
+
+    grid-template-columns: 2fr 1fr;
+
+    gap: 24px;
+
+}
+
+.overview-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16px;
+}
+
+.overview-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.overview-left,
+.overview-right {
+  min-height: 500px;
+}
