@@ -1,11 +1,11 @@
 using BarsHr.Api.Domain.Entities;
 using BarsHr.Api.DTOs.Evaluations;
+using BarsHr.Api.DTOs.Decisions;
 
 namespace BarsHr.Api.DTOs.Interviews;
 
 public static class InterviewMappings
 {
-    // требует загруженных Application.Candidate/Vacancy, Interviewer и Evaluations с Competency
     public static InterviewDto ToDto(this Interview i) => new(
         i.Id,
         i.ApplicationId,
@@ -20,7 +20,8 @@ public static class InterviewMappings
         i.GeneralNotes,
         i.InterviewerId,
         i.Interviewer?.FullName,
-        i.Evaluations.Select(e => e.ToDto()).ToList()
+        i.Evaluations.Select(e => e.ToDto()).ToList(),
+        i.Decision?.ToDto()
     );
 
     public static Interview ToEntity(this CreateInterviewRequest r, int currentUserId) => new()
