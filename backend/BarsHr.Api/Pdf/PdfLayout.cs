@@ -21,7 +21,6 @@ public static class PdfLayout
 
             page.Header().Element(h => BrandHeader.Compose(h, title));
             page.Content().PaddingVertical(16).Element(body);
-            page.Footer().Element(BrandFooter.Compose);
         });
     }
 }

@@ -68,7 +68,7 @@ public class InterviewProtocolDocument : IDocument
                 columns.ConstantColumn(26);
                 columns.RelativeColumn(3);
                 columns.ConstantColumn(72);
-                columns.ConstantColumn(58);
+                columns.ConstantColumn(66);
                 columns.RelativeColumn(3);
             });
 
@@ -87,7 +87,7 @@ public class InterviewProtocolDocument : IDocument
                 DataCell(table.Cell(), number++.ToString());
                 DataCell(table.Cell(), competency.SkillName);
                 DataCell(table.Cell(), TypeLabel(competency.SkillType));
-                DataCell(table.Cell(), $"/ {competency.MaxScore}");
+                DataCell(table.Cell(), $"/ {competency.MaxScore}", alignRight: true);
                 DataCell(table.Cell(), string.Empty);
             }
         });
@@ -108,10 +108,15 @@ public class InterviewProtocolDocument : IDocument
             .PaddingVertical(5).PaddingHorizontal(6)
             .Text(text).Bold();
 
-    private static void DataCell(IContainer cell, string text) =>
-        cell.Border(0.5f).BorderColor(PdfTheme.Line)
-            .PaddingVertical(7).PaddingHorizontal(6)
-            .Text(text);
+    private static void DataCell(IContainer cell, string text, bool alignRight = false)
+    {
+        var content = cell.Border(0.5f).BorderColor(PdfTheme.Line)
+            .PaddingVertical(7).PaddingHorizontal(6);
+        // балл выравниваем вправо, чтобы слева осталось место вписать оценку от руки
+        if (alignRight)
+            content = content.AlignRight();
+        content.Text(text);
+    }
 
     private static string TypeLabel(string type) => type switch
     {

@@ -8,12 +8,15 @@ public static class Signature
 {
     public static void Compose(IContainer container, string hrName, DateTime date)
     {
-        container.Column(col =>
+        container.Row(row =>
         {
-            col.Item().Text("С уважением,");
-            col.Item().Text(hrName).Bold();
-            col.Item().Text("БАРС Груп");
-            col.Item().PaddingTop(4).Text(PdfFormat.Date(date)).FontColor(PdfTheme.Muted);
+            row.RelativeItem().Column(col =>
+            {
+                col.Item().Text("С уважением,");
+                col.Item().Text(hrName).Bold();
+                col.Item().Text("БАРС Груп");
+            });
+            row.RelativeItem().AlignRight().AlignTop().Text(PdfFormat.Date(date)).FontColor(PdfTheme.Muted);
         });
     }
 }
