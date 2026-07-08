@@ -1,13 +1,19 @@
 using System.Text;
 using BarsHr.Api.Data;
+using BarsHr.Api.Pdf;
 using BarsHr.Api.Services.Implementations;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// QuestPDF: бесплатная Community-лицензия, регистрация кириллического шрифта и логотипа
+QuestPDF.Settings.License = LicenseType.Community;
+PdfAssets.Initialize();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -38,6 +44,7 @@ builder.Services.AddScoped<IInterviewService, InterviewService>();
 builder.Services.AddScoped<IEvaluationService, EvaluationService>();
 builder.Services.AddScoped<IVacancyService, VacancyService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 var jwt = builder.Configuration.GetSection("Jwt");
 
