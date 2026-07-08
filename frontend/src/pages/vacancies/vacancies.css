@@ -7,15 +7,14 @@
     margin: 0 0 24px;
 
     font-size: 44px;
-    font-weight: 700;
+    font-weight: 640;
     letter-spacing: -1px;
     line-height: 1.1;
     color: #1a1a1a;
 }
 
 .vac-title-count {
-    color: #8a94a6;
-    font-weight: 600;
+    color: #616161;
 }
 
 .vac-toolbar {

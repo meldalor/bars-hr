@@ -8,13 +8,14 @@
   box-sizing: border-box;
 }
 
-/* Центральный контейнер 1800px */
+/* Центральный контейнер 1700px */
 .app-wrapper {
   width: 100%;
-  max-width: 1800px;
+  max-width: 1700px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  padding: 0 20px;
 }
 
 /* Шапка - прозрачная */
@@ -28,14 +29,21 @@
   width: 100%;
 }
 
-/* Логотип - не сжимается и не растягивается */
+/* Логотип - простое перекрашивание */
 .header-logo {
   font-size: 40px;
   font-weight: 500;
   color: #1a1a1a;
   font-family: inherit;
   letter-spacing: -0.5px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
+  cursor: pointer;
+  display: inline-block;
+  transition: color 0.2s ease;
+}
+
+.header-logo:hover {
+  color: #106AFF;
 }
 
 /* Правая часть (Навигация + Иконки + Профиль) - единый блок */
@@ -199,6 +207,7 @@
   overflow: auto;
   box-sizing: border-box;
 }
+
 /* Адаптивность */
 @media (max-width: 1024px) {
   .header-logo {

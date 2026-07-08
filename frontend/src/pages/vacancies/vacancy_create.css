@@ -12,7 +12,7 @@
     margin: 0 0 24px;
 
     font-size: 22px;
-    font-weight: 700;
+    font-weight: 640;
     color: #1a1a1a;
 }
 
@@ -20,6 +20,10 @@
     display: flex;
     align-items: flex-start;
     gap: 40px;
+}
+
+.vac-detail-title{
+    font-weight: 640;
 }
 
 .vcreate-col {

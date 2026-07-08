@@ -8,14 +8,14 @@ import ActivityTable from "./components/ActivityTable/ActivityTable";
 function Overview() {
     return (
         <main className="overview-page">
-            <h1 className="overview-title">Обзор</h1>
-
-            <StatisticsCards />
+            <h1 className="overview-title">Обзор:<span className="overview-title-count"> HR-панель</span></h1>
 
             <section className="overview-top">
                 <ProfileCard />
                 <InterviewsCard />
             </section>
+
+            <StatisticsCards />
 
             <ActivityTable />
         </main>

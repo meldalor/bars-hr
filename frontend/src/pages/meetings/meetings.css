@@ -1,33 +1,10 @@
 .meetings-page {
+  text-align: left;
   display: flex;
   flex-direction: column;
-  padding: 0 0 20px 0;
-}
-
-/* --- ОТДЕЛЬНЫЙ БЛОК ЗАГОЛОВКА --- */
-.page-title-wrapper {
-  padding: 40px 0; 
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.page-title {
-  font-size: 54px;
-  margin: 0;
-  text-align: left;
-  letter-spacing: -1.5px;
-  line-height: 1.1;
-}
-
-.title-main {
-  color: #1a1a1a;
-  font-weight: 400;
-}
-
-.title-sub {
-  color: #616161;
-  font-weight: 400;
+  gap: 28px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .meetings-layout-full {
@@ -105,15 +82,14 @@
 .grid-header-cell {
   flex: 1;
   text-align: center;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 16px; /* Увеличили шрифт заголовков */
+  font-weight: 600;
   color: #374151;
   white-space: nowrap;
   box-sizing: border-box;
 }
 .grid-header-cell.today-header {
-  color: #2563eb;
-  font-weight: 700;
+  color: #106AFF; /* Ваш фирменный синий */
 }
 
 .grid-body-scroll {
@@ -128,10 +104,11 @@
   overflow: hidden;
 }
 
+/* --- СЕТКА 30 МИНУТ (высота строки 40px) --- */
 .grid-body {
   display: grid;
   grid-template-columns: 52px repeat(7, 1fr);
-  grid-auto-rows: 20px;
+  grid-auto-rows: 40px; /* Было 20px, стало 40px (30 минут) */
   border-top: 1px solid #e5e7eb;
   border-left: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
@@ -145,14 +122,14 @@
   padding-right: 12px;
   box-sizing: border-box;
   border-bottom: 1px solid #eef1f4;
-  line-height: 20px;
-  height: 20px;
+  line-height: 40px; /* Синхронизировано с высотой строки */
+  height: 40px;
 }
 
 .grid-cell {
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #eef1f4;
-  height: 20px;
+  height: 40px;
   box-sizing: border-box;
 }
 
@@ -207,7 +184,7 @@
 }
 
 .meeting-card-absolute--selected {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #106AFF;
   outline-offset: 2px;
 }
 
@@ -244,7 +221,6 @@
   line-height: 1.3;
 }
 
-/* --- ИСПРАВЛЕННАЯ КРАСНАЯ ЛИНИЯ --- */
 .current-time-line-absolute {
   position: absolute;
   left: 52px;
@@ -333,16 +309,13 @@
 .schedule-duration {
   height: 32px;
   padding: 0 14px;
-
   border: 1px solid #d1d5db;
   border-radius: 999px;
   background: #ffffff;
-
   color: #374151;
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
-
   cursor: pointer;
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
@@ -353,8 +326,8 @@
 }
 
 .schedule-duration.active {
-  border-color: #2563eb;
-  background: #2563eb;
+  border-color: #106AFF;
+  background: #106AFF;
   color: #ffffff;
 }
 
@@ -446,12 +419,12 @@
 
 .schedule-btn.link,
 .schedule-btn.change {
-  background: #2563eb;
+  background: #106AFF;
 }
 
 .schedule-btn.link:not(:disabled):hover,
 .schedule-btn.change:not(:disabled):hover {
-  background: #1d4ed8;
+  background: #0d56d6;
 }
 
 @media (max-width: 1024px) {

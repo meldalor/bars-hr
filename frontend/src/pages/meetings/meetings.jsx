@@ -88,10 +88,10 @@ function Meetings() {
 
   const HOUR_START = 8;
   const HOUR_END = 19;
-  const STEP_MINUTES = 15;
-  const ROW_HEIGHT_PX = 20;
+  const STEP_MINUTES = 30; // Шаг 30 минут
+  const ROW_HEIGHT_PX = 40; // Высота одной строки = 30 минут (40px)
   const TIME_COLUMN_WIDTH = 52;
-  const SLOTS_PER_HOUR = 60 / STEP_MINUTES;
+  const SLOTS_PER_HOUR = 60 / STEP_MINUTES; // 60/30 = 2
 
   useEffect(() => {
     setTimeout(() => {
@@ -123,7 +123,7 @@ function Meetings() {
       const currentMinute = getMinutes(now);
 
       const minutesFromStart = (currentHour - HOUR_START) * 60 + currentMinute;
-      const pixelsPerMinute = ROW_HEIGHT_PX / STEP_MINUTES;
+      const pixelsPerMinute = ROW_HEIGHT_PX / STEP_MINUTES; // 40px / 30мин = 1.333px в минуту
       let position = minutesFromStart * pixelsPerMinute;
 
       const maxPosition = (HOUR_END - HOUR_START) * 60 * pixelsPerMinute;
@@ -259,7 +259,7 @@ function Meetings() {
     const minutesFromStart = (getHours(start) - HOUR_START) * 60 + getMinutes(start);
     const minutesDuration = (getHours(end) - getHours(start)) * 60 + (getMinutes(end) - getMinutes(start));
 
-    const topPx = minutesFromStart * (ROW_HEIGHT_PX / STEP_MINUTES);
+    const topPx = minutesFromStart * (ROW_HEIGHT_PX / STEP_MINUTES); // 40px за 30 минут
     const heightPx = minutesDuration * (ROW_HEIGHT_PX / STEP_MINUTES);
 
     const totalWidth = `calc(100% - ${TIME_COLUMN_WIDTH}px)`;
@@ -278,12 +278,9 @@ function Meetings() {
 
   return (
     <div className="meetings-page">
-      <div className="page-title-wrapper">
-        <h1 className="page-title">
-          <span className="title-main">Встречи:</span>
-          <span className="title-sub">&nbsp;назначено {meetings.length} встреч</span>
-        </h1>
-      </div>
+      <h1 className="overview-title">
+        Встречи: <span className="overview-title-count">назначено {meetings.length} встреч</span>
+      </h1>
 
       <div className="meetings-layout-full">
         <div className="calendar-container-full">
@@ -307,7 +304,8 @@ function Meetings() {
                     key={day.toISOString()}
                     className={`grid-header-cell ${isTodayFlag ? "today-header" : ""}`}
                   >
-                    {format(day, "EEEE d MMM", { locale: ru })}
+                    {format(day, "EEEE d MMM", { locale: ru })
+                      .replace(/^./, (char) => char.toUpperCase())}
                   </div>
                 );
               })}
@@ -396,7 +394,7 @@ function Meetings() {
 
           {picking && (
             <div className="schedule-hint">
-              Нажмите на нужную ячейку в таблице (шаг — 15 минут). Начало и
+              Нажмите на нужную ячейку в таблице (шаг — 30 минут). Начало и
               длительность можно изменить ниже.
             </div>
           )}
