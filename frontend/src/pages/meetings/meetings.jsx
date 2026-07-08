@@ -57,7 +57,6 @@ const DURATION_OPTIONS = [
 function Meetings() {
   const location = useLocation();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const schedule = location.state?.schedule || null;
   const reschedule = location.state?.reschedule || null;
@@ -84,7 +83,7 @@ function Meetings() {
     return startOfWeek(base, { weekStartsOn: 1 });
   });
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
-  const [selectedMeetingId, setSelectedMeetingId] = useState(initialMeeting?.id || null);
+  const [selectedMeetingId, setSelectedMeetingId] = useState(location.state?.meetingId || null);
   const calendarBodyRef = useRef(null);
 
   const HOUR_START = 8;
@@ -359,7 +358,7 @@ function Meetings() {
                         className={`meeting-card-absolute ${
                           selectedMeetingId === meeting.id ? "meeting-card-absolute--selected" : ""
                         }`}
-                        onClick={() => handleMeetingClick(meeting)}
+                        onClick={() => handleMeetingClick(meeting.id)}
                         style={{
                           top: `${pos.top}px`,
                           left: pos.left,
