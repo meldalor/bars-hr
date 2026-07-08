@@ -7,7 +7,7 @@
 .nav-list {
   position: relative;
   list-style: none;
-  padding: 4px;
+  padding: 0;
   margin: 0;
   display: flex;
   flex-direction: row;
@@ -39,26 +39,23 @@
   box-sizing: border-box;
 }
 
-/* Активная кнопка — текст белый */
 .nav-item.active {
   color: #ffffff;
 }
 
-/* Наведение на НЕактивную кнопку — текст СИНИЙ */
 .nav-item:not(.active):hover {
   color: #2563eb; 
   background-color: transparent; 
 }
 
-/* Синяя плашка-индикатор (двигается) */
 .nav-indicator {
   position: absolute;
-  top: 4px;
+  top: 0;
   left: 4px;
   width: 0;
-  height: calc(100% - 8px);
+  height: 100%;
   background-color: #2563eb;
-  border-radius: 22px;
+  border-radius: 26px;
   transition: transform 0.35s cubic-bezier(0.4, 0.0, 0.2, 1), 
               width 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
   pointer-events: none;
@@ -80,7 +77,6 @@
   line-height: 18px;
 }
 
-/* Адаптивность для маленьких экранов */
 @media (max-width: 768px) {
   .nav-item {
     height: 40px;
@@ -88,13 +84,13 @@
     font-size: 14px;
   }
   .nav-list {
-    padding: 2px;
+    padding: 0;
     border-radius: 22px;
   }
   .nav-indicator {
-    top: 2px;
-    left: 2px;
-    height: calc(100% - 4px);
-    border-radius: 20px;
+    top: 0;
+    left: 4px;
+    height: 100%;
+    border-radius: 22px;
   }
 }

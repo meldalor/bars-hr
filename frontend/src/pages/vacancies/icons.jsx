@@ -187,3 +187,43 @@ export function IconXCircle({ size }) {
         </Svg>
     );
 }
+
+export function IconBriefcase({ size }) {
+    return (
+        <Svg size={size}>
+            <rect x="3" y="7" width="18" height="13" rx="2" />
+            <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            <path d="M3 13h18" />
+        </Svg>
+    );
+}
+
+export function IconBuilding({ size }) {
+    return (
+        <Svg size={size}>
+            <path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17" />
+            <path d="M3 21h18" />
+            <path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1" />
+        </Svg>
+    );
+}
+
+export function IconBulb({ size }) {
+    return (
+        <Svg size={size}>
+            <path d="M9 18h6" />
+            <path d="M10 22h4" />
+            <path d="M15.1 14a5 5 0 1 0-6.2 0c.5.4 1.1 1.2 1.1 2h4c0-.8.6-1.6 1.1-2Z" />
+        </Svg>
+    );
+}
+
+export function IconDocument({ size }) {
+    return (
+        <Svg size={size}>
+            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" />
+            <path d="M14 3v5h5" />
+            <path d="M9 13h6M9 17h6" />
+        </Svg>
+    );
+}

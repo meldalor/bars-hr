@@ -8,6 +8,7 @@ import {
     TAG_COLORS,
     formatSalary,
     plural,
+    requirementStyle,
 } from "../../mocks/vacancies.js";
 
 import {
@@ -20,6 +21,7 @@ import {
     IconFilter,
     IconSort,
     IconPlus,
+    IconUser,
 } from "./icons.jsx";
 
 import Navigation_Bar from "../../components/ui/Navigation_Bar/Navigation_Bar";
@@ -119,11 +121,11 @@ export default function Vacancies() {
                                     <div
                                         className="vac-card-icon"
                                         style={{
-                                            backgroundColor: lang.color,
-                                            color: lang.text,
+                                            backgroundColor: lang ? lang.color : "#16a34a",
+                                            color: lang ? lang.text : "#ffffff",
                                         }}
                                     >
-                                        {lang.code}
+                                        {lang ? lang.code : <IconUser size={26} />}
                                     </div>
 
                                     <div className="vac-card-title">{vacancy.title}</div>
@@ -142,15 +144,15 @@ export default function Vacancies() {
                                 </div>
 
                                 <div className="vac-tags">
-                                    <span
-                                        className="vac-tag"
-                                        style={{
-                                            backgroundColor: lang.color,
-                                            color: lang.text,
-                                        }}
-                                    >
-                                        {lang.label}
-                                    </span>
+                                    {vacancy.requirements.map((requirement) => (
+                                        <span
+                                            key={requirement}
+                                            className="vac-tag"
+                                            style={requirementStyle(requirement)}
+                                        >
+                                            {requirement}
+                                        </span>
+                                    ))}
                                     <span
                                         className="vac-tag"
                                         style={{ backgroundColor: TAG_COLORS.experience }}
