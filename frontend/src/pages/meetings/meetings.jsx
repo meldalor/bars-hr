@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   format,
   addWeeks,
@@ -16,55 +17,10 @@ import {
 import { ru } from "date-fns/locale";
 import "./meetings.css";
 
-const MOCK_MEETINGS = [
-  {
-    id: 1,
-    date: "2026-07-06",
-    startTime: "09:30",
-    endTime: "10:30",
-    fullName: "Иван Петров",
-    vacancy: "iOS-разработчик",
-    type: "pink",
-  },
-  {
-    id: 2,
-    date: "2026-07-07",
-    startTime: "11:00",
-    endTime: "12:00",
-    fullName: "Мария Смирнова",
-    vacancy: "Product Manager",
-    type: "blue",
-  },
-  {
-    id: 3,
-    date: "2026-07-08",
-    startTime: "10:30",
-    endTime: "11:30",
-    fullName: "Дмитрий Соколов",
-    vacancy: "Android-разработчик",
-    type: "purple",
-  },
-  {
-    id: 4,
-    date: "2026-07-09",
-    startTime: "14:00",
-    endTime: "15:00",
-    fullName: "Анна Морозова",
-    vacancy: "Data Analyst",
-    type: "green",
-  },
-  {
-    id: 5,
-    date: "2026-07-10",
-    startTime: "16:00",
-    endTime: "17:00",
-    fullName: "Кирилл Лебедев",
-    vacancy: "DevOps-инженер",
-    type: "orange",
-  },
-];
+import { MEETINGS as MOCK_MEETINGS } from "../../mocks/interviews.js";
 
 function Meetings() {
+  const navigate = useNavigate();
   const [meetings, setMeetings] = useState([]);
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(2026, 6, 6), { weekStartsOn: 1 })); 
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
@@ -145,7 +101,7 @@ function Meetings() {
   };
 
   const handleMeetingClick = (id) => {
-    console.log(`Клик по встрече с ID: ${id}`);
+    navigate(`/app/meetings/${id}`);
   };
 
   const monthLabel = format(currentWeekStart, "LLLL yyyy", { locale: ru });

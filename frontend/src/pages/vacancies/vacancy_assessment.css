@@ -1,0 +1,309 @@
+.va-subtitle {
+    margin: 10px 0 20px;
+
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #1a1a1a;
+}
+
+.va-card {
+    padding: 26px 30px;
+
+    background: #ffffff;
+    border: 1px solid #ececf0;
+    border-radius: 18px;
+
+    color-scheme: light;
+}
+
+.va-step-title {
+    margin: 0 0 20px;
+
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.va-question {
+    margin-bottom: 20px;
+}
+
+.va-question-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 8px;
+}
+
+.va-question-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.va-req {
+    color: #dc2626;
+}
+
+.va-del {
+    padding: 0 6px;
+
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+
+    color: #9aa0ad;
+    font-size: 20px;
+    line-height: 1;
+
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.va-del:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.08);
+}
+
+.va-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    box-sizing: border-box;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #ffffff;
+
+    color: #111827;
+    font-family: inherit;
+    font-size: 14px;
+
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.va-input::placeholder {
+    color: #9ca3af;
+}
+
+.va-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.va-input-hint {
+    margin-top: 8px;
+}
+
+.va-invalid {
+    border-color: #dc2626;
+}
+
+.va-add-btn {
+    margin-top: 6px;
+    height: 40px;
+    padding: 0 20px;
+
+    border: none;
+    border-radius: 999px;
+    background: #2563eb;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.va-add-btn:hover {
+    background: #1d4ed8;
+}
+
+.va-group {
+    margin-bottom: 30px;
+}
+
+.va-group:last-child {
+    margin-bottom: 0;
+}
+
+.va-group-title {
+    margin: 0 0 14px;
+
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.va-skill {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    padding: 8px 0;
+}
+
+.va-skill-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.va-skill-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.va-skill-desc {
+    margin-top: 2px;
+    font-size: 14px;
+    color: #8a94a6;
+}
+
+.va-skill .va-del {
+    align-self: center;
+}
+
+.va-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    margin-top: 10px;
+}
+
+.va-add-input {
+    height: 40px;
+    padding: 0 12px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+
+    color: #111827;
+    font-family: inherit;
+    font-size: 14px;
+
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.va-add-input:focus {
+    border-color: #2563eb;
+}
+
+.va-add-confirm {
+    height: 40px;
+    padding: 0 16px;
+
+    border: none;
+    border-radius: 999px;
+    background: #2563eb;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.va-add-confirm:hover {
+    background: #1d4ed8;
+}
+
+.va-add-cancel {
+    height: 40px;
+    padding: 0 14px;
+
+    border: none;
+    border-radius: 999px;
+    background: #f1f2f5;
+
+    color: #1a1a1a;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.va-add-cancel:hover {
+    background: #e5e7eb;
+}
+
+.va-error-note {
+    margin-top: 14px;
+    color: #dc2626;
+    font-size: 14px;
+}
+
+.va-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-top: 20px;
+}
+
+.va-footer-end {
+    justify-content: flex-end;
+}
+
+.va-footer-right {
+    margin-left: auto;
+
+    display: flex;
+    gap: 12px;
+}
+
+.va-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    height: 46px;
+    padding: 0 24px;
+
+    border: none;
+    border-radius: 999px;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.va-btn.primary {
+    background: #2563eb;
+}
+
+.va-btn.primary:hover {
+    background: #1d4ed8;
+}
+
+.va-btn.danger {
+    background: #dc2626;
+}
+
+.va-btn.danger:hover {
+    background: #b91c1c;
+}
+
+.va-btn.ghost {
+    background: #f1f2f5;
+    color: #1a1a1a;
+}
+
+.va-btn.ghost:hover {
+    background: #e5e7eb;
+}

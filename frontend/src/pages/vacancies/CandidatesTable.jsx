@@ -4,12 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 
 import { STATUSES, STATUS_ORDER, SUBSTATUSES } from "../../mocks/candidates.js";
 import {
+    getMeetingForCandidate,
+    scheduleInterview,
+    cancelInterview,
+    formatMeetingSlot,
+} from "../../mocks/interviews.js";
+import {
     IconSearch,
     IconFilter,
     IconEdit,
     IconPlus,
     IconChevronDown,
     IconPrinter,
+    IconCalendar,
     IconUser,
     IconClock,
     IconFlask,
@@ -38,7 +45,15 @@ function initials(name) {
         .toUpperCase();
 }
 
-function StatusCell({ candidate, openKey, setOpenKey, onChangeStatus, onChangeSubstatus }) {
+function StatusCell({
+    candidate,
+    openKey,
+    setOpenKey,
+    onChangeStatus,
+    onChangeSubstatus,
+    onSchedule,
+    onCancel,
+}) {
     const status = STATUSES[candidate.status];
     const StatusIcon = STATUS_ICONS[candidate.status];
     const subs = SUBSTATUSES[candidate.status] || [];
@@ -48,6 +63,8 @@ function StatusCell({ candidate, openKey, setOpenKey, onChangeStatus, onChangeSu
 
     const pillStyle = { color: status.color, backgroundColor: status.bg };
     const isFinal = candidate.status === "accepted" || candidate.status === "rejected";
+    const scheduledMeeting =
+        candidate.status === "interview" ? getMeetingForCandidate(candidate.id) : null;
 
     return (
         <div className="ct-status">
@@ -96,6 +113,29 @@ function StatusCell({ candidate, openKey, setOpenKey, onChangeStatus, onChangeSu
                     <IconPrinter size={15} />
                     Распечатать
                 </button>
+            ) : candidate.status === "interview" ? (
+                scheduledMeeting ? (
+                    <span className="ct-meeting">
+                        <IconCalendar size={14} />
+                        {formatMeetingSlot(scheduledMeeting)}
+                        <button
+                            type="button"
+                            className="ct-meeting-cancel"
+                            title="Отменить встречу"
+                            onClick={() => onCancel(candidate.id)}
+                        >
+                            ×
+                        </button>
+                    </span>
+                ) : (
+                    <button
+                        type="button"
+                        className="ct-schedule"
+                        onClick={() => onSchedule(candidate)}
+                    >
+                        Назначить интервью
+                    </button>
+                )
             ) : (
                 <div className="ct-status-wrap">
                     <button
@@ -131,11 +171,22 @@ function StatusCell({ candidate, openKey, setOpenKey, onChangeStatus, onChangeSu
     );
 }
 
-export default function CandidatesTable({ candidates, setCandidates, statusFilter }) {
+export default function CandidatesTable({ candidates, setCandidates, statusFilter, vacancy }) {
     const [query, setQuery] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
     const [selected, setSelected] = useState(() => new Set());
     const [openKey, setOpenKey] = useState(null);
+    const [, setScheduleTick] = useState(0);
+
+    const scheduleCandidate = (candidate) => {
+        scheduleInterview(candidate, vacancy);
+        setScheduleTick((value) => value + 1);
+    };
+
+    const cancelCandidate = (candidateId) => {
+        cancelInterview(candidateId);
+        setScheduleTick((value) => value + 1);
+    };
 
     useEffect(() => {
         if (!openKey) {
@@ -327,6 +378,8 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                                             setOpenKey={setOpenKey}
                                             onChangeStatus={changeStatus}
                                             onChangeSubstatus={changeSubstatus}
+                                            onSchedule={scheduleCandidate}
+                                            onCancel={cancelCandidate}
                                         />
                                     </td>
                                 </tr>

@@ -7,8 +7,10 @@ import Overview from "../pages/overview/overview.jsx";
 import Vacancies from "../pages/vacancies/vacancies.jsx";
 import VacancyCreate from "../pages/vacancies/VacancyCreate.jsx";
 import VacancyDetail from "../pages/vacancies/VacancyDetail.jsx";
+import VacancyAssessment from "../pages/vacancies/VacancyAssessment.jsx";
 import Candidates from "../pages/candidates/candidates.jsx";
 import Meetings from "../pages/meetings/meetings.jsx";
+import MeetingInterview from "../pages/meetings/MeetingInterview.jsx";
 
 import Layout from "../components/layout/layout";
 
@@ -22,9 +24,11 @@ function App_Router() {
         <Route path="vacancies" element={<Vacancies />} />
         <Route path="vacancies/new" element={<VacancyCreate />} />
         <Route path="vacancies/:id/edit" element={<VacancyCreate />} />
+        <Route path="vacancies/:id/assessment" element={<VacancyAssessment />} />
         <Route path="vacancies/:id" element={<VacancyDetail />} />
         <Route path="candidates" element={<Candidates />} />
         <Route path="meetings" element={<Meetings />} />
+        <Route path="meetings/:id" element={<MeetingInterview />} />
       </Route>
     </Routes>
   );
