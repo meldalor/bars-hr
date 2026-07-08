@@ -1,27 +1,52 @@
 import "./ActivityTable.css";
 import { getActivityByVacancy } from "../../../../mocks/activity";
 
+import searchIcon from "../../../../assets/overview/search.svg";
+import filterIcon from "../../../../assets/overview/nastroyky.svg";
+import calendarIcon from "../../../../assets/overview/calendar.svg";
+import chevronDownIcon from "../../../../assets/overview/Chevron down.svg";
+
 function ActivityTable() {
     const activity = getActivityByVacancy();
 
     return (
         <section className="activity-table-card">
             <div className="activity-header">
-                <h2 className="activity-title">Журнал активности</h2>
+                <h2 className="activity-title">
+                    Журнал активности
+                </h2>
 
                 <div className="activity-toolbar">
-                    <input
-                        type="text"
-                        placeholder="Поиск"
-                        className="activity-search"
-                    />
+                    <div className="activity-search-wrapper">
+                        <img
+                            src={searchIcon}
+                            alt=""
+                            className="activity-search-icon"
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="Поиск"
+                            className="activity-search"
+                        />
+                    </div>
 
                     <button className="activity-button">
-                        Фильтры
+                        <img
+                            src={filterIcon}
+                            alt=""
+                            className="activity-button-icon"
+                        />
+                        <span>Фильтры</span>
                     </button>
 
                     <button className="activity-button">
-                        Выбрать дату
+                        <img
+                            src={calendarIcon}
+                            alt=""
+                            className="activity-button-icon"
+                        />
+                        <span>Выбрать дату</span>
                     </button>
                 </div>
             </div>
@@ -30,11 +55,50 @@ function ActivityTable() {
                 <table className="activity-table">
                     <thead>
                         <tr>
-                            <th>Дата и время</th>
-                            <th>Пользователь</th>
-                            <th>Роль</th>
-                            <th>Действие</th>
-                            <th>Детали</th>
+                            <th>
+                                <span>Дата и время</span>
+                                <img
+                                    src={chevronDownIcon}
+                                    alt=""
+                                    className="table-arrow"
+                                />
+                            </th>
+
+                            <th>
+                                <span>Пользователь</span>
+                                <img
+                                    src={chevronDownIcon}
+                                    alt=""
+                                    className="table-arrow"
+                                />
+                            </th>
+
+                            <th>
+                                <span>Роль</span>
+                                <img
+                                    src={chevronDownIcon}
+                                    alt=""
+                                    className="table-arrow"
+                                />
+                            </th>
+
+                            <th>
+                                <span>Действие</span>
+                                <img
+                                    src={chevronDownIcon}
+                                    alt=""
+                                    className="table-arrow"
+                                />
+                            </th>
+
+                            <th>
+                                <span>Детали</span>
+                                <img
+                                    src={chevronDownIcon}
+                                    alt=""
+                                    className="table-arrow"
+                                />
+                            </th>
                         </tr>
                     </thead>
 

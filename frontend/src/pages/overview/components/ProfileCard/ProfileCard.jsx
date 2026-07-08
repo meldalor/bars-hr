@@ -22,7 +22,7 @@ function ProfileCard() {
             <div className="profile-content">
                 <div className="profile-top">
                     <div className="profile-main">
-                        <h2>Алина Закиева</h2>
+                        <h2>Петрова Арина</h2>
                         <p className="profile-position">
                             HR-менеджер
                         </p>

@@ -1,14 +1,13 @@
 .profile-card {
     position: relative;
     background: #ffffff;
-    border-radius: 28px;
+    border-radius: 24px;
     overflow: hidden;
-    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .profile-cover {
-    width: 100%;
-    height: 170px;
+    height: 132px;
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
@@ -16,34 +15,35 @@
 
 .profile-avatar {
     position: absolute;
-    top: 108px;
-    left: 40px;
+    top: 78px;
+    left: 36px;
 
-    width: 112px;
-    height: 112px;
+    width: 96px;
+    height: 96px;
 
-    border: 5px solid #ffffff;
     border-radius: 50%;
+    border: 5px solid #ffffff;
     overflow: hidden;
 
     background: #ffffff;
+    z-index: 2;
 }
 
 .profile-avatar img {
-    display: block;
     width: 100%;
     height: 100%;
+    display: block;
     object-fit: cover;
 }
 
 .profile-content {
-    padding: 72px 40px 36px;
+    padding: 42px 36px 22px;
 }
 
 .profile-top {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 24px;
 }
 
@@ -52,27 +52,29 @@
     flex-direction: column;
 }
 
-.profile-main h2 {
-    margin: 0 0 0 132px;
-    font-size: 30px;
+.profile-content h2 {
+    margin: 0 0 0 122px;
+
+    font-size: 28px;
     font-weight: 700;
     line-height: 1.2;
-    color: #202020;
+    color: #1a1a1a;
 }
 
 .profile-position {
-    margin: 8px 0 0 132px;
-    font-size: 17px;
-    font-weight: 500;
-    color: #8b8b8b;
+    margin: 6px 0 0 122px;
+
+    font-size: 16px;
+    font-weight: 400;
+    color: #7b7b7b;
 }
 
 .profile-edit-button {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 
-    height: 46px;
+    height: 44px;
     padding: 0 18px;
 
     border: none;
@@ -82,14 +84,14 @@
     color: #2f66e8;
 
     font-size: 15px;
-    font-weight: 600;
-
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s ease;
+
+    transition: .2s;
 }
 
 .profile-edit-button:hover {
-    background: #dfeaff;
+    background: #e4eeff;
 }
 
 .profile-edit-button img {
@@ -99,54 +101,56 @@
 
 .profile-contacts {
     display: flex;
+    align-items: center;
+    gap: 34px;
+    margin-top: 26px;
     flex-wrap: wrap;
-    gap: 32px;
-    margin-top: 32px;
 }
 
 .profile-contact {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 
     font-size: 15px;
-    color: #3f3f46;
+    color: #3d3d3d;
 }
 
 .profile-contact img {
-    width: 18px;
-    height: 18px;
-    object-fit: contain;
+    width: 20px;
+    height: 20px;
 }
 
 .profile-date {
-    margin: 28px 0 0;
-    font-size: 14px;
-    color: #8b8b8b;
+    margin-top: 18px;
+
+    font-size: 15px;
+    color: #7b7b7b;
 }
 
 @media (max-width: 900px) {
-    .profile-content {
-        padding: 32px 24px 24px;
-    }
-
-    .profile-avatar {
-        position: static;
-        margin: -56px auto 20px;
-    }
-
     .profile-top {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .profile-main h2,
+    .profile-avatar {
+        position: static;
+        margin-bottom: 20px;
+    }
+
+    .profile-content {
+        padding: 24px;
+    }
+
+    .profile-content h2,
     .profile-position {
         margin-left: 0;
     }
 
     .profile-contacts {
         flex-direction: column;
+        align-items: flex-start;
         gap: 16px;
     }
 }
