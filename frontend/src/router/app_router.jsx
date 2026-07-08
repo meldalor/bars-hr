@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 
 import Login from "../pages/login/login.jsx";
-import Landing from "../pages/landing/Landing.jsx";
+import Landing from "../pages/landing/landing.jsx";
 
 import Overview from "../pages/overview/overview.jsx";
 import Vacancies from "../pages/vacancies/vacancies.jsx";
@@ -10,7 +10,9 @@ import VacancyDetail from "../pages/vacancies/VacancyDetail.jsx";
 import Candidates from "../pages/candidates/candidates.jsx";
 import CreateCandidate from "../pages/candidates/CreateCandidate";
 import EditCandidate from "../pages/candidates/EditCandidate";
+import CandidateProfile from "../pages/candidates/CandidateProfile.jsx";
 import Meetings from "../pages/meetings/meetings.jsx";
+import Admin from "../pages/admin/Admin.jsx";
 
 import Layout from "../components/layout/layout";
 
@@ -28,7 +30,9 @@ function App_Router() {
         <Route path="candidates" element={<Candidates />} />
         <Route path="candidates/create" element={<CreateCandidate />} />
         <Route path="candidates/edit/:id" element={<EditCandidate />} />
+        <Route path="candidates/:id" element={<CandidateProfile />} />
         <Route path="meetings" element={<Meetings />} />
+        <Route path="admin" element={<Admin />} />
       </Route>
     </Routes>
   );
