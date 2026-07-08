@@ -1,4 +1,5 @@
 using BarsHr.Api.Data;
+using BarsHr.Api.Domain.Entities;
 using BarsHr.Api.DTOs.Vacancies;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +63,7 @@ public class VacancyService : IVacancyService
             .AsNoTracking()
             .Include(v => v.CreatedBy)
             .Include(v => v.Applications)
+            .Include(v => v.Competencies).ThenInclude(c => c.Skill)
             .FirstOrDefaultAsync(v => v.Id == id);
 
         return vacancy?.ToDto();
@@ -71,16 +73,13 @@ public class VacancyService : IVacancyService
     {
         var vacancy = request.ToEntity(currentUserId);
 
+        if (request.Competencies is { Count: > 0 })
+            vacancy.Competencies = await BuildCompetenciesAsync(request.Competencies);
+
         _context.Vacancies.Add(vacancy);
         await _context.SaveChangesAsync();
 
-        var created = await _context.Vacancies
-            .AsNoTracking()
-            .Include(v => v.CreatedBy)
-            .Include(v => v.Applications)
-            .FirstAsync(v => v.Id == vacancy.Id);
-
-        return created.ToDto();
+        return (await GetByIdAsync(vacancy.Id))!;
     }
 
     public async Task<VacancyDto?> UpdateAsync(int id, UpdateVacancyRequest request, int currentUserId)
@@ -91,14 +90,57 @@ public class VacancyService : IVacancyService
         vacancy.ApplyUpdate(request);
         await _context.SaveChangesAsync();
 
-        // Перезагружаем для актуального ToDto
-        var updated = await _context.Vacancies
-            .AsNoTracking()
-            .Include(v => v.CreatedBy)
-            .Include(v => v.Applications)
-            .FirstAsync(v => v.Id == id);
+        return await GetByIdAsync(id);
+    }
 
-        return updated.ToDto();
+    // полная замена матрицы: фронт присылает желаемый набор навыков целиком
+    public async Task<VacancyDto?> SetCompetenciesAsync(int id, List<CompetencyItem> items)
+    {
+        var vacancy = await _context.Vacancies
+            .Include(v => v.Competencies).ThenInclude(c => c.Skill)
+            .FirstOrDefaultAsync(v => v.Id == id);
+        if (vacancy == null) return null;
+
+        items ??= new List<CompetencyItem>();
+        await ValidateCompetencyItemsAsync(items);
+
+        var targetSkillIds = items.Select(i => i.SkillId).ToHashSet();
+        var currentBySkill = vacancy.Competencies.ToDictionary(c => c.SkillId);
+
+        // убрать компетенции, которых нет в целевом наборе; с оценками — нельзя
+        foreach (var comp in vacancy.Competencies.ToList())
+        {
+            if (targetSkillIds.Contains(comp.SkillId)) continue;
+
+            if (await _context.Evaluations.AnyAsync(e => e.CompetencyId == comp.Id))
+                throw new InvalidOperationException(
+                    $"По компетенции «{comp.Skill?.Name ?? comp.SkillId.ToString()}» уже есть оценки, её нельзя убрать");
+
+            _context.Competencies.Remove(comp);
+        }
+
+        // добавить новые, у существующих обновить потолок и вернуть в активные
+        foreach (var item in items)
+        {
+            if (currentBySkill.TryGetValue(item.SkillId, out var existing))
+            {
+                existing.MaxScore = item.MaxScore;
+                existing.IsActive = true;
+            }
+            else
+            {
+                _context.Competencies.Add(new Competency
+                {
+                    VacancyId = id,
+                    SkillId = item.SkillId,
+                    MaxScore = item.MaxScore,
+                    IsActive = true
+                });
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return await GetByIdAsync(id);
     }
 
     public async Task<bool> SetArchivedAsync(int id, bool archived)
@@ -111,5 +153,39 @@ public class VacancyService : IVacancyService
 
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private async Task<List<Competency>> BuildCompetenciesAsync(List<CompetencyItem> items)
+    {
+        await ValidateCompetencyItemsAsync(items);
+
+        return items.Select(i => new Competency
+        {
+            SkillId = i.SkillId,
+            MaxScore = i.MaxScore,
+            IsActive = true
+        }).ToList();
+    }
+
+    // навыки берутся только из пула: существуют, активны, без дублей в пачке
+    private async Task ValidateCompetencyItemsAsync(List<CompetencyItem> items)
+    {
+        var skillIds = items.Select(i => i.SkillId).ToList();
+        if (skillIds.Count != skillIds.Distinct().Count())
+            throw new ArgumentException("В матрице есть повторяющиеся навыки");
+
+        var skills = await _context.Skills
+            .Where(s => skillIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id);
+
+        foreach (var item in items)
+        {
+            if (!skills.TryGetValue(item.SkillId, out var skill))
+                throw new ArgumentException($"Навык с id {item.SkillId} не найден в пуле");
+            if (!skill.IsActive)
+                throw new ArgumentException($"Навык «{skill.Name}» в архиве и не может быть добавлен");
+            if (item.MaxScore < 1)
+                throw new ArgumentException("Максимальный балл должен быть не меньше 1");
+        }
     }
 }

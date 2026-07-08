@@ -14,6 +14,7 @@ public record CreateVacancyRequest(
     string? Skills,
     string? Platforms,
     DateTime? ClosesAt,
-    string Currency = "RUB",       
-    int PositionsCount = 1
+    string Currency = "RUB",
+    int PositionsCount = 1,
+    List<CompetencyItem>? Competencies = null
 );
