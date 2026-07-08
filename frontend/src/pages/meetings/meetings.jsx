@@ -16,12 +16,14 @@ import {
 } from "date-fns";
 import { ru } from "date-fns/locale";
 import "./meetings.css";
-import { getMeetings } from "../../mocks/meetings";
+
+import { MEETINGS as MOCK_MEETINGS } from "../../mocks/interviews.js";
 
 function Meetings() {
   const location = useLocation();
   const navigate = useNavigate();
-  const initialMeeting = getMeetings().find((item) => item.id === location.state?.meetingId);
+  const initialMeeting = MOCK_MEETINGS.find((item) => item.id === location.state?.meetingId);
+
   const [meetings, setMeetings] = useState([]);
   const [currentWeekStart, setCurrentWeekStart] = useState(
     initialMeeting
@@ -40,7 +42,7 @@ function Meetings() {
 
   useEffect(() => {
     setTimeout(() => {
-      setMeetings(getMeetings());
+      setMeetings(MOCK_MEETINGS);
     }, 300);
   }, []);
 
@@ -106,7 +108,7 @@ function Meetings() {
 
   const handleMeetingClick = (meeting) => {
     setSelectedMeetingId(meeting.id);
-    navigate("/app/meetings", { replace: true, state: { meetingId: meeting.id } });
+    navigate(`/app/meetings/${meeting.id}`);
   };
 
   const monthLabel = format(currentWeekStart, "LLLL yyyy", { locale: ru });

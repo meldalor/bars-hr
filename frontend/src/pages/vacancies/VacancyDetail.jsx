@@ -113,6 +113,7 @@ export default function VacancyDetail() {
                     candidates={candidates}
                     setCandidates={setCandidates}
                     statusFilter={activeTab}
+                    vacancy={vacancy}
                 />
             )}
         </div>

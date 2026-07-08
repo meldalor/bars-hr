@@ -49,6 +49,10 @@ export default function VacancyDescription({ vacancy }) {
         navigate(`/app/vacancies/${vacancy.id}/edit`);
     };
 
+    const handleQuestions = () => {
+        navigate(`/app/vacancies/${vacancy.id}/assessment`);
+    };
+
     const log = useMemo(() => getActivityByVacancy(vacancy.id), [vacancy.id]);
 
     const rows = useMemo(() => {
@@ -138,6 +142,13 @@ export default function VacancyDescription({ vacancy }) {
                         onClick={handleCopy}
                     >
                         Создать копию
+                    </button>
+                    <button
+                        type="button"
+                        className="vdesc-btn primary"
+                        onClick={handleQuestions}
+                    >
+                        Настроить вопросы
                     </button>
                     <button
                         type="button"

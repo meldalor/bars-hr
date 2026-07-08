@@ -279,3 +279,68 @@
     color: #8a94a6;
     font-size: 15px;
 }
+
+.ct-schedule {
+    display: inline-flex;
+    align-items: center;
+
+    height: 30px;
+    padding: 0 14px;
+
+    border: none;
+    border-radius: 999px;
+    background: #c026a6;
+
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.ct-schedule:hover {
+    background: #a21c8a;
+}
+
+.ct-meeting {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    height: 30px;
+    padding: 0 10px 0 12px;
+
+    border-radius: 999px;
+    background: #fceef5;
+
+    color: #db2777;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ct-meeting svg {
+    flex-shrink: 0;
+}
+
+.ct-meeting-cancel {
+    padding: 0 2px;
+
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+
+    color: #db2777;
+    font-size: 16px;
+    line-height: 1;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.ct-meeting-cancel:hover {
+    background: rgba(219, 39, 119, 0.15);
+}

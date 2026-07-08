@@ -18,6 +18,7 @@ public class BarsHrDbContext : DbContext
     public DbSet<Interview> Interviews { get; set; } = null!;
     public DbSet<Application> Applications { get; set; } = null!;
     public DbSet<Competency> Competencies { get; set; } = null!;
+    public DbSet<Skill> Skills { get; set; } = null!;
     public DbSet<Evaluation> Evaluations { get; set; } = null!;
     public DbSet<Decision> Decisions { get; set; } = null!;
     public DbSet<DocumentTemplate> DocumentTemplates { get; set; } = null!;
@@ -99,6 +100,12 @@ public class BarsHrDbContext : DbContext
             .HasForeignKey(c => c.VacancyId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<Competency>()
+            .HasOne(c => c.Skill)
+            .WithMany(s => s.Competencies)
+            .HasForeignKey(c => c.SkillId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Interview → Evaluation (матрица компетенций)
         modelBuilder.Entity<Evaluation>()
             .HasOne(e => e.Interview)
@@ -134,7 +141,13 @@ public class BarsHrDbContext : DbContext
         modelBuilder.Entity<Evaluation>()
             .HasIndex(e => new { e.InterviewId, e.CompetencyId })
             .IsUnique();
+        modelBuilder.Entity<Skill>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
 
+        modelBuilder.Entity<Competency>()
+            .HasIndex(c => new { c.VacancyId, c.SkillId })
+            .IsUnique();
         // под сортировки и фильтры списков (FK-колонки EF индексирует сам)
         modelBuilder.Entity<Candidate>()
             .HasIndex(c => c.CreatedAt);

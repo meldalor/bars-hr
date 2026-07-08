@@ -46,7 +46,7 @@ public class EvaluationService : IEvaluationService
 
             if (item.Score < 1 || item.Score > competency.MaxScore)
                 throw new ArgumentException(
-                    $"Оценка по «{competency.Name}» должна быть от 1 до {competency.MaxScore}");
+                    $"Оценка по «{competency.Skill?.Name ?? "компетенции"}» должна быть от 1 до {competency.MaxScore}");
 
             var existing = interview.Evaluations.FirstOrDefault(e => e.CompetencyId == item.CompetencyId);
             if (existing != null)
