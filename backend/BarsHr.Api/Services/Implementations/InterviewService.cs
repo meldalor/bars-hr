@@ -1,5 +1,7 @@
 using BarsHr.Api.Data;
 using BarsHr.Api.DTOs.Interviews;
+using BarsHr.Api.DTOs.Decisions;
+using BarsHr.Api.Domain.Entities;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,6 +52,7 @@ public class InterviewService : IInterviewService
             .Include(i => i.Application)!.ThenInclude(a => a!.Vacancy)
             .Include(i => i.Interviewer)
             .Include(i => i.Evaluations).ThenInclude(e => e.Competency)
+            .Include(i => i.Decision)!.ThenInclude(d => d!.MadeBy)
             .FirstOrDefaultAsync(i => i.Id == id);
 
         return interview?.ToDto();
@@ -73,13 +76,50 @@ public class InterviewService : IInterviewService
         var interview = request.ToEntity(currentUserId);
         _context.Interviews.Add(interview);
 
-        // назначенная встреча означает, что отклик просмотрен;
-        // статусы дальше Viewed (Approved/Rejected) не откатываем
+
         if (application.Status == "New")
             application.Status = "Viewed";
 
         await _context.SaveChangesAsync();
 
         return (await GetByIdAsync(interview.Id))!;
+    }
+    public async Task<DecisionDto?> MakeDecisionAsync(
+        int interviewId, 
+        CreateDecisionRequest request, 
+        int currentUserId)
+    {
+        var interview = await _context.Interviews
+            .Include(i => i.Decision)
+                .ThenInclude(d => d!.MadeBy)
+            .FirstOrDefaultAsync(i => i.Id == interviewId);
+
+        if (interview == null)
+            return null;
+
+        Decision decision;
+
+        if (interview.Decision == null)
+        {
+            decision = request.ToEntity(interviewId, currentUserId);
+            _context.Decisions.Add(decision);
+            interview.Decision = decision;
+        }
+        else
+        {
+            decision = interview.Decision;
+            decision.DecisionType = request.DecisionType;
+            decision.Comment = request.Comment;
+            decision.MadeById = currentUserId;
+            decision.MadeAt = DateTime.UtcNow;
+        }
+        interview.Status = request.DecisionType == "Accepted" ? "Completed" : 
+                        request.DecisionType == "Rejected" ? "Rejected" : interview.Status;
+
+        interview.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return decision.ToDto();
     }
 }
