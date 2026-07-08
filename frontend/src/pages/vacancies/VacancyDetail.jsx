@@ -1,6 +1,6 @@
 import "./vacancies.css";
 import { useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 import { getVacancyById, LANGUAGES, TAG_COLORS } from "../../mocks/vacancies.js";
 import { STATUS_ORDER, STATUSES, getCandidatesByVacancy } from "../../mocks/candidates.js";
@@ -13,11 +13,12 @@ import { IconInfo } from "./icons.jsx";
 export default function VacancyDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const vacancy = getVacancyById(id);
 
     const [candidates, setCandidates] = useState(() => getCandidatesByVacancy(id));
-    const [activeTab, setActiveTab] = useState("all");
+    const [activeTab, setActiveTab] = useState(() => location.state?.tab || "all");
 
     const counts = useMemo(() => {
         const result = { all: candidates.length };

@@ -19,6 +19,9 @@
 }
 
 .login-card {
+    position: relative;
+    z-index: 3;
+
     width: 100%;
     max-width: 420px;
 
@@ -209,6 +212,7 @@
 
 .login-back {
     position: absolute;
+    z-index: 5;
     top: 24px;
     left: 24px;
 
@@ -230,6 +234,12 @@
 .login-back:hover {
     background: rgba(255, 255, 255, 0.95);
     color: #102040;
+}
+
+@media (max-width: 1100px) {
+    .login .floating-badge {
+        display: none;
+    }
 }
 
 @media (max-width: 520px) {

@@ -192,3 +192,15 @@ const CANDIDATES = [
 export function getCandidatesByVacancy() {
     return CANDIDATES.map((candidate) => ({ ...candidate }));
 }
+
+export function getCandidateById(id) {
+    const found = CANDIDATES.find((candidate) => candidate.id === id);
+    return found ? { ...found } : null;
+}
+
+export function setCandidateSubstatus(id, substatus) {
+    const found = CANDIDATES.find((candidate) => candidate.id === id);
+    if (found) {
+        found.substatus = substatus;
+    }
+}

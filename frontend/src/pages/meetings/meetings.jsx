@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   format,
   addWeeks,
@@ -16,21 +16,81 @@ import {
 } from "date-fns";
 import { ru } from "date-fns/locale";
 import "./meetings.css";
+import "./interview.css";
 
-import { MEETINGS as MOCK_MEETINGS } from "../../mocks/interviews.js";
+import {
+  MEETINGS as MOCK_MEETINGS,
+  getMeetingById,
+  getMeetingForCandidate,
+  saveInterviewSlot,
+  updateMeetingTime,
+  cancelInterview,
+  removeMeeting,
+  formatMeetingSlot,
+  toMinutes,
+  toTime,
+  DAY_START,
+  DAY_END,
+} from "../../mocks/interviews.js";
+import { getCandidateById, setCandidateSubstatus } from "../../mocks/candidates.js";
+import { getVacancyById } from "../../mocks/vacancies.js";
+import { IconCalendar } from "../vacancies/icons.jsx";
+import Modal from "../../components/ui/Modal/Modal.jsx";
+
+function initials(name) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
+const DURATION_OPTIONS = [
+  { value: 15, label: "15 мин" },
+  { value: 30, label: "30 мин" },
+  { value: 60, label: "1 час" },
+  { value: 90, label: "1,5 часа" },
+  { value: 120, label: "2 часа" },
+];
 
 function Meetings() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const schedule = location.state?.schedule || null;
+  const reschedule = location.state?.reschedule || null;
+
+  const candidate = schedule ? getCandidateById(schedule.candidateId) : null;
+  const vacancy = schedule ? getVacancyById(schedule.vacancyId) : null;
+  const scheduling = Boolean((candidate && vacancy) || reschedule);
+
   const [meetings, setMeetings] = useState([]);
-  const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(2026, 6, 6), { weekStartsOn: 1 })); 
+  const [picking, setPicking] = useState(() => {
+    if (reschedule) return true;
+    if (!schedule) return false;
+    return !getMeetingForCandidate(schedule.candidateId);
+  });
+  const [scheduleError, setScheduleError] = useState("");
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+    const existing = reschedule
+      ? getMeetingById(reschedule.meetingId)
+      : schedule
+        ? getMeetingForCandidate(schedule.candidateId)
+        : null;
+    const base = existing ? parseISO(existing.date) : new Date(2026, 6, 6);
+    return startOfWeek(base, { weekStartsOn: 1 });
+  });
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
   const calendarBodyRef = useRef(null);
 
-  const HOUR_START = 8; 
-  const HOUR_END = 19;   
-  const STEP_MINUTES = 30;
-  const ROW_HEIGHT_PX = 40; 
+  const HOUR_START = 8;
+  const HOUR_END = 19;
+  const STEP_MINUTES = 15;
+  const ROW_HEIGHT_PX = 20;
   const TIME_COLUMN_WIDTH = 52;
+  const SLOTS_PER_HOUR = 60 / STEP_MINUTES;
 
   useEffect(() => {
     setTimeout(() => {
@@ -101,7 +161,90 @@ function Meetings() {
   };
 
   const handleMeetingClick = (id) => {
+    if (picking) return;
     navigate(`/app/meetings/${id}`);
+  };
+
+  const currentMeeting = reschedule
+    ? getMeetingById(reschedule.meetingId)
+    : schedule
+      ? getMeetingForCandidate(schedule.candidateId)
+      : null;
+
+  const panelName = schedule ? candidate.name : currentMeeting ? currentMeeting.fullName : "";
+  const panelRole = schedule ? candidate.specialty : currentMeeting ? currentMeeting.role : "";
+  const panelSkills = schedule ? vacancy.requirements : currentMeeting ? currentMeeting.skills : [];
+  const panelTitle = reschedule ? "Изменение времени встречи" : "Назначение интервью";
+
+  const applySlot = (date, startTime, durationMinutes) => {
+    const result = reschedule
+      ? updateMeetingTime(reschedule.meetingId, { date, startTime, durationMinutes })
+      : saveInterviewSlot(candidate, vacancy, { date, startTime, durationMinutes });
+    if (!result.ok) {
+      setScheduleError("Это время пересекается с другой встречей");
+      return false;
+    }
+    if (schedule) {
+      setCandidateSubstatus(schedule.candidateId, "Интервью назначено");
+    }
+    setScheduleError("");
+    setMeetings([...MOCK_MEETINGS]);
+    return true;
+  };
+
+  const handleCellClick = (day, slot) => {
+    if (!scheduling || !picking) return;
+    const date = format(day, "yyyy-MM-dd");
+    const duration = currentMeeting
+      ? toMinutes(currentMeeting.endTime) - toMinutes(currentMeeting.startTime)
+      : 60;
+    if (toMinutes(slot) + duration > DAY_END) {
+      setScheduleError("Интервью не помещается в рабочий день");
+      return;
+    }
+    if (applySlot(date, slot, duration)) {
+      setPicking(false);
+    }
+  };
+
+  const shiftStart = (delta) => {
+    if (!currentMeeting) return;
+    const startMin = toMinutes(currentMeeting.startTime);
+    const duration = toMinutes(currentMeeting.endTime) - startMin;
+    const next = startMin + delta;
+    if (next < DAY_START || next + duration > DAY_END) return;
+    applySlot(currentMeeting.date, toTime(next), duration);
+  };
+
+  const setDuration = (minutes) => {
+    if (!currentMeeting) return;
+    const startMin = toMinutes(currentMeeting.startTime);
+    if (startMin + minutes > DAY_END) {
+      setScheduleError("Интервью не помещается в рабочий день");
+      return;
+    }
+    applySlot(currentMeeting.date, currentMeeting.startTime, minutes);
+  };
+
+  const handleCancelMeeting = () => {
+    if (reschedule) {
+      if (currentMeeting && currentMeeting.candidateId) {
+        setCandidateSubstatus(currentMeeting.candidateId, "Интервью не назначено");
+      }
+      removeMeeting(reschedule.meetingId);
+      setMeetings([...MOCK_MEETINGS]);
+      navigate("/app/meetings");
+      return;
+    }
+    cancelInterview(schedule.candidateId);
+    setCandidateSubstatus(schedule.candidateId, "Интервью не назначено");
+    setMeetings([...MOCK_MEETINGS]);
+    navigate(`/app/vacancies/${schedule.vacancyId}`);
+  };
+
+  const confirmCancelMeeting = () => {
+    setConfirmCancel(false);
+    handleCancelMeeting();
   };
 
   const monthLabel = format(currentWeekStart, "LLLL yyyy", { locale: ru });
@@ -181,14 +324,19 @@ function Meetings() {
               <div className="grid-body-wrapper">
                 <div className="grid-body">
                   {gridSlots.map((slot, index) => (
-                    <div key={`row-${index}`} style={{ display: "contents" }}>
+                    <div
+                      key={`row-${index}`}
+                      className={(index + 1) % SLOTS_PER_HOUR === 0 ? "grid-row-hour" : ""}
+                      style={{ display: "contents" }}
+                    >
                       <div className="grid-time-slot">
-                        {index % 2 === 0 ? timeLabels[index / 2] : ""}
+                        {index % SLOTS_PER_HOUR === 0 ? timeLabels[index / SLOTS_PER_HOUR] : ""}
                       </div>
                       {weekDays.map((day) => (
-                        <div 
-                          key={`${day.toISOString()}-${slot}`} 
-                          className="grid-cell"
+                        <div
+                          key={`${day.toISOString()}-${slot}`}
+                          className={`grid-cell${scheduling && picking ? " picking" : ""}`}
+                          onClick={() => handleCellClick(day, slot)}
                         ></div>
                       ))}
                     </div>
@@ -247,6 +395,142 @@ function Meetings() {
           </div>
         </div>
       </div>
+
+      {scheduling && (
+        <div className="schedule-panel">
+          <div className="schedule-panel-title">{panelTitle}</div>
+
+          {picking && (
+            <div className="schedule-hint">
+              Нажмите на нужную ячейку в таблице (шаг — 15 минут). Начало и
+              длительность можно изменить ниже.
+            </div>
+          )}
+          {scheduleError && <div className="schedule-error">{scheduleError}</div>}
+
+          <div className="iv-candidate">
+            <div className="iv-cand-head">
+              <div className="iv-cand-avatar">{initials(panelName)}</div>
+              <div>
+                <div className="iv-cand-name">{panelName}</div>
+                <div className="iv-cand-role">{panelRole}</div>
+              </div>
+            </div>
+
+            <div className="iv-cand-label">Навыки</div>
+            <div className="iv-chips">
+              {panelSkills.map((skill) => (
+                <span key={skill} className="iv-chip">
+                  {skill}
+                </span>
+              ))}
+            </div>
+
+            {currentMeeting && (
+              <div className="schedule-adjust">
+                <div className="schedule-adjust-group">
+                  <span className="schedule-adjust-label">Начало</span>
+                  <button
+                    type="button"
+                    className="schedule-step"
+                    onClick={() => shiftStart(-STEP_MINUTES)}
+                  >
+                    −
+                  </button>
+                  <span className="schedule-adjust-value">
+                    {currentMeeting.startTime}
+                  </span>
+                  <button
+                    type="button"
+                    className="schedule-step"
+                    onClick={() => shiftStart(STEP_MINUTES)}
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="schedule-adjust-group schedule-adjust-duration">
+                  <span className="schedule-adjust-label">Длительность</span>
+                  <div className="schedule-durations">
+                    {DURATION_OPTIONS.map((option) => {
+                      const duration =
+                        toMinutes(currentMeeting.endTime) -
+                        toMinutes(currentMeeting.startTime);
+                      return (
+                        <button
+                          type="button"
+                          key={option.value}
+                          className={`schedule-duration${
+                            duration === option.value ? " active" : ""
+                          }`}
+                          onClick={() => setDuration(option.value)}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="schedule-actions">
+              {currentMeeting && (
+                <span className="schedule-slot-badge">
+                  <IconCalendar size={16} />
+                  {formatMeetingSlot(currentMeeting)}
+                </span>
+              )}
+              <button
+                type="button"
+                className="schedule-btn cancel"
+                onClick={() => setConfirmCancel(true)}
+              >
+                Отменить встречу
+              </button>
+              <button
+                type="button"
+                className="schedule-btn link"
+                disabled={!currentMeeting}
+              >
+                Ссылка на встречу
+              </button>
+              <button
+                type="button"
+                className="schedule-btn change"
+                onClick={() => {
+                  setPicking(true);
+                  setScheduleError("");
+                }}
+                disabled={!currentMeeting}
+              >
+                Изменить время
+              </button>
+            </div>
+          </div>
+
+          <Modal open={confirmCancel} onClose={() => setConfirmCancel(false)}>
+            <p className="iv-modal-title">
+              Отменить встречу{panelName ? ` с ${panelName}` : ""}?
+            </p>
+            <div className="iv-modal-actions">
+              <button
+                type="button"
+                className="iv-btn ghost"
+                onClick={() => setConfirmCancel(false)}
+              >
+                Нет
+              </button>
+              <button
+                type="button"
+                className="iv-btn danger"
+                onClick={confirmCancelMeeting}
+              >
+                Отменить встречу
+              </button>
+            </div>
+          </Modal>
+        </div>
+      )}
     </div>
   );
 }

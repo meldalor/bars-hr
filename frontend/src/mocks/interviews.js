@@ -1,4 +1,5 @@
-import { LANGUAGES, TAG_COLORS } from "./vacancies.js";
+import { LANGUAGES, TAG_COLORS, getVacancyById } from "./vacancies.js";
+import { getAssessment } from "./assessment.js";
 
 export const INTERVIEW_QUESTION_HINT =
     "Конкретные проекты, используемый стек (C#, .NET, Xamarin/MAUI), количество пользователей и роль в команде";
@@ -146,61 +147,21 @@ const SLOT_MONTHS = [
     "июля", "августа", "сентября", "октября", "ноября", "декабря",
 ];
 
-const SCHEDULE_DAYS = [
-    "2026-07-06",
-    "2026-07-07",
-    "2026-07-08",
-    "2026-07-09",
-    "2026-07-10",
-];
+export const DAY_START = 8 * 60;
+export const DAY_END = 19 * 60;
 
-const DAY_START = 8 * 60;
-const DAY_END = 19 * 60;
-const SLOT_LENGTH = 60;
-const SLOT_STEP = 30;
-
-function toMinutes(time) {
+export function toMinutes(time) {
     const [hours, minutes] = time.split(":").map(Number);
     return hours * 60 + minutes;
 }
 
-function toTime(minutes) {
+export function toTime(minutes) {
     const hours = Math.floor(minutes / 60);
     const rest = minutes % 60;
     return `${String(hours).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
 }
 
-function findFreeSlot() {
-    for (const date of SCHEDULE_DAYS) {
-        const dayMeetings = MEETINGS.filter((meeting) => meeting.date === date);
-
-        for (let start = DAY_START; start + SLOT_LENGTH <= DAY_END; start += SLOT_STEP) {
-            const end = start + SLOT_LENGTH;
-            const busy = dayMeetings.some((meeting) => {
-                const meetingStart = toMinutes(meeting.startTime);
-                const meetingEnd = toMinutes(meeting.endTime);
-                return start < meetingEnd && meetingStart < end;
-            });
-
-            if (!busy) {
-                return { date, startTime: toTime(start), endTime: toTime(end) };
-            }
-        }
-    }
-
-    return null;
-}
-
-export function getMeetingForCandidate(candidateId) {
-    return MEETINGS.find((meeting) => meeting.candidateId === candidateId) || null;
-}
-
-export function scheduleInterview(candidate, vacancy) {
-    const slot = findFreeSlot();
-    if (!slot) {
-        return null;
-    }
-
+function buildTags(vacancy) {
     const tags = [];
     const lang = LANGUAGES[vacancy.lang];
     if (lang) {
@@ -209,24 +170,62 @@ export function scheduleInterview(candidate, vacancy) {
     tags.push({ label: vacancy.experience, color: TAG_COLORS.experience });
     tags.push({ label: vacancy.employment, color: TAG_COLORS.employment });
     tags.push({ label: vacancy.city, color: TAG_COLORS.city });
+    return tags;
+}
+
+export function getMeetingForCandidate(candidateId) {
+    return MEETINGS.find((meeting) => meeting.candidateId === candidateId) || null;
+}
+
+export function saveInterviewSlot(candidate, vacancy, slot) {
+    const startMin = toMinutes(slot.startTime);
+    const endMin = startMin + slot.durationMinutes;
+
+    const existing = MEETINGS.find((meeting) => meeting.candidateId === candidate.id) || null;
+
+    const overlap = MEETINGS.some((meeting) => {
+        if (existing && meeting === existing) {
+            return false;
+        }
+        if (meeting.date !== slot.date) {
+            return false;
+        }
+        const meetingStart = toMinutes(meeting.startTime);
+        const meetingEnd = toMinutes(meeting.endTime);
+        return startMin < meetingEnd && meetingStart < endMin;
+    });
+
+    if (overlap) {
+        return { ok: false, meeting: existing };
+    }
+
+    const endTime = toTime(endMin);
+
+    if (existing) {
+        existing.date = slot.date;
+        existing.startTime = slot.startTime;
+        existing.endTime = endTime;
+        return { ok: true, meeting: existing };
+    }
 
     const meeting = {
         id: `s${Date.now()}`,
         candidateId: candidate.id,
+        vacancyId: vacancy.id,
         date: slot.date,
         startTime: slot.startTime,
-        endTime: slot.endTime,
+        endTime,
         type: "pink",
         fullName: candidate.name,
         vacancy: vacancy.title,
         role: candidate.specialty,
-        tags,
+        tags: buildTags(vacancy),
         skills: [...vacancy.requirements],
         additionalInfo: "",
     };
 
     MEETINGS.push(meeting);
-    return meeting;
+    return { ok: true, meeting };
 }
 
 export function cancelInterview(candidateId) {
@@ -235,6 +234,44 @@ export function cancelInterview(candidateId) {
             MEETINGS.splice(i, 1);
         }
     }
+}
+
+export function removeMeeting(id) {
+    const index = MEETINGS.findIndex((meeting) => String(meeting.id) === String(id));
+    if (index !== -1) {
+        MEETINGS.splice(index, 1);
+    }
+}
+
+export function updateMeetingTime(id, slot) {
+    const meeting = MEETINGS.find((item) => String(item.id) === String(id));
+    if (!meeting) {
+        return { ok: false, meeting: null };
+    }
+
+    const startMin = toMinutes(slot.startTime);
+    const endMin = startMin + slot.durationMinutes;
+
+    const overlap = MEETINGS.some((other) => {
+        if (other === meeting) {
+            return false;
+        }
+        if (other.date !== slot.date) {
+            return false;
+        }
+        const otherStart = toMinutes(other.startTime);
+        const otherEnd = toMinutes(other.endTime);
+        return startMin < otherEnd && otherStart < endMin;
+    });
+
+    if (overlap) {
+        return { ok: false, meeting };
+    }
+
+    meeting.date = slot.date;
+    meeting.startTime = slot.startTime;
+    meeting.endTime = toTime(endMin);
+    return { ok: true, meeting };
 }
 
 export function formatMeetingSlot(meeting) {
@@ -256,6 +293,26 @@ function storageKey(id) {
     return `huntly_interview_${id}`;
 }
 
+function baseAssessment(meeting) {
+    const vacancy = meeting && meeting.vacancyId ? getVacancyById(meeting.vacancyId) : null;
+
+    if (vacancy && vacancy.assessment) {
+        const assessment = getAssessment(vacancy);
+        return {
+            questions: assessment.questions.map((question) => ({
+                text: question.text,
+                hint: question.hint || "",
+            })),
+            matrix: assessment.matrix,
+        };
+    }
+
+    return {
+        questions: INTERVIEW_QUESTIONS.map((text) => ({ text, hint: "" })),
+        matrix: INTERVIEW_MATRIX,
+    };
+}
+
 export function getInterview(meeting) {
     const raw = meeting ? localStorage.getItem(storageKey(meeting.id)) : null;
 
@@ -270,12 +327,19 @@ export function getInterview(meeting) {
         };
     }
 
+    const base = baseAssessment(meeting);
+
     return {
-        questions: INTERVIEW_QUESTIONS.map((text) => ({ text, rating: 0, comment: "" })),
+        questions: base.questions.map((question) => ({
+            text: question.text,
+            hint: question.hint,
+            rating: 0,
+            comment: "",
+        })),
         matrix: {
-            hard: INTERVIEW_MATRIX.hard.map((item) => ({ ...item, rating: 0, comment: "" })),
-            soft: INTERVIEW_MATRIX.soft.map((item) => ({ ...item, rating: 0, comment: "" })),
-            culture: INTERVIEW_MATRIX.culture.map((item) => ({ ...item, rating: 0, comment: "" })),
+            hard: base.matrix.hard.map((item) => ({ ...item, rating: 0, comment: "" })),
+            soft: base.matrix.soft.map((item) => ({ ...item, rating: 0, comment: "" })),
+            culture: base.matrix.culture.map((item) => ({ ...item, rating: 0, comment: "" })),
         },
         skills: meeting ? [...meeting.skills] : [],
         finalScore: "",
