@@ -13,7 +13,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    // Кнопка Authorize в Swagger: вставляем токен из POST /api/auth/login (без слова Bearer)
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -29,17 +28,15 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Регистрация DbContext (EF Core + PostgreSQL)
 builder.Services.AddDbContext<BarsHrDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ICandidateService, CandidateService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IInterviewService, InterviewService>();
 builder.Services.AddScoped<IEvaluationService, EvaluationService>();
 builder.Services.AddScoped<IVacancyService, VacancyService>();
-
-// ==================== JWT ====================
 
 var jwt = builder.Configuration.GetSection("Jwt");
 
@@ -70,12 +67,10 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAsync(db);
 }
 
-// ==================== MIDDLEWARE ====================
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    // токен из Authorize сохраняется в localStorage и переживает обновление страницы
+
     app.UseSwaggerUI(options => options.EnablePersistAuthorization());
 }
 
