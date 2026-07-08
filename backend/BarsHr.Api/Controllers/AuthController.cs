@@ -1,6 +1,8 @@
 using BarsHr.Api.Data;
+using BarsHr.Api.Domain;
 using BarsHr.Api.Domain.Entities;
 using BarsHr.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -23,9 +25,8 @@ namespace BarsHr.Api.Controllers
             _config = config;
         }
 
-        // TODO: временный эндпоинт, чтобы завести первого пользователя.
-        // По ТЗ самостоятельной регистрации нет — когда появится сид пользователей,
-        // удалить или закрыть [Authorize(Roles = "Admin")].
+        // самостоятельной регистрации по ТЗ нет — пользователей заводит админ
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto model)
         {
@@ -35,13 +36,17 @@ namespace BarsHr.Api.Controllers
             if (model.Password.Length < 6)
                 return BadRequest("Пароль должен быть не менее 6 символов");
 
+            if (!Roles.All.Contains(model.Role))
+                return BadRequest($"Роль должна быть одной из: {string.Join(", ", Roles.All)}");
+
             if (await _context.Users.AnyAsync(u => u.Login == model.Username))
                 return BadRequest("Пользователь уже существует");
 
             var user = new User
             {
                 Login = model.Username,
-                FullName = model.Username,
+                FullName = string.IsNullOrWhiteSpace(model.FullName) ? model.Username : model.FullName,
+                Role = model.Role,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password)
             };
 

@@ -33,7 +33,9 @@ builder.Services.AddDbContext<BarsHrDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ICandidateService, CandidateService>();
+builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IInterviewService, InterviewService>();
+builder.Services.AddScoped<IEvaluationService, EvaluationService>();
 
 // ==================== JWT ====================
 
@@ -58,6 +60,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// стартовые пользователи и демо-данные: без них на чистой БД невозможно войти
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BarsHrDbContext>();
+    await DbSeeder.SeedAsync(db);
+}
 
 // ==================== MIDDLEWARE ====================
 

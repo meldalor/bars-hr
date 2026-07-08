@@ -2,11 +2,10 @@ namespace BarsHr.Api.DTOs.Evaluations;
 
 public record EvaluationDto(
     int Id,
-    int InterviewId,
     int CompetencyId,
-    string CompetencyName,      
+    string CompetencyName,
     int Score,
+    int MaxScore,
     string? Comment,
-    int EvaluatedById,
     DateTime EvaluatedAt
 );

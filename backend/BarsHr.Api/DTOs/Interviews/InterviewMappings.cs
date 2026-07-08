@@ -5,56 +5,31 @@ namespace BarsHr.Api.DTOs.Interviews;
 
 public static class InterviewMappings
 {
-    public static InterviewDto ToDto(this Interview interview) => new(
-        interview.Id,
-        interview.ApplicationId,
-        interview.ScheduledAt,
-        interview.Plan,
-        interview.Status,
-        interview.SubStatus,
-        interview.OverallScore,
-        interview.GeneralNotes,
-        interview.Evaluations.Select(e => e.ToDto()).ToList(),   // ← вложенный маппинг
-        interview.CreatedById,
-        interview.CreatedAt,
-        interview.UpdatedById,
-        interview.UpdatedAt,
-        interview.InterviewerId
+    // требует загруженных Application.Candidate/Vacancy, Interviewer и Evaluations с Competency
+    public static InterviewDto ToDto(this Interview i) => new(
+        i.Id,
+        i.ApplicationId,
+        i.Application?.CandidateId ?? 0,
+        i.Application?.Candidate?.FullName ?? string.Empty,
+        i.Application?.VacancyId ?? 0,
+        i.Application?.Vacancy?.Title ?? string.Empty,
+        i.ScheduledAt,
+        i.Status,
+        i.Plan,
+        i.OverallScore,
+        i.GeneralNotes,
+        i.InterviewerId,
+        i.Interviewer?.FullName,
+        i.Evaluations.Select(e => e.ToDto()).ToList()
     );
 
-    public static Interview ToEntity(this CreateInterviewRequest request, int currentUserId) => new()
+    public static Interview ToEntity(this CreateInterviewRequest r, int currentUserId) => new()
     {
-        ApplicationId = request.ApplicationId,
-        ScheduledAt = DateTime.SpecifyKind(request.ScheduledAt, DateTimeKind.Utc),
-        Plan = request.Plan,
-        Status = "New",                    
-        CreatedById = currentUserId,
-        CreatedAt = DateTime.UtcNow
+        ApplicationId = r.ApplicationId,
+        ScheduledAt = r.ScheduledAt,
+        Plan = r.Plan,
+        InterviewerId = r.InterviewerId,
+        Status = "Scheduled",
+        CreatedById = currentUserId
     };
-
-    public static void ApplyUpdate(this Interview interview, UpdateInterviewRequest request)
-    {
-        if (request.ScheduledAt.HasValue)
-            interview.ScheduledAt = request.ScheduledAt.Value;
-
-        if (request.Plan != null)
-            interview.Plan = request.Plan;
-
-        if (request.Status != null)
-            interview.Status = request.Status;
-
-        if (request.SubStatus != null)
-            interview.SubStatus = request.SubStatus;
-
-        if (request.OverallScore.HasValue)
-            interview.OverallScore = request.OverallScore;
-
-        if (request.GeneralNotes != null)
-            interview.GeneralNotes = request.GeneralNotes;
-
-        if (request.InterviewerId.HasValue)
-            interview.InterviewerId = request.InterviewerId;
-
-        interview.UpdatedAt = DateTime.UtcNow;
-    }
 }

@@ -1,11 +1,13 @@
-using BarsHr.Api.DTOs.Evaluations;
 using BarsHr.Api.DTOs.Interviews;
+using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarsHr.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class InterviewsController : ControllerBase
 {
@@ -16,6 +18,15 @@ public class InterviewsController : ControllerBase
         _interviewService = interviewService;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<List<InterviewListItemDto>>> GetAll(
+        [FromQuery] string? scope,
+        [FromQuery] int? candidateId)
+    {
+        var result = await _interviewService.GetAllAsync(scope, candidateId);
+        return Ok(result);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<InterviewDto>> GetById(int id)
     {
@@ -24,46 +35,15 @@ public class InterviewsController : ControllerBase
         return Ok(interview);
     }
 
-    [HttpGet("by-application/{applicationId}")]
-    public async Task<ActionResult<List<InterviewDto>>> GetByApplicationId(int applicationId)
-    {
-        var interviews = await _interviewService.GetByApplicationIdAsync(applicationId);
-        return Ok(interviews);
-    }
-
     [HttpPost]
     public async Task<ActionResult<InterviewDto>> Create([FromBody] CreateInterviewRequest request)
     {
-        var currentUserId = 1;
-
-        var created = await _interviewService.CreateAsync(request, currentUserId);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult<InterviewDto>> Update(int id, [FromBody] UpdateInterviewRequest request)
-    {
-        var currentUserId = 1;
-
-        var updated = await _interviewService.UpdateAsync(id, request, currentUserId);
-        if (updated == null) return NotFound();
-        return Ok(updated);
-    }
-
-    [HttpPost("{interviewId}/evaluations")]
-    public async Task<ActionResult<EvaluationDto>> AddEvaluation(int interviewId, [FromBody] CreateEvaluationRequest request)
-    {
-        var currentUserId = 1;
+        var currentUserId = User.GetUserId();
 
         try
         {
-            var evaluation = await _interviewService.AddEvaluationAsync(interviewId, request, currentUserId);
-
-            return CreatedAtAction(
-                nameof(GetById),                          
-                new { id = interviewId },                 
-                evaluation                                
-            );
+            var created = await _interviewService.CreateAsync(request, currentUserId);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
         {

@@ -5,17 +5,16 @@ namespace BarsHr.Api.DTOs.Interviews;
 public record InterviewDto(
     int Id,
     int ApplicationId,
+    int CandidateId,
+    string CandidateFullName,
+    int VacancyId,
+    string VacancyTitle,
     DateTime ScheduledAt,
-    string? Plan,
     string Status,
-    string? SubStatus,
+    string? Plan,
     decimal? OverallScore,
     string? GeneralNotes,
-    List<EvaluationDto> Evaluations,  
-
-    int CreatedById,
-    DateTime CreatedAt,
-    int? UpdatedById,
-    DateTime? UpdatedAt,
-    int? InterviewerId
+    int? InterviewerId,
+    string? InterviewerName,
+    List<EvaluationDto> Evaluations
 );
