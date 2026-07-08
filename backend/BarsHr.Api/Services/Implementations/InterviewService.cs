@@ -51,7 +51,7 @@ public class InterviewService : IInterviewService
             .Include(i => i.Application)!.ThenInclude(a => a!.Candidate)
             .Include(i => i.Application)!.ThenInclude(a => a!.Vacancy)
             .Include(i => i.Interviewer)
-            .Include(i => i.Evaluations).ThenInclude(e => e.Competency)
+            .Include(i => i.Evaluations).ThenInclude(e => e.Competency)!.ThenInclude(c => c!.Skill)
             .Include(i => i.Decision)!.ThenInclude(d => d!.MadeBy)
             .FirstOrDefaultAsync(i => i.Id == id);
 
