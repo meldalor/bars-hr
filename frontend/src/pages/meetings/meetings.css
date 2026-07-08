@@ -169,6 +169,7 @@
 
 .meeting-card-absolute {
   position: absolute;
+  border: none;
   border-radius: 8px;
   padding: 4px 12px;
   box-sizing: border-box;
@@ -176,6 +177,8 @@
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.1s;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  font-family: inherit;
+  text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -183,10 +186,16 @@
   overflow: hidden;
 }
 
-.meeting-card-absolute:hover {
+.meeting-card-absolute:hover,
+.meeting-card-absolute--selected {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: scale(1.02);
   z-index: 10;
+}
+
+.meeting-card-absolute--selected {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .meeting-time {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IMaskInput } from "react-imask";
 import "../../pages/candidates/CreateCandidate.css"; // Путь к CSS (можно оставить или скопировать CSS в components)
@@ -195,14 +195,6 @@ export default function CandidateForm({
   const removeExperience = (id) => setExperience((prev) => prev.filter((e) => e.id !== id));
   const updateExperience = (id, field, value) =>
     setExperience((prev) => prev.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
-
-  const progress = useMemo(() => {
-    const total = REQUIRED_FIELDS.length + 1;
-    const filled =
-      REQUIRED_FIELDS.filter((f) => formData[f].trim() !== "").length +
-      (formData.selectedSkills.length > 0 ? 1 : 0);
-    return Math.round((filled / total) * 100);
-  }, [formData]);
 
   const mainSectionDone =
     REQUIRED_FIELDS.every((f) => formData[f].trim() !== "") && formData.selectedSkills.length > 0;

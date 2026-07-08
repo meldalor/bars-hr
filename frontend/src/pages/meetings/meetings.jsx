@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   format,
   addWeeks,
@@ -20,16 +20,24 @@ import "./meetings.css";
 import { MEETINGS as MOCK_MEETINGS } from "../../mocks/interviews.js";
 
 function Meetings() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const initialMeeting = MOCK_MEETINGS.find((item) => item.id === location.state?.meetingId);
+
   const [meetings, setMeetings] = useState([]);
-  const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(2026, 6, 6), { weekStartsOn: 1 })); 
+  const [currentWeekStart, setCurrentWeekStart] = useState(
+    initialMeeting
+      ? startOfWeek(parseISO(initialMeeting.date), { weekStartsOn: 1 })
+      : startOfWeek(new Date(2026, 6, 6), { weekStartsOn: 1 })
+  );
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
+  const [selectedMeetingId, setSelectedMeetingId] = useState(initialMeeting?.id || null);
   const calendarBodyRef = useRef(null);
 
-  const HOUR_START = 8; 
-  const HOUR_END = 19;   
+  const HOUR_START = 8;
+  const HOUR_END = 19;
   const STEP_MINUTES = 30;
-  const ROW_HEIGHT_PX = 40; 
+  const ROW_HEIGHT_PX = 40;
   const TIME_COLUMN_WIDTH = 52;
 
   useEffect(() => {
@@ -45,13 +53,13 @@ function Meetings() {
 
   const timeLabels = [];
   for (let h = HOUR_START; h <= HOUR_END; h++) {
-    timeLabels.push(`${String(h).padStart(2, '0')}:00`);
+    timeLabels.push(`${String(h).padStart(2, "0")}:00`);
   }
 
   const gridSlots = [];
   for (let h = HOUR_START; h < HOUR_END; h++) {
     for (let m = 0; m < 60; m += STEP_MINUTES) {
-      gridSlots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+      gridSlots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
     }
   }
 
@@ -60,18 +68,16 @@ function Meetings() {
       const now = new Date();
       const currentHour = getHours(now);
       const currentMinute = getMinutes(now);
-      
-      // Вычисляем, сколько минут прошло с 8 утра
+
       const minutesFromStart = (currentHour - HOUR_START) * 60 + currentMinute;
-      const pixelsPerMinute = ROW_HEIGHT_PX / STEP_MINUTES; 
+      const pixelsPerMinute = ROW_HEIGHT_PX / STEP_MINUTES;
       let position = minutesFromStart * pixelsPerMinute;
 
-      // ВАЖНО: Если время за 19:00, ставим линию в самый низ сетки
-      const maxPosition = (HOUR_END - HOUR_START) * 60 * (ROW_HEIGHT_PX / STEP_MINUTES);
+      const maxPosition = (HOUR_END - HOUR_START) * 60 * pixelsPerMinute;
       if (position > maxPosition) {
         position = maxPosition;
       }
-      
+
       setCurrentTimePosition(Math.max(0, position));
     };
 
@@ -100,8 +106,9 @@ function Meetings() {
     return colors[type] || colors.blue;
   };
 
-  const handleMeetingClick = (id) => {
-    navigate(`/app/meetings/${id}`);
+  const handleMeetingClick = (meeting) => {
+    setSelectedMeetingId(meeting.id);
+    navigate(`/app/meetings/${meeting.id}`);
   };
 
   const monthLabel = format(currentWeekStart, "LLLL yyyy", { locale: ru });
@@ -110,8 +117,8 @@ function Meetings() {
     const meetingDate = parseISO(meeting.date);
     const start = parseISO(`${meeting.date}T${meeting.startTime}`);
     const end = parseISO(`${meeting.date}T${meeting.endTime}`);
-    
-    const dayIndex = weekDays.findIndex(d => isSameDay(d, meetingDate));
+
+    const dayIndex = weekDays.findIndex((day) => isSameDay(day, meetingDate));
     if (dayIndex === -1) return null;
 
     const minutesFromStart = (getHours(start) - HOUR_START) * 60 + getMinutes(start);
@@ -122,7 +129,7 @@ function Meetings() {
 
     const totalWidth = `calc(100% - ${TIME_COLUMN_WIDTH}px)`;
     const columnWidth = `calc(${totalWidth} / 7)`;
-    
+
     const leftPx = `calc(${TIME_COLUMN_WIDTH}px + ${dayIndex} * (${columnWidth}) + 3px)`;
     const widthPx = `calc(${columnWidth} - 6px)`;
 
@@ -136,24 +143,19 @@ function Meetings() {
 
   return (
     <div className="meetings-page">
-      
-      {/* ОТДЕЛЬНЫЙ БЛОК ЗАГОЛОВКА С РАВНЫМИ ОТСТУПАМИ */}
       <div className="page-title-wrapper">
         <h1 className="page-title">
           <span className="title-main">Встречи:</span>
-          <span className="title-sub">
-            &nbsp;назначено {meetings.length} встреч
-          </span>
+          <span className="title-sub">&nbsp;назначено {meetings.length} встреч</span>
         </h1>
       </div>
 
-      {/* КАЛЕНДАРЬ */}
       <div className="meetings-layout-full">
         <div className="calendar-container-full">
           <div className="calendar-header">
             <div className="calendar-nav">
               <button className="nav-arrow" onClick={handlePrevWeek}>{"<"}</button>
-              <span className="month-label" style={{ textTransform: 'capitalize' }}>
+              <span className="month-label" style={{ textTransform: "capitalize" }}>
                 {monthLabel}
               </span>
               <button className="nav-arrow" onClick={handleNextWeek}>{">"}</button>
@@ -161,15 +163,14 @@ function Meetings() {
           </div>
 
           <div className="calendar-grid">
-            {/* Дни недели */}
             <div className="grid-header-row">
               <div className="grid-time-header-cell"></div>
               {weekDays.map((day) => {
                 const isTodayFlag = isToday(day);
                 return (
-                  <div 
-                    key={day.toISOString()} 
-                    className={`grid-header-cell ${isTodayFlag ? 'today-header' : ''}`}
+                  <div
+                    key={day.toISOString()}
+                    className={`grid-header-cell ${isTodayFlag ? "today-header" : ""}`}
                   >
                     {format(day, "EEEE d MMM", { locale: ru })}
                   </div>
@@ -186,8 +187,8 @@ function Meetings() {
                         {index % 2 === 0 ? timeLabels[index / 2] : ""}
                       </div>
                       {weekDays.map((day) => (
-                        <div 
-                          key={`${day.toISOString()}-${slot}`} 
+                        <div
+                          key={`${day.toISOString()}-${slot}`}
                           className="grid-cell"
                         ></div>
                       ))}
@@ -195,16 +196,15 @@ function Meetings() {
                   ))}
                 </div>
 
-                {/* Карточки встреч */}
                 <div className="meetings-overlay">
                   {meetings.map((meeting) => {
                     const meetingDate = parseISO(meeting.date);
-                    
+
                     const isInWeek = isWithinInterval(meetingDate, {
                       start: startOfWeek(currentWeekStart, { weekStartsOn: 1 }),
-                      end: endOfWeek(currentWeekStart, { weekStartsOn: 1 })
+                      end: endOfWeek(currentWeekStart, { weekStartsOn: 1 }),
                     });
-                    
+
                     if (!isInWeek) return null;
 
                     const styles = getColorStyles(meeting.type);
@@ -212,10 +212,13 @@ function Meetings() {
                     if (!pos) return null;
 
                     return (
-                      <div 
+                      <button
+                        type="button"
                         key={meeting.id}
-                        className="meeting-card-absolute"
-                        onClick={() => handleMeetingClick(meeting.id)}
+                        className={`meeting-card-absolute ${
+                          selectedMeetingId === meeting.id ? "meeting-card-absolute--selected" : ""
+                        }`}
+                        onClick={() => handleMeetingClick(meeting)}
                         style={{
                           top: `${pos.top}px`,
                           left: pos.left,
@@ -230,18 +233,17 @@ function Meetings() {
                         </div>
                         <div className="meeting-name">{meeting.fullName}</div>
                         <div className="meeting-vacancy">{meeting.vacancy}</div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
 
-                <div 
-                  className="current-time-line-absolute" 
+                <div
+                  className="current-time-line-absolute"
                   style={{ top: `${currentTimePosition}px` }}
                 >
                   <div className="current-time-dot"></div>
                 </div>
-
               </div>
             </div>
           </div>
