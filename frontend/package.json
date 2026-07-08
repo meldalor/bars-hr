@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "date-fns": "^4.4.0",
+    "lucide-react": "^1.23.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-imask": "^7.6.1",
     "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
