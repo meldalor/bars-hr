@@ -17,5 +17,7 @@ public interface IVacancyService
 
     Task<VacancyDto?> UpdateAsync(int id, UpdateVacancyRequest request, int currentUserId);
 
+    Task<VacancyDto?> SetCompetenciesAsync(int id, List<CompetencyItem> items);
+
     Task<bool> SetArchivedAsync(int id, bool archived);
 }
