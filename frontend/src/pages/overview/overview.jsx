@@ -7,19 +7,17 @@ import ActivityTable from "./components/ActivityTable/ActivityTable";
 
 function Overview() {
     return (
-        <main className="overview">
+        <main className="overview-page">
+            <h1 className="overview-title">Обзор</h1>
+
             <StatisticsCards />
 
-            <section className="overview-content">
-                <div className="overview-left">
-                    <ProfileCard />
-                    <ActivityTable />
-                </div>
-
-                <div className="overview-right">
-                    <InterviewsCard />
-                </div>
+            <section className="overview-top">
+                <ProfileCard />
+                <InterviewsCard />
             </section>
+
+            <ActivityTable />
         </main>
     );
 }
