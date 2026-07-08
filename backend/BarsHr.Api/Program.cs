@@ -73,7 +73,8 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    // токен из Authorize сохраняется в localStorage и переживает обновление страницы
+    app.UseSwaggerUI(options => options.EnablePersistAuthorization());
 }
 
 app.UseAuthentication();
