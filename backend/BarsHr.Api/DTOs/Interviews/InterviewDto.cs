@@ -1,4 +1,5 @@
 using BarsHr.Api.DTOs.Evaluations;
+using BarsHr.Api.DTOs.Decisions;
 
 namespace BarsHr.Api.DTOs.Interviews;
 
@@ -16,5 +17,6 @@ public record InterviewDto(
     string? GeneralNotes,
     int? InterviewerId,
     string? InterviewerName,
-    List<EvaluationDto> Evaluations
+    List<EvaluationDto> Evaluations,
+    DecisionDto? Decision
 );
