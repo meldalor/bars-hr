@@ -52,7 +52,10 @@ public class VacancyService : IVacancyService
                 v.SalaryMax,
                 v.Status,
                 v.Applications.Count,
-                v.CreatedAt
+                v.CreatedAt,
+                v.Department,
+                v.Skills,
+                v.UpdatedAt
             ))
             .ToListAsync();
     }

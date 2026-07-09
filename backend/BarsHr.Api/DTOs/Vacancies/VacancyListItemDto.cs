@@ -10,6 +10,10 @@ public record VacancyListItemDto(
     int? SalaryMax,
     string Status,
     int ApplicationsCount,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    // нужны карточке списка на фронте: чипы навыков, отдел и дата правки
+    string? Department,
+    string? Skills,
+    DateTime? UpdatedAt
 );
 
