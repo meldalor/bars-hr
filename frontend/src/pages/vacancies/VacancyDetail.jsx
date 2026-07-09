@@ -131,6 +131,7 @@ export default function VacancyDetail() {
                 <VacancyDescription vacancy={vacancy} />
             ) : (
                 <CandidatesTable
+                    vacancyId={id}
                     applications={applications}
                     statusFilter={activeTab}
                     onChanged={reloadApplications}

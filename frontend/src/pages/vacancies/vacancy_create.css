@@ -16,6 +16,11 @@
     color: #1a1a1a;
 }
 
+/* заголовок «Компетенции» идёт сразу после кнопки «Добавить» требований — нужен воздух */
+.vcreate-section-comps {
+    margin-top: 36px;
+}
+
 .vcreate-cols {
     display: flex;
     align-items: flex-start;

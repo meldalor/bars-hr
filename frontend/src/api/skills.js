@@ -16,3 +16,8 @@ export function fetchSkills({ type, includeInactive = false } = {}) {
 export function createSkill({ name, type }) {
     return apiPost("/skills", { name, type });
 }
+
+// мягкое удаление из пула: навык архивируется и пропадает из выбора у всех вакансий
+export function archiveSkill(id) {
+    return apiPost(`/skills/${id}/archive`);
+}

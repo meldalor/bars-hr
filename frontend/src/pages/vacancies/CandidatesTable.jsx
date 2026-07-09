@@ -18,7 +18,7 @@ function initials(name) {
 }
 
 // отклики по вакансии + инлайн-смена статуса/подстатуса (PUT /applications/{id}/status)
-export default function CandidatesTable({ applications, statusFilter, onChanged }) {
+export default function CandidatesTable({ vacancyId, applications, statusFilter, onChanged }) {
     const navigate = useNavigate();
     const [query, setQuery] = useState("");
     const [openKey, setOpenKey] = useState(null);
@@ -63,11 +63,20 @@ export default function CandidatesTable({ applications, statusFilter, onChanged 
                 </div>
                 <button
                     type="button"
+                    className="vac-btn"
+                    onClick={() =>
+                        navigate("/app/candidates", { state: { selectForVacancy: vacancyId } })
+                    }
+                >
+                    Выбрать кандидата
+                </button>
+                <button
+                    type="button"
                     className="vac-btn vac-btn-primary"
-                    onClick={() => navigate("/app/candidates/create")}
+                    onClick={() => navigate("/app/candidates/create", { state: { vacancyId } })}
                 >
                     <IconPlus size={18} />
-                    Добавить кандидата
+                    Создать кандидата
                 </button>
             </div>
 

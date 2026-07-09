@@ -10,7 +10,7 @@ import Modal from "../../components/ui/Modal/Modal.jsx";
 import { createVacancy, saveVacancy, fetchVacancy, setCompetencies } from "../../api/vacancies.js";
 import { positiveIntError } from "../../utils/validation.js";
 import CompetencyMatrix from "./CompetencyMatrix.jsx";
-import { IconPlus, IconXCircle, IconCheckCircle } from "./icons.jsx";
+import { IconXCircle, IconCheckCircle } from "./icons.jsx";
 
 const REQUIRED_FIELDS = [
     "title",
@@ -331,10 +331,11 @@ export default function VacancyCreate() {
                             </div>
 
                             {adding ? (
-                                <div className="vcreate-add-row">
+                                // та же форма, что у добавления компетенции, адаптированная под требование
+                                <div className="va-add-form">
                                     <input
-                                        className="vcreate-add-input"
-                                        placeholder="Новое требование"
+                                        className="va-add-input"
+                                        placeholder="Название требования"
                                         value={newReq}
                                         autoFocus
                                         onChange={(event) => setNewReq(event.target.value)}
@@ -347,19 +348,28 @@ export default function VacancyCreate() {
                                     />
                                     <button
                                         type="button"
-                                        className="vcreate-add-confirm"
+                                        className="va-add-confirm"
                                         onClick={addReq}
                                     >
                                         Добавить
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="va-add-cancel"
+                                        onClick={() => {
+                                            setNewReq("");
+                                            setAdding(false);
+                                        }}
+                                    >
+                                        Отмена
                                     </button>
                                 </div>
                             ) : (
                                 <button
                                     type="button"
-                                    className="vcreate-add-btn"
+                                    className="va-add-btn"
                                     onClick={() => setAdding(true)}
                                 >
-                                    <IconPlus size={16} />
                                     Добавить
                                 </button>
                             )}
@@ -407,7 +417,7 @@ export default function VacancyCreate() {
                     </div>
                 </div>
 
-                <h2 className="vcreate-section">Компетенции</h2>
+                <h2 className="vcreate-section vcreate-section-comps">Компетенции</h2>
                 <CompetencyMatrix defaultFill={!editing} value={comps} onChange={setComps} />
 
                 {Object.keys(errors).length > 0 && (

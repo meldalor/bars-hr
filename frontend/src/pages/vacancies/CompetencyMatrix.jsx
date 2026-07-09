@@ -1,7 +1,8 @@
 import "./vacancy_assessment.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { fetchSkills, createSkill } from "../../api/skills.js";
+import { fetchSkills, createSkill, archiveSkill } from "../../api/skills.js";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 
 const GROUPS = [
     { type: "Hard", title: "A. Hard Skills (технические навыки)" },
@@ -89,6 +90,7 @@ export default function CompetencyMatrix({ value, onChange, defaultFill = false 
     const [skills, setSkills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     const latest = useRef({ value, onChange, defaultFill });
     useEffect(() => {
@@ -151,6 +153,24 @@ export default function CompetencyMatrix({ value, onChange, defaultFill = false 
         onChange({ ...value, [created.id]: 5 });
     };
 
+    // удаление навыка из общего пула (архивация); снимаем и выбор, если стоял
+    const doArchive = async () => {
+        const skill = deleteTarget;
+        setDeleteTarget(null);
+        setError("");
+        try {
+            await archiveSkill(skill.id);
+            setSkills((prev) => prev.filter((item) => item.id !== skill.id));
+            if (skill.id in value) {
+                const next = { ...value };
+                delete next[skill.id];
+                onChange(next);
+            }
+        } catch (archiveError) {
+            setError(archiveError.message || "Не удалось удалить навык");
+        }
+    };
+
     return (
         <div className="va-card">
             {error && <div className="va-error-note">{error}</div>}
@@ -173,6 +193,19 @@ export default function CompetencyMatrix({ value, onChange, defaultFill = false 
                                         />
                                         <span className="va-skill-name">{skill.name}</span>
                                     </div>
+                                    <button
+                                        type="button"
+                                        className="va-skill-delete"
+                                        title="Удалить навык из пула"
+                                        aria-label={`Удалить навык «${skill.name}»`}
+                                        onClick={(event) => {
+                                            // клик по кнопке внутри label не должен переключать чекбокс
+                                            event.preventDefault();
+                                            setDeleteTarget(skill);
+                                        }}
+                                    >
+                                        ×
+                                    </button>
                                 </label>
                             ))
                         )}
@@ -180,6 +213,20 @@ export default function CompetencyMatrix({ value, onChange, defaultFill = false 
                     </div>
                 ))
             )}
+
+            <Modal open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
+                <p className="va-modal-title">
+                    Удалить навык «{deleteTarget?.name}» из пула? Он исчезнет из выбора для всех вакансий.
+                </p>
+                <div className="va-modal-actions">
+                    <button type="button" className="va-btn ghost" onClick={() => setDeleteTarget(null)}>
+                        Отмена
+                    </button>
+                    <button type="button" className="va-btn danger" onClick={doArchive}>
+                        Удалить
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }
