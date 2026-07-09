@@ -8,6 +8,7 @@ import Select from "../../components/ui/Select/Select.jsx";
 import Modal from "../../components/ui/Modal/Modal.jsx";
 
 import { createVacancy, saveVacancy, fetchVacancy, setCompetencies } from "../../api/vacancies.js";
+import { positiveIntError } from "../../utils/validation.js";
 import CompetencyMatrix from "./CompetencyMatrix.jsx";
 import { IconPlus, IconXCircle, IconCheckCircle } from "./icons.jsx";
 
@@ -139,11 +140,23 @@ export default function VacancyCreate() {
         const newErrors = {};
         REQUIRED_FIELDS.forEach((key) => {
             if (!String(form[key]).trim()) {
-                newErrors[key] = true;
+                newErrors[key] = "Заполните обязательные поля";
             }
         });
         if (requirements.length === 0) {
-            newErrors.requirements = true;
+            newErrors.requirements = "Заполните обязательные поля";
+        }
+
+        // числовые поля: положительные целые без ведущего нуля, вилка «от» не больше «до»
+        ["salaryFrom", "salaryTo", "peopleCount"].forEach((key) => {
+            if (!newErrors[key]) {
+                const problem = positiveIntError(form[key]);
+                if (problem) newErrors[key] = problem;
+            }
+        });
+        if (!newErrors.salaryFrom && !newErrors.salaryTo &&
+            Number(form.salaryFrom) > Number(form.salaryTo)) {
+            newErrors.salaryTo = "Зарплата «до» меньше, чем «от»";
         }
 
         setErrors(newErrors);
@@ -399,7 +412,7 @@ export default function VacancyCreate() {
 
                 {Object.keys(errors).length > 0 && (
                     <div className="vcreate-error-note">
-                        Заполните обязательные поля
+                        {[...new Set(Object.values(errors))].join(". ")}
                     </div>
                 )}
 
