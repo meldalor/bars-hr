@@ -20,6 +20,9 @@ public class Interview
     [Column("scheduled_at")]
     public DateTime ScheduledAt { get; set; }
 
+    [Column("duration_minutes")]
+    public int DurationMinutes { get; set; } = 60;
+
     [Column("plan")]
     public string? Plan { get; set; }
 

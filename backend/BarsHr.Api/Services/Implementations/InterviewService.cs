@@ -39,6 +39,7 @@ public class InterviewService : IInterviewService
                 i.Application!.Candidate!.FullName,
                 i.Application!.Vacancy!.Title,
                 i.ScheduledAt,
+                i.DurationMinutes,
                 i.Status,
                 i.Interviewer != null ? i.Interviewer.FullName : null
             ))
@@ -104,6 +105,7 @@ public class InterviewService : IInterviewService
         }
 
         if (request.ScheduledAt.HasValue) interview.ScheduledAt = request.ScheduledAt.Value;
+        if (request.DurationMinutes is > 0) interview.DurationMinutes = request.DurationMinutes.Value;
         if (request.Plan != null) interview.Plan = request.Plan;
 
         interview.UpdatedAt = DateTime.UtcNow;

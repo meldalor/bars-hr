@@ -12,15 +12,17 @@ function statusColor(status) {
     return "blue";
 }
 
-// интервью бэка → объект под сетку календаря (длительность по умолчанию 60 минут)
+// интервью бэка → объект под сетку календаря (длительность хранится на бэке, по умолчанию 60 минут)
 export function mapInterviewToMeeting(dto) {
     const start = new Date(dto.scheduledAt);
-    const end = new Date(start.getTime() + 60 * 60000);
+    const durationMinutes = dto.durationMinutes > 0 ? dto.durationMinutes : 60;
+    const end = new Date(start.getTime() + durationMinutes * 60000);
     return {
         id: String(dto.id),
         date: format(start, "yyyy-MM-dd"),
         startTime: format(start, "HH:mm"),
         endTime: format(end, "HH:mm"),
+        durationMinutes,
         type: statusColor(dto.status),
         fullName: dto.candidateFullName,
         vacancy: dto.vacancyTitle,
@@ -66,20 +68,22 @@ export async function fetchInterview(id) {
     return mapInterview(dto);
 }
 
-export async function createInterview({ applicationId, scheduledAt, plan, interviewerId }) {
+export async function createInterview({ applicationId, scheduledAt, durationMinutes, plan, interviewerId }) {
     const dto = await apiPost("/interviews", {
         applicationId: Number(applicationId),
         scheduledAt,
+        durationMinutes: durationMinutes ?? null,
         plan: plan || null,
         interviewerId: interviewerId ?? null,
     });
     return mapInterview(dto);
 }
 
-// перенос интервью (частичное обновление)
-export async function updateInterview(id, { scheduledAt, plan, interviewerId } = {}) {
+// перенос интервью (частичное обновление; null-поля бэк не меняет)
+export async function updateInterview(id, { scheduledAt, durationMinutes, plan, interviewerId } = {}) {
     const dto = await apiPut(`/interviews/${id}`, {
         scheduledAt: scheduledAt ?? null,
+        durationMinutes: durationMinutes ?? null,
         plan: plan ?? null,
         interviewerId: interviewerId ?? null,
     });

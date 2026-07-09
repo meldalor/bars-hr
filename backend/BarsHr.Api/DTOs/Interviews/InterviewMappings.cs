@@ -15,6 +15,7 @@ public static class InterviewMappings
         i.Application?.VacancyId ?? 0,
         i.Application?.Vacancy?.Title ?? string.Empty,
         i.ScheduledAt,
+        i.DurationMinutes,
         i.Status,
         i.Plan,
         i.OverallScore,
@@ -30,6 +31,7 @@ public static class InterviewMappings
     {
         ApplicationId = r.ApplicationId,
         ScheduledAt = r.ScheduledAt,
+        DurationMinutes = r.DurationMinutes is > 0 ? r.DurationMinutes.Value : 60,
         Plan = r.Plan,
         InterviewerId = r.InterviewerId,
         Status = "Scheduled",

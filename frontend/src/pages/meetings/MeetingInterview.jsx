@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { fetchInterview, saveEvaluations, makeDecision, cancelInterview } from "../../api/interviews.js";
 import { updateApplicationStatus } from "../../api/applications.js";
 import { fetchVacancy } from "../../api/vacancies.js";
-import { downloadInterviewProtocol } from "../../api/documents.js";
+import { downloadInterviewProtocol, downloadCandidateCard } from "../../api/documents.js";
 import { formatDateTime } from "../../api/format.js";
 import { getSession } from "../../auth/session.js";
 import { IconCalendar } from "../vacancies/icons.jsx";
@@ -234,6 +234,15 @@ export default function MeetingInterview() {
                     </button>
                     <button
                         type="button"
+                        className="iv-btn ghost"
+                        onClick={() =>
+                            downloadCandidateCard(interview.candidateId).catch(() => {})
+                        }
+                    >
+                        Скачать резюме кандидата
+                    </button>
+                    <button
+                        type="button"
                         className="iv-btn primary"
                         onClick={() =>
                             navigate("/app/meetings", {
@@ -332,8 +341,9 @@ export default function MeetingInterview() {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <input
+                                                    <textarea
                                                         className="iv-comp-comment"
+                                                        rows={3}
                                                         placeholder="Написать..."
                                                         value={scores[competency.id]?.comment ?? ""}
                                                         onChange={(event) =>
