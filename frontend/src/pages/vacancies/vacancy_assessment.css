@@ -153,6 +153,21 @@
     min-width: 0;
 }
 
+.va-skill-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.va-skill-check input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: #2563eb;
+    cursor: pointer;
+}
+
 .va-skill-name {
     font-size: 15px;
     font-weight: 700;

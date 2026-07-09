@@ -44,83 +44,75 @@
     opacity: 0.9;
 }
 
-.statistics-card:nth-child(1) {
+.statistics-card--free {
     background: #ececec;
 }
 
-.statistics-card:nth-child(1) h3,
-.statistics-card:nth-child(1) .statistics-value,
-.statistics-card:nth-child(1) .statistics-change {
+.statistics-card--free h3,
+.statistics-card--free .statistics-value {
     color: #48494A;
 }
 
-.statistics-card:nth-child(2) {
-    background: #f3e7ff;
-}
-
-.statistics-card:nth-child(2) h3,
-.statistics-card:nth-child(2) .statistics-value,
-.statistics-card:nth-child(2) .statistics-change {
-    color: #6107A3;
-}
-
-.statistics-card:nth-child(3) {
-    background: #e0f6f8;
-}
-
-.statistics-card:nth-child(3) h3,
-.statistics-card:nth-child(3) .statistics-value,
-.statistics-card:nth-child(3) .statistics-change {
-    color: #028ABC;
-}
-
-.statistics-card:nth-child(4) {
-    background: #eefbdc;
-}
-
-.statistics-card:nth-child(4) h3,
-.statistics-card:nth-child(4) .statistics-value,
-.statistics-card:nth-child(4) .statistics-change {
-    color: #61AA12;
-}
-
-.statistics-card:nth-child(5) {
+.statistics-card--in_progress {
     background: #e8f1ff;
 }
 
-.statistics-card:nth-child(5) h3,
-.statistics-card:nth-child(5) .statistics-value,
-.statistics-card:nth-child(5) .statistics-change {
+.statistics-card--in_progress h3,
+.statistics-card--in_progress .statistics-value {
     color: #106AFF;
 }
 
-.statistics-card:nth-child(6) {
+.statistics-card--testing {
+    background: #f3e7ff;
+}
+
+.statistics-card--testing h3,
+.statistics-card--testing .statistics-value {
+    color: #6107A3;
+}
+
+.statistics-card--interview {
     background: #ffe7f6;
 }
 
-.statistics-card:nth-child(6) h3,
-.statistics-card:nth-child(6) .statistics-value,
-.statistics-card:nth-child(6) .statistics-change {
+.statistics-card--interview h3,
+.statistics-card--interview .statistics-value {
     color: #C10990;
 }
 
-.statistics-card:nth-child(7) {
+.statistics-card--offer {
     background: #fff2d9;
 }
 
-.statistics-card:nth-child(7) h3,
-.statistics-card:nth-child(7) .statistics-value,
-.statistics-card:nth-child(7) .statistics-change {
+.statistics-card--offer h3,
+.statistics-card--offer .statistics-value {
     color: #BC7A02;
 }
 
-.statistics-card:nth-child(8) {
+.statistics-card--pending {
+    background: #e0f6f8;
+}
+
+.statistics-card--pending h3,
+.statistics-card--pending .statistics-value {
+    color: #028ABC;
+}
+
+.statistics-card--accepted {
+    background: #eefbdc;
+}
+
+.statistics-card--accepted h3,
+.statistics-card--accepted .statistics-value {
+    color: #61AA12;
+}
+
+.statistics-card--rejected {
     background: #ffe5e5;
 }
 
-.statistics-card:nth-child(8) h3,
-.statistics-card:nth-child(8) .statistics-value,
-.statistics-card:nth-child(8) .statistics-change {
+.statistics-card--rejected h3,
+.statistics-card--rejected .statistics-value {
     color: #DD0E0D;
 }
 

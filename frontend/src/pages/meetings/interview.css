@@ -744,12 +744,29 @@
     font-size: 16px;
 }
 
-.iv-star {
-    font-size: 40px;
+.iv-stars {
+    display: inline-flex;
+    gap: 2px;
+    white-space: nowrap;
 }
 
-.iv-stars {
-    white-space: nowrap;
+.iv-star {
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    color: #d1d5db;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.iv-star:hover {
+    transform: scale(1.15);
+}
+
+.iv-star.active {
+    color: #f5b301;
 }
 
 .iv-th-score {

@@ -218,27 +218,25 @@ export default function MeetingInterview() {
                     >
                         Скачать протокол
                     </button>
+                    <button
+                        type="button"
+                        className="iv-btn primary"
+                        onClick={() =>
+                            navigate("/app/meetings", {
+                                state: { reschedule: { meetingId: interview.id } },
+                            })
+                        }
+                    >
+                        Изменить время
+                    </button>
                     {!decision && (
-                        <>
-                            <button
-                                type="button"
-                                className="iv-btn ghost"
-                                onClick={() =>
-                                    navigate("/app/meetings", {
-                                        state: { reschedule: { meetingId: interview.id } },
-                                    })
-                                }
-                            >
-                                Изменить время
-                            </button>
-                            <button
-                                type="button"
-                                className="iv-btn danger"
-                                onClick={() => setConfirmCancel(true)}
-                            >
-                                Отменить встречу
-                            </button>
-                        </>
+                        <button
+                            type="button"
+                            className="iv-btn danger"
+                            onClick={() => setConfirmCancel(true)}
+                        >
+                            Отменить встречу
+                        </button>
                     )}
                 </div>
                 {cancelError && <div className="schedule-error">{cancelError}</div>}
@@ -290,16 +288,34 @@ export default function MeetingInterview() {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        max={competency.maxScore}
-                                                        className="iv-input iv-score-input"
-                                                        value={scores[competency.id]?.score ?? ""}
-                                                        onChange={(event) =>
-                                                            setScore(competency.id, competency.maxScore, event.target.value)
-                                                        }
-                                                    />
+                                                    <div className="iv-stars" role="radiogroup">
+                                                        {Array.from(
+                                                            { length: competency.maxScore },
+                                                            (_, i) => i + 1
+                                                        ).map((value) => {
+                                                            const current =
+                                                                Number(scores[competency.id]?.score) || 0;
+                                                            return (
+                                                                <button
+                                                                    type="button"
+                                                                    key={value}
+                                                                    className={`iv-star${
+                                                                        value <= current ? " active" : ""
+                                                                    }`}
+                                                                    aria-label={`Оценка ${value}`}
+                                                                    onClick={() =>
+                                                                        setScore(
+                                                                            competency.id,
+                                                                            competency.maxScore,
+                                                                            value === current ? "" : value
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    ★
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <input

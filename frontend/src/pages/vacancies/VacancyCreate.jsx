@@ -7,7 +7,8 @@ import Input from "../../components/ui/Input/Input.jsx";
 import Select from "../../components/ui/Select/Select.jsx";
 import Modal from "../../components/ui/Modal/Modal.jsx";
 
-import { createVacancy, saveVacancy, fetchVacancy } from "../../api/vacancies.js";
+import { createVacancy, saveVacancy, fetchVacancy, setCompetencies } from "../../api/vacancies.js";
+import CompetencyMatrix from "./CompetencyMatrix.jsx";
 import { IconPlus, IconXCircle, IconCheckCircle } from "./icons.jsx";
 
 const REQUIRED_FIELDS = [
@@ -71,6 +72,7 @@ export default function VacancyCreate() {
 
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [requirements, setRequirements] = useState([]);
+    const [comps, setComps] = useState({});
     const [adding, setAdding] = useState(false);
     const [newReq, setNewReq] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -89,6 +91,11 @@ export default function VacancyCreate() {
                 if (!cancelled) {
                     setForm(formFromVacancy(vacancy));
                     setRequirements([...vacancy.requirements]);
+                    const preset = {};
+                    (vacancy.competencies || []).forEach((competency) => {
+                        preset[competency.skillId] = 5;
+                    });
+                    setComps(preset);
                 }
             })
             .catch((error) => {
@@ -166,16 +173,23 @@ export default function VacancyCreate() {
                 .filter(Boolean),
         };
 
+        const items = Object.keys(comps).map((skillId) => ({
+            skillId: Number(skillId),
+            maxScore: 5,
+        }));
+
         setSaving(true);
         setSaveError("");
 
         try {
             if (editing) {
                 await saveVacancy(id, data);
+                await setCompetencies(id, items);
                 setConfirmSave(false);
                 navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
             } else {
                 const created = await createVacancy(data);
+                await setCompetencies(created.id, items);
                 setConfirmSave(false);
                 navigate(`/app/vacancies/${created.id}`, { state: { tab: "description" } });
             }
@@ -379,6 +393,9 @@ export default function VacancyCreate() {
                         </Field>
                     </div>
                 </div>
+
+                <h2 className="vcreate-section">Компетенции</h2>
+                <CompetencyMatrix defaultFill={!editing} value={comps} onChange={setComps} />
 
                 {Object.keys(errors).length > 0 && (
                     <div className="vcreate-error-note">

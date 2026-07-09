@@ -1,4 +1,4 @@
-import { apiGet } from "./client.js";
+import { apiGet, apiPost } from "./client.js";
 
 // Пул навыков. type: "Hard" | "Soft" | "CultureFit"; includeInactive — с архивными.
 export function fetchSkills({ type, includeInactive = false } = {}) {
@@ -11,4 +11,8 @@ export function fetchSkills({ type, includeInactive = false } = {}) {
     }
     const qs = params.toString();
     return apiGet(`/skills${qs ? `?${qs}` : ""}`);
+}
+
+export function createSkill({ name, type }) {
+    return apiPost("/skills", { name, type });
 }

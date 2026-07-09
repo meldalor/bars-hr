@@ -23,7 +23,7 @@ export default function VacancyDetail() {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState("");
-    const [activeTab, setActiveTab] = useState(() => location.state?.tab || "description");
+    const [activeTab, setActiveTab] = useState(() => location.state?.tab || "all");
 
     const reloadApplications = useCallback(async () => {
         const list = await fetchApplications({ vacancyId: id });

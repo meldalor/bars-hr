@@ -43,7 +43,7 @@ function Meetings() {
   const [loadError, setLoadError] = useState("");
   const [panelName, setPanelName] = useState("");
   const [applicationId, setApplicationId] = useState(null);
-  const [picking, setPicking] = useState(Boolean(schedule));
+  const [picking, setPicking] = useState(Boolean(schedule) || Boolean(reschedule));
   const [scheduleError, setScheduleError] = useState("");
   const [editTime, setEditTime] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -177,16 +177,41 @@ function Meetings() {
     return dt.toISOString();
   };
 
+  const slotMinutes = (time) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  };
+
   const handleCellClick = async (day, slot) => {
     if (!scheduling || !picking) {
       return;
     }
+    const start = slotMinutes(slot);
+
+    if (reschedule) {
+      const duration = currentMeeting
+        ? slotMinutes(currentMeeting.endTime) - slotMinutes(currentMeeting.startTime)
+        : 60;
+      if (start + duration > DAY_END) {
+        setScheduleError("Встреча не помещается в рабочий день");
+        return;
+      }
+      setScheduleError("");
+      try {
+        await updateInterview(reschedule.meetingId, { scheduledAt: slotToIso(day, slot) });
+        await loadMeetings();
+        setPicking(false);
+      } catch (error) {
+        setScheduleError(error.message || "Не удалось перенести встречу");
+      }
+      return;
+    }
+
     if (!applicationId) {
       setScheduleError("Нет отклика для назначения интервью");
       return;
     }
-    const [h, m] = slot.split(":").map(Number);
-    if (h * 60 + m + 60 > DAY_END) {
+    if (start + 60 > DAY_END) {
       setScheduleError("Интервью не помещается в рабочий день");
       return;
     }
@@ -349,7 +374,11 @@ function Meetings() {
           </div>
 
           {picking && (
-            <div className="schedule-hint">Нажмите на ячейку в таблице — интервью назначится на это время (по умолчанию 1 час).</div>
+            <div className="schedule-hint">
+              {reschedule
+                ? "Нажмите на ячейку в таблице — встреча перенесётся на это время."
+                : "Нажмите на ячейку в таблице — интервью назначится на это время (по умолчанию 1 час)."}
+            </div>
           )}
           {scheduleError && <div className="schedule-error">{scheduleError}</div>}
 

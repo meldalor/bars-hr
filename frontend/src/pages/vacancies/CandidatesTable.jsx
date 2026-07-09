@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { STATUSES, STATUS_ORDER, SUBSTATUSES } from "../../mocks/candidates.js";
 import { backendStatus } from "../../api/candidates.js";
 import { updateApplicationStatus } from "../../api/applications.js";
-import { IconSearch, IconChevronDown } from "./icons.jsx";
+import { IconSearch, IconChevronDown, IconPlus } from "./icons.jsx";
 
 function initials(name) {
     return name
@@ -66,6 +66,7 @@ export default function CandidatesTable({ applications, statusFilter, onChanged 
                     className="vac-btn vac-btn-primary"
                     onClick={() => navigate("/app/candidates/create")}
                 >
+                    <IconPlus size={18} />
                     Добавить кандидата
                 </button>
             </div>
@@ -193,7 +194,7 @@ export default function CandidatesTable({ applications, statusFilter, onChanged 
                                                         })
                                                     }
                                                 >
-                                                    Назначить
+                                                    Назначить интервью
                                                 </button>
                                             )}
                                         </td>

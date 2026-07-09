@@ -53,7 +53,7 @@ function StatisticsCards() {
             <section className="statistics-cards">
                 {CARDS.map((card) => (
                     <div
-                        className="statistics-card"
+                        className={`statistics-card statistics-card--${card.statusKey}`}
                         key={card.title}
                         onClick={() => navigate("/app/candidates")}
                         style={{ cursor: "pointer" }}
