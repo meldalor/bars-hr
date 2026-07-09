@@ -552,3 +552,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+.cp-back {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.cp-back:hover {
+  border-color: #cfe0ff;
+  background: #edf4ff;
+  color: #106aff;
+}
+
+.cp-hero-card {
+  align-items: start;
+}
+
+.cp-hero-actions {
+  justify-content: flex-end;
+}

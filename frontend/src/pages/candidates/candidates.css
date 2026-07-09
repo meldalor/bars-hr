@@ -134,10 +134,11 @@
   top: calc(100% + 8px);
   left: 0;
   z-index: 70;
-  width: 660px;
-  max-width: calc(100vw - 48px);
+  width: 760px;
+  max-width: calc(100vw - 64px);
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
   padding: 18px;
   background: #ffffff;
@@ -473,7 +474,7 @@
   }
 
   .candidates-filter-menu {
-    width: min(88vw, 420px);
+      width: min(88vw, 420px);
     grid-template-columns: 1fr;
   }
 

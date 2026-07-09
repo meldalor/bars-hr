@@ -126,7 +126,7 @@ function ActivityTable() {
 
     const totalPages = Math.max(1, Math.ceil(filteredActivity.length / PAGE_SIZE));
     const safePage = Math.min(page, totalPages);
-    const pageRows = filteredActivity.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+    const pageRows = filteredActivity.slice(0, safePage * PAGE_SIZE);
 
     return (
         <section className="activity-table-card">

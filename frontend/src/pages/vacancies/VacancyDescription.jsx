@@ -1,7 +1,7 @@
 import "./vacancies.css";
 import "./candidates_table.css";
 import "./vacancy_description.css";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -30,11 +30,52 @@ import {
 
 const PAGE_SIZE = 8;
 
+const LOG_COLUMNS = [
+    { key: "datetime", label: "Дата и время" },
+    { key: "user", label: "Пользователь" },
+    { key: "role", label: "Роль" },
+    { key: "action", label: "Действие" },
+    { key: "details", label: "Детали" },
+];
+
+function parseDisplayDate(value) {
+    const [datePart, timePart = "00:00"] = value.split(" ");
+    const [day, month, year] = datePart.split(".").map(Number);
+    const [hours, minutes] = timePart.split(":").map(Number);
+    return new Date(2000 + year, month - 1, day, hours, minutes);
+}
+
+function toInputDate(value) {
+    const date = parseDisplayDate(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function compareLogRows(a, b, key) {
+    if (key === "datetime") {
+        return parseDisplayDate(a.datetime) - parseDisplayDate(b.datetime);
+    }
+
+    return String(a[key]).localeCompare(String(b[key]), "ru", {
+        sensitivity: "base",
+        numeric: true,
+    });
+}
+
 export default function VacancyDescription({ vacancy }) {
     const navigate = useNavigate();
+    const filterRef = useRef(null);
+    const dateRef = useRef(null);
 
     const [query, setQuery] = useState("");
-    const [orderDesc, setOrderDesc] = useState(true);
+    const [sort, setSort] = useState({ key: "datetime", direction: "desc" });
+    const [selectedRoles, setSelectedRoles] = useState([]);
+    const [selectedActions, setSelectedActions] = useState([]);
+    const [selectedDate, setSelectedDate] = useState("");
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isDateOpen, setIsDateOpen] = useState(false);
     const [confirmClose, setConfirmClose] = useState(false);
     const [confirmCopy, setConfirmCopy] = useState(false);
     const [page, setPage] = useState(1);
@@ -61,24 +102,68 @@ export default function VacancyDescription({ vacancy }) {
 
     const log = useMemo(() => getActivityByVacancy(vacancy.id), [vacancy.id]);
 
+    const roles = useMemo(
+        () => [...new Set(log.map((entry) => entry.role))].sort((a, b) => a.localeCompare(b, "ru")),
+        [log]
+    );
+
+    const actions = useMemo(
+        () => [...new Set(log.map((entry) => entry.action))].sort((a, b) => a.localeCompare(b, "ru")),
+        [log]
+    );
+
+    useEffect(() => {
+        const handleOutsideClick = (event) => {
+            if (filterRef.current && !filterRef.current.contains(event.target)) {
+                setIsFilterOpen(false);
+            }
+            if (dateRef.current && !dateRef.current.contains(event.target)) {
+                setIsDateOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, []);
+
+    const toggleValue = (value, setter) => {
+        setter((prev) =>
+            prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+        );
+        setPage(1);
+    };
+
+    const handleSort = (key) => {
+        setSort((prev) => ({
+            key,
+            direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+        }));
+    };
+
     const rows = useMemo(() => {
         const search = query.trim().toLowerCase();
 
-        const filtered = search
-            ? log.filter((entry) =>
-                  [entry.datetime, entry.user, entry.role, entry.action, entry.details]
-                      .join(" ")
-                      .toLowerCase()
-                      .includes(search)
-              )
-            : log;
+        return log
+            .filter((entry) => {
+                const source = [entry.datetime, entry.user, entry.role, entry.action, entry.details]
+                    .join(" ")
+                    .toLowerCase();
+                return !search || source.includes(search);
+            })
+            .filter((entry) => selectedRoles.length === 0 || selectedRoles.includes(entry.role))
+            .filter((entry) => selectedActions.length === 0 || selectedActions.includes(entry.action))
+            .filter((entry) => !selectedDate || toInputDate(entry.datetime) === selectedDate)
+            .sort((a, b) => {
+                const result = compareLogRows(a, b, sort.key);
+                return sort.direction === "asc" ? result : -result;
+            });
+    }, [log, query, selectedActions, selectedDate, selectedRoles, sort]);
 
-        return orderDesc ? filtered : [...filtered].reverse();
-    }, [log, query, orderDesc]);
+    const hasFilters = selectedRoles.length > 0 || selectedActions.length > 0;
 
     const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
     const safePage = Math.min(page, totalPages);
-    const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+    const pageRows = rows.slice(0, safePage * PAGE_SIZE);
 
     return (
         <div className="vdesc">
@@ -179,41 +264,129 @@ export default function VacancyDescription({ vacancy }) {
                         className="vac-search-input"
                         placeholder="Поиск"
                         value={query}
-                        onChange={(event) => setQuery(event.target.value)}
+                        onChange={(event) => {
+                            setQuery(event.target.value);
+                            setPage(1);
+                        }}
                     />
                 </div>
 
-                <button type="button" className="vac-btn">
-                    <IconFilter size={18} />
-                    Фильтры
-                </button>
+                <div className="vdesc-dropdown-wrap" ref={filterRef}>
+                    <button
+                        type="button"
+                        className={`vac-btn ${hasFilters ? "vac-btn-active" : ""}`}
+                        onClick={() => setIsFilterOpen((value) => !value)}
+                    >
+                        <IconFilter size={18} />
+                        Фильтры
+                    </button>
 
-                <button type="button" className="vac-btn">
-                    <IconCalendar size={18} />
-                    Выбрать дату
-                </button>
+                    {isFilterOpen && (
+                        <div className="vdesc-dropdown vdesc-filter-menu">
+                            <div className="vdesc-filter-group">
+                                <div className="vdesc-filter-title">Роль</div>
+                                {roles.map((role) => (
+                                    <label className="vdesc-check-row" key={role}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedRoles.includes(role)}
+                                            onChange={() => toggleValue(role, setSelectedRoles)}
+                                        />
+                                        <span>{role}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="vdesc-filter-group">
+                                <div className="vdesc-filter-title">Тип действия</div>
+                                {actions.map((action) => (
+                                    <label className="vdesc-check-row" key={action}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedActions.includes(action)}
+                                            onChange={() => toggleValue(action, setSelectedActions)}
+                                        />
+                                        <span>{action}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <button
+                                type="button"
+                                className="vdesc-clear-btn"
+                                onClick={() => {
+                                    setSelectedRoles([]);
+                                    setSelectedActions([]);
+                                    setPage(1);
+                                }}
+                            >
+                                Очистить фильтры
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <div className="vdesc-dropdown-wrap" ref={dateRef}>
+                    <button
+                        type="button"
+                        className={`vac-btn ${selectedDate ? "vac-btn-active" : ""}`}
+                        onClick={() => setIsDateOpen((value) => !value)}
+                    >
+                        <IconCalendar size={18} />
+                        {selectedDate || "Выбрать дату"}
+                    </button>
+
+                    {isDateOpen && (
+                        <div className="vdesc-dropdown vdesc-date-menu">
+                            <label className="vdesc-date-label">
+                                Дата события
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={(event) => {
+                                        setSelectedDate(event.target.value);
+                                        setPage(1);
+                                    }}
+                                />
+                            </label>
+
+                            <button
+                                type="button"
+                                className="vdesc-clear-btn"
+                                onClick={() => {
+                                    setSelectedDate("");
+                                    setPage(1);
+                                }}
+                            >
+                                Очистить дату
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="ct-card">
                 <table className="ct-table">
                     <thead>
                         <tr>
-                            <th>
-                                <button
-                                    type="button"
-                                    className="ct-sort"
-                                    onClick={() => setOrderDesc((value) => !value)}
-                                >
-                                    Дата и время
-                                    <span className={`ct-sort-icon ${orderDesc ? "" : "desc"}`}>
-                                        <IconChevronDown size={16} />
-                                    </span>
-                                </button>
-                            </th>
-                            <th>Пользователь</th>
-                            <th>Роль</th>
-                            <th>Действие</th>
-                            <th>Детали</th>
+                            {LOG_COLUMNS.map((column) => (
+                                <th key={column.key}>
+                                    <button
+                                        type="button"
+                                        className="ct-sort"
+                                        onClick={() => handleSort(column.key)}
+                                    >
+                                        {column.label}
+                                        <span
+                                            className={`ct-sort-icon ${
+                                                sort.key === column.key && sort.direction === "asc" ? "desc" : ""
+                                            }`}
+                                        >
+                                            <IconChevronDown size={16} />
+                                        </span>
+                                    </button>
+                                </th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>

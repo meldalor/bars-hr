@@ -66,6 +66,8 @@ export default function MeetingInterview() {
     const [finalScore, setFinalScore] = useState(initial.finalScore);
     const [finalComment, setFinalComment] = useState(initial.finalComment);
     const [confirmCancel, setConfirmCancel] = useState(false);
+    const [confirmFinish, setConfirmFinish] = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
 
     const back = () => navigate("/app/meetings");
 
@@ -126,8 +128,12 @@ export default function MeetingInterview() {
         window.scrollTo({ top: 0 });
     };
 
-    const confirm = () => {
+    const confirm = (shouldPrint = false) => {
         saveInterview(id, { questions, matrix, skills, finalScore, finalComment });
+        setConfirmFinish(false);
+        if (shouldPrint) {
+            window.print();
+        }
         back();
     };
 
@@ -237,8 +243,21 @@ export default function MeetingInterview() {
                     >
                         Отменить встречу
                     </button>
-                    <button type="button" className="iv-btn primary">
-                        Ссылка на встречу
+                    <button
+                        type="button"
+                        className="iv-btn ghost"
+                        onClick={() =>
+                            navigate(meeting.candidateId ? `/app/candidates/${meeting.candidateId}` : "/app/candidates")
+                        }
+                    >
+                        Профиль кандидата
+                    </button>
+                    <button
+                        type="button"
+                        className="iv-btn primary"
+                        onClick={() => setLinkCopied(true)}
+                    >
+                        {linkCopied ? "Ссылка скопирована" : "Ссылка на встречу"}
                     </button>
                     <button
                         type="button"
@@ -436,13 +455,32 @@ export default function MeetingInterview() {
                             <button type="button" className="iv-btn danger" onClick={back}>
                                 Отменить
                             </button>
-                            <button type="button" className="iv-btn primary" onClick={confirm}>
+                            <button type="button" className="iv-btn primary" onClick={() => setConfirmFinish(true)}>
                                 Подтвердить
                             </button>
                         </div>
                     </div>
                 </>
             )}
+
+            <Modal open={confirmFinish} onClose={() => setConfirmFinish(false)}>
+                <p className="iv-modal-title">Подтвердить итоговое решение?</p>
+                <div className="iv-modal-actions iv-modal-actions-wide">
+                    <button
+                        type="button"
+                        className="iv-btn ghost"
+                        onClick={() => setConfirmFinish(false)}
+                    >
+                        Отмена
+                    </button>
+                    <button type="button" className="iv-btn primary" onClick={() => confirm(false)}>
+                        Подтвердить
+                    </button>
+                    <button type="button" className="iv-btn primary" onClick={() => confirm(true)}>
+                        Подтвердить и распечатать
+                    </button>
+                </div>
+            </Modal>
 
             <Modal open={confirmCancel} onClose={() => setConfirmCancel(false)}>
                 <p className="iv-modal-title">

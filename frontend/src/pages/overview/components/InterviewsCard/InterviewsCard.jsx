@@ -62,7 +62,7 @@ function InterviewsCard() {
     }, []);
 
     const openMeeting = (meeting) => {
-        navigate("/app/meetings", { state: { meetingId: meeting.id } });
+        navigate(`/app/meetings/${meeting.id}`);
     };
 
     return (

@@ -98,6 +98,8 @@
     z-index: 80;
 
     min-width: 280px;
+    max-width: calc(100vw - 64px);
+    box-sizing: border-box;
     padding: 14px;
 
     background: #ffffff;
@@ -110,7 +112,9 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
-    min-width: 560px;
+    width: 560px;
+    min-width: 0;
+    max-width: calc(100vw - 64px);
 }
 
 .activity-filter-group {
@@ -140,6 +144,7 @@
     height: 16px;
     margin: 0;
     accent-color: #2563eb;
+    background: #ffffff;
 }
 
 .activity-clear-btn {
@@ -178,6 +183,7 @@
     height: 42px;
     padding: 0 12px;
     border: 1px solid #e5e7eb;
+    background: #ffffff;
     border-radius: 12px;
     color: #1a1a1a;
     font-family: inherit;

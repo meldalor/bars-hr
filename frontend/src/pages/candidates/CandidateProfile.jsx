@@ -112,7 +112,7 @@ function VacancyCard({ vacancy, candidate }) {
             </span>
           )}
           {isFinal && (
-            <button type="button" className="cp-print-btn">
+            <button type="button" className="cp-print-btn" onClick={() => window.print()}>
               <IconPrinter size={15} />
               Распечатать
             </button>
@@ -218,7 +218,13 @@ export default function CandidateProfile() {
                   {skill}
                 </span>
               ))}
-              <button type="button" className="cp-add-skill">+ Добавить</button>
+              <button
+                type="button"
+                className="cp-add-skill"
+                onClick={() => navigate(`/app/candidates/edit/${candidate.id}`)}
+              >
+                + Добавить
+              </button>
             </div>
           </section>
 
@@ -316,7 +322,7 @@ export default function CandidateProfile() {
                 <button
                   type="button"
                   className="cp-primary-btn"
-                  onClick={() => navigate("/app/meetings", { state: { meetingId: nearestInterview.id } })}
+                  onClick={() => navigate(`/app/meetings/${nearestInterview.id}`)}
                 >
                   Перейти
                 </button>
@@ -341,7 +347,7 @@ export default function CandidateProfile() {
                 <VacancyCard key={vacancy.id} vacancy={vacancy} candidate={candidate} />
               ))}
             </div>
-            <button type="button" className="cp-add-vacancy">Добавить</button>
+            <button type="button" className="cp-add-vacancy" onClick={() => navigate("/app/vacancies")}>Добавить</button>
           </section>
         </aside>
       </div>

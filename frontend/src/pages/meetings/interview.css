@@ -717,3 +717,62 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+.interview .vac-back {
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #ffffff;
+}
+
+.interview .vac-back:hover {
+    border-color: #cfe0ff;
+    background: #edf4ff;
+    color: #2563eb;
+}
+
+.iv-step-title {
+    font-size: 24px;
+}
+
+.iv-q-text {
+    font-size: 22px;
+}
+
+.iv-q-hint {
+    font-size: 16px;
+}
+
+.iv-star {
+    font-size: 40px;
+}
+
+.iv-stars {
+    white-space: nowrap;
+}
+
+.iv-th-score {
+    width: 250px;
+}
+
+.iv-table td:nth-child(2) {
+    min-width: 250px;
+}
+
+.iv-table td:nth-child(3) {
+    width: 42%;
+}
+
+.iv-modal-actions-wide {
+    flex-wrap: wrap;
+}
+
+@media print {
+    .header,
+    .vac-back,
+    .iv-cand-actions,
+    .iv-footer {
+        display: none !important;
+    }
+}
