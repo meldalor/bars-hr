@@ -23,7 +23,7 @@ import {
 import Modal from "../../components/ui/Modal/Modal.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 8;
 
 const STATUS_ICONS = {
   free: IconUser,
@@ -110,21 +110,21 @@ export default function Candidates() {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState(() => getAllCandidates());
   const [archivedCandidates, setArchivedCandidates] = useState([]);
-  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
   const [query, setQuery] = useState("");
   const [activeStatus, setActiveStatus] = useState("all");
   const [selected, setSelected] = useState(() => new Set());
   const [sort, setSort] = useState({ key: "date", direction: "desc" });
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [specialtyFilters, setSpecialtyFilters] = useState([]);
+  const [statusFilters, setStatusFilters] = useState([]);
+  const [roleFilters, setRoleFilters] = useState([]);
   const [cityFilters, setCityFilters] = useState([]);
   const [skillFilters, setSkillFilters] = useState([]);
-  const [statusFilters, setStatusFilters] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(false);
   const filtersRef = useRef(null);
 
-  const sourceCandidates = isArchiveOpen ? archivedCandidates : candidates;
+  const sourceCandidates = showArchive ? archivedCandidates : candidates;
 
   const cities = useMemo(
     () => [...new Set(sourceCandidates.map((candidate) => candidate.city))].sort((a, b) => a.localeCompare(b, "ru")),
@@ -161,7 +161,7 @@ export default function Candidates() {
     return sourceCandidates
       .filter((candidate) => activeStatus === "all" || candidate.status === activeStatus)
       .filter((candidate) => statusFilters.length === 0 || statusFilters.includes(candidate.status))
-      .filter((candidate) => specialtyFilters.length === 0 || specialtyFilters.includes(candidate.specialty))
+      .filter((candidate) => roleFilters.length === 0 || roleFilters.includes(candidate.specialty))
       .filter((candidate) => cityFilters.length === 0 || cityFilters.includes(candidate.city))
       .filter(
         (candidate) =>
@@ -194,14 +194,13 @@ export default function Candidates() {
         const result = compareCandidates(a, b, sort.key);
         return sort.direction === "asc" ? result : -result;
       });
-  }, [activeStatus, cityFilters, query, skillFilters, sort, sourceCandidates, specialtyFilters, statusFilters]);
+  }, [activeStatus, cityFilters, query, roleFilters, skillFilters, sort, sourceCandidates, statusFilters]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pageRows = filtered.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
   const allChecked = pageRows.length > 0 && pageRows.every((candidate) => selected.has(candidate.id));
-  const hasFilters =
-    specialtyFilters.length > 0 || cityFilters.length > 0 || skillFilters.length > 0 || statusFilters.length > 0;
+  const hasFilters = statusFilters.length > 0 || roleFilters.length > 0 || cityFilters.length > 0 || skillFilters.length > 0;
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -218,11 +217,6 @@ export default function Candidates() {
     { id: "all", label: `Все` },
     ...STATUS_ORDER.map((key) => ({ id: key, label: STATUSES[key].label })),
   ];
-
-  const resetSelection = () => {
-    setSelected(new Set());
-    setCurrentPage(1);
-  };
 
   const toggleAll = () => {
     setSelected((prev) => {
@@ -262,24 +256,36 @@ export default function Candidates() {
     }));
   };
 
-  const archiveSelected = () => {
-    if (isArchiveOpen) {
+  const handleBulkAction = () => {
+    if (showArchive) {
       setArchivedCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
     } else {
-      const selectedCandidates = candidates.filter((candidate) => selected.has(candidate.id));
-      setArchivedCandidates((prev) => [...selectedCandidates, ...prev]);
+      const moving = candidates.filter((candidate) => selected.has(candidate.id));
       setCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
+      setArchivedCandidates((prev) => [...moving, ...prev]);
     }
-
     setSelected(new Set());
-    setConfirmArchive(false);
+    setConfirmAction(false);
   };
+
+  const clearFilters = () => {
+    setStatusFilters([]);
+    setRoleFilters([]);
+    setCityFilters([]);
+    setSkillFilters([]);
+    setCurrentPage(1);
+  };
+
+  const title = showArchive ? "Архив кандидатов" : "База кандидатов";
+  const actionText = showArchive ? "Удалить" : "Перенести в архив";
+  const confirmText = showArchive
+    ? `Удалить выбранных кандидатов (${selected.size}) из архива?`
+    : `Перенести выбранных кандидатов (${selected.size}) в архив?`;
 
   return (
     <div className="candidates-page">
       <h1 className="overview-title">
-        {isArchiveOpen ? "Архив кандидатов" : "База кандидатов:"}{" "}
-        <span className="overview-title-count">{sourceCandidates.length} человек</span>
+        {title}: <span className="overview-title-count">{sourceCandidates.length} человек</span>
       </h1>
 
       <div className="candidates-tabs">
@@ -290,7 +296,7 @@ export default function Candidates() {
             className={`candidates-tab ${activeStatus === tab.id ? "active" : ""}`}
             onClick={() => {
               setActiveStatus(tab.id);
-              resetSelection();
+              setCurrentPage(1);
             }}
           >
             {tab.label} {counts[tab.id]}
@@ -323,17 +329,17 @@ export default function Candidates() {
           </button>
 
           {isFiltersOpen && (
-            <div className="candidates-filter-menu candidates-filter-menu-four">
+            <div className="candidates-filter-menu">
               <div className="candidates-filter-column">
                 <div className="candidates-filter-title">Статус</div>
-                {STATUS_ORDER.map((statusKey) => (
-                  <label className="candidates-check-row" key={statusKey}>
+                {STATUS_ORDER.map((status) => (
+                  <label className="candidates-check-row" key={status}>
                     <input
                       type="checkbox"
-                      checked={statusFilters.includes(statusKey)}
-                      onChange={() => toggleFilterValue(statusKey, setStatusFilters)}
+                      checked={statusFilters.includes(status)}
+                      onChange={() => toggleFilterValue(status, setStatusFilters)}
                     />
-                    <span>{STATUSES[statusKey].label}</span>
+                    <span>{STATUSES[status].label}</span>
                   </label>
                 ))}
               </div>
@@ -344,8 +350,8 @@ export default function Candidates() {
                   <label className="candidates-check-row" key={specialty}>
                     <input
                       type="checkbox"
-                      checked={specialtyFilters.includes(specialty)}
-                      onChange={() => toggleFilterValue(specialty, setSpecialtyFilters)}
+                      checked={roleFilters.includes(specialty)}
+                      onChange={() => toggleFilterValue(specialty, setRoleFilters)}
                     />
                     <span>{specialty}</span>
                   </label>
@@ -383,13 +389,7 @@ export default function Candidates() {
               <button
                 type="button"
                 className="candidates-filter-clear"
-                onClick={() => {
-                  setSpecialtyFilters([]);
-                  setCityFilters([]);
-                  setSkillFilters([]);
-                  setStatusFilters([]);
-                  setCurrentPage(1);
-                }}
+                onClick={clearFilters}
               >
                 Очистить фильтры
               </button>
@@ -399,13 +399,14 @@ export default function Candidates() {
 
         <button
           type="button"
-          className={`candidates-toolbar-btn ${isArchiveOpen ? "active" : ""}`}
+          className={`candidates-toolbar-btn ${showArchive ? "dark" : ""}`}
           onClick={() => {
-            setIsArchiveOpen((value) => !value);
-            resetSelection();
+            setShowArchive((value) => !value);
+            setSelected(new Set());
+            setCurrentPage(1);
           }}
         >
-          Архив
+          {showArchive ? "Кандидаты" : "Архив"}
         </button>
 
         <button
@@ -421,9 +422,9 @@ export default function Candidates() {
           <button
             type="button"
             className="candidates-toolbar-btn danger"
-            onClick={() => setConfirmArchive(true)}
+            onClick={() => setConfirmAction(true)}
           >
-            {isArchiveOpen ? "Удалить" : "Перенести в архив"} ({selected.size})
+            {actionText} ({selected.size})
           </button>
         )}
       </div>
@@ -464,7 +465,7 @@ export default function Candidates() {
             {pageRows.length === 0 ? (
               <tr>
                 <td className="candidates-empty" colSpan={6}>
-                  Кандидаты не найдены
+                  {showArchive ? "В архиве нет кандидатов" : "Кандидаты не найдены"}
                 </td>
               </tr>
             ) : (
@@ -512,24 +513,20 @@ export default function Candidates() {
         </table>
       </div>
 
-      <Pagination page={safePage} totalPages={totalPages} onChange={setCurrentPage} />
+      <Pagination page={safeCurrentPage} totalPages={totalPages} onChange={setCurrentPage} />
 
-      <Modal open={confirmArchive} onClose={() => setConfirmArchive(false)}>
-        <p className="cand-modal-title">
-          {isArchiveOpen
-            ? `Удалить выбранных кандидатов (${selected.size})?`
-            : `Перенести выбранных кандидатов (${selected.size}) в архив?`}
-        </p>
+      <Modal open={confirmAction} onClose={() => setConfirmAction(false)}>
+        <p className="cand-modal-title">{confirmText}</p>
         <div className="cand-modal-actions">
           <button
             type="button"
             className="cand-modal-btn ghost"
-            onClick={() => setConfirmArchive(false)}
+            onClick={() => setConfirmAction(false)}
           >
             Отмена
           </button>
-          <button type="button" className="cand-modal-btn danger" onClick={archiveSelected}>
-            {isArchiveOpen ? "Удалить" : "Перенести в архив"}
+          <button type="button" className="cand-modal-btn danger" onClick={handleBulkAction}>
+            {actionText}
           </button>
         </div>
       </Modal>

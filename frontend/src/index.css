@@ -116,7 +116,10 @@ textarea {
 }
 
 input[type="checkbox"] {
-  background: #ffffff;
   color-scheme: light;
-  accent-color: #2563eb;
+  background-color: #ffffff;
+}
+
+input[type="checkbox"]:not(.native-checkbox) {
+  accent-color: #106aff;
 }

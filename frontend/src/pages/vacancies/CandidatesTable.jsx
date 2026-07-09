@@ -32,7 +32,7 @@ import {
     IconXCircle,
 } from "./icons.jsx";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 8;
 
 const STATUS_ICONS = {
     free: IconUser,
@@ -117,7 +117,7 @@ function StatusCell({
             </div>
 
             {isFinal ? (
-                <button type="button" className="ct-print">
+                <button type="button" className="ct-print" onClick={() => window.print()}>
                     <IconPrinter size={15} />
                     Распечатать
                 </button>
@@ -188,6 +188,7 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
     const [openKey, setOpenKey] = useState(null);
     const [, setScheduleTick] = useState(0);
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [statusFilters, setStatusFilters] = useState([]);
     const [cityFilters, setCityFilters] = useState([]);
     const [specialtyFilters, setSpecialtyFilters] = useState([]);
     const [skillFilters, setSkillFilters] = useState([]);
@@ -220,7 +221,7 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
     );
 
     const hasFilters =
-        cityFilters.length > 0 || specialtyFilters.length > 0 || skillFilters.length > 0;
+        statusFilters.length > 0 || cityFilters.length > 0 || specialtyFilters.length > 0 || skillFilters.length > 0;
 
     const toggleFilterValue = (value, setter) => {
         setter((prev) =>
@@ -300,6 +301,10 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
             );
         }
 
+        if (statusFilters.length > 0) {
+            list = list.filter((candidate) => statusFilters.includes(candidate.status));
+        }
+
         if (cityFilters.length > 0) {
             list = list.filter((candidate) => cityFilters.includes(candidate.city));
         }
@@ -317,7 +322,7 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
         return [...list].sort((a, b) =>
             sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
         );
-    }, [candidates, statusFilter, query, sortAsc, cityFilters, specialtyFilters, skillFilters]);
+    }, [candidates, statusFilter, query, sortAsc, statusFilters, cityFilters, specialtyFilters, skillFilters]);
 
     const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
     const safePage = Math.min(page, totalPages);
@@ -398,6 +403,20 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                     {isFiltersOpen && (
                         <div className="ct-filter-menu">
                             <div className="ct-filter-column">
+                                <div className="ct-filter-title">Статус</div>
+                                {STATUS_ORDER.map((status) => (
+                                    <label className="ct-check-row" key={status}>
+                                        <input
+                                            type="checkbox"
+                                            checked={statusFilters.includes(status)}
+                                            onChange={() => toggleFilterValue(status, setStatusFilters)}
+                                        />
+                                        <span>{STATUSES[status].label}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="ct-filter-column">
                                 <div className="ct-filter-title">Специальность</div>
                                 {specialties.map((specialty) => (
                                     <label className="ct-check-row" key={specialty}>
@@ -445,6 +464,7 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                                 type="button"
                                 className="ct-filter-clear"
                                 onClick={() => {
+                                    setStatusFilters([]);
                                     setCityFilters([]);
                                     setSpecialtyFilters([]);
                                     setSkillFilters([]);
@@ -517,7 +537,7 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                             pageRows.map((candidate) => (
                                 <tr
                                     key={candidate.id}
-                                    className="ct-row-clickable"
+                                    className="ct-clickable-row"
                                     onClick={() => navigate(`/app/candidates/${candidate.id}`)}
                                 >
                                     <td

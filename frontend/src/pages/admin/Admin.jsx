@@ -50,7 +50,7 @@ const INITIAL_USERS = [
 
 const ROLES = ["HR-менеджер", "Администратор", "Согласующий"];
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 8;
 
 const PERMISSIONS = [
   "Удаление кандидатов",
@@ -80,6 +80,8 @@ export default function Admin() {
   const [confirmSave, setConfirmSave] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmAdd, setConfirmAdd] = useState(false);
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
   const [page, setPage] = useState(1);
 
   const selectedUser = users.find((user) => user.id === selectedUserId) || users[0];
@@ -127,6 +129,26 @@ export default function Admin() {
     setConfirmSave(false);
   };
 
+  const addUser = () => {
+    const name = newUserName.trim() || "Новый пользователь";
+    const email = newUserEmail.trim() || "user@example.com";
+    const user = {
+      id: `u${Date.now()}`,
+      name,
+      email,
+      role: "HR-менеджер",
+      status: "Оффлайн",
+      lastLogin: "—",
+    };
+
+    setUsers((prev) => [user, ...prev]);
+    setSelectedUserId(user.id);
+    setDraftRole(user.role);
+    setNewUserName("");
+    setNewUserEmail("");
+    setConfirmAdd(false);
+  };
+
   const deleteUser = () => {
     setUsers((prev) => {
       const next = prev.filter((user) => user.id !== selectedUserId);
@@ -138,23 +160,6 @@ export default function Admin() {
       return next;
     });
     setConfirmDelete(false);
-  };
-
-  const addUser = () => {
-    const user = {
-      id: `u${Date.now()}`,
-      name: "Новый пользователь",
-      email: "new-user@huntly.ru",
-      role: "HR-менеджер",
-      status: "Оффлайн",
-      lastLogin: "—\n—",
-    };
-
-    setUsers((prev) => [user, ...prev]);
-    setSelectedUserId(user.id);
-    setDraftRole(user.role);
-    setConfirmAdd(false);
-    setPage(1);
   };
 
   return (
@@ -174,11 +179,7 @@ export default function Admin() {
                 onChange={(event) => setQuery(event.target.value)}
               />
             </div>
-            <button
-              type="button"
-              className="admin-add-btn"
-              onClick={() => setConfirmAdd(true)}
-            >
+            <button type="button" className="admin-add-btn" onClick={() => setConfirmAdd(true)}>
               <IconPlus size={18} />
               Добавить
             </button>
@@ -307,7 +308,21 @@ export default function Admin() {
       <ActivityTable />
 
       <Modal open={confirmAdd} onClose={() => setConfirmAdd(false)}>
-        <p className="admin-modal-title">Добавить нового пользователя?</p>
+        <p className="admin-modal-title">Добавить пользователя</p>
+        <div className="admin-add-form">
+          <input
+            type="text"
+            placeholder="Имя пользователя"
+            value={newUserName}
+            onChange={(event) => setNewUserName(event.target.value)}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={newUserEmail}
+            onChange={(event) => setNewUserEmail(event.target.value)}
+          />
+        </div>
         <div className="admin-modal-actions">
           <button
             type="button"

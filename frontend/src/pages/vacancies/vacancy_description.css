@@ -214,24 +214,25 @@
     position: relative;
 }
 
-.vdesc-dropdown-menu {
+.vdesc-dropdown {
     position: absolute;
     top: calc(100% + 8px);
-    left: 0;
-    z-index: 80;
-    padding: 16px;
+    right: 0;
+    z-index: 90;
     box-sizing: border-box;
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 18px;
-    box-shadow: 0 18px 44px rgba(16, 32, 64, 0.16);
+    box-shadow: 0 16px 40px rgba(16, 32, 64, 0.16);
 }
 
 .vdesc-filter-menu {
-    width: min(520px, calc(100vw - 64px));
+    width: 560px;
+    max-width: calc(100vw - 64px);
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 14px;
+    padding: 14px;
 }
 
 .vdesc-filter-group {
@@ -241,14 +242,14 @@
 }
 
 .vdesc-filter-title {
+    color: #111827;
     font-size: 14px;
     font-weight: 700;
-    color: #111827;
 }
 
 .vdesc-check-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     color: #374151;
     font-size: 14px;
@@ -257,39 +258,14 @@
 }
 
 .vdesc-check-row input {
-    appearance: none;
-    -webkit-appearance: none;
-    position: relative;
-    box-sizing: border-box;
     width: 16px;
     height: 16px;
-    margin: 1px 0 0;
-    border: 1.4px solid #8d8d8d;
-    border-radius: 4px;
-    background: #ffffff;
-    cursor: pointer;
+    margin: 0;
 }
 
-.vdesc-check-row input:checked {
-    border-color: #2563eb;
-    background: #2563eb;
-}
-
-.vdesc-check-row input:checked::after {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 1px;
-    width: 4px;
-    height: 8px;
-    border: solid #ffffff;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
-
-.vdesc-filter-clear {
+.vdesc-clear-btn {
     grid-column: 1 / -1;
-    height: 40px;
+    height: 38px;
     border: none;
     border-radius: 999px;
     background: #f3f4f6;
@@ -300,12 +276,14 @@
     cursor: pointer;
 }
 
-.vdesc-filter-clear:hover {
+.vdesc-clear-btn:hover {
     background: #e5e7eb;
 }
 
 .vdesc-date-menu {
     width: 260px;
+    max-width: calc(100vw - 64px);
+    padding: 14px;
 }
 
 .vdesc-date-label {
@@ -324,8 +302,14 @@
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     background: #ffffff;
-    color: #111827;
-    color-scheme: light;
+    color: #1a1a1a;
     font-family: inherit;
     font-size: 14px;
+}
+
+@media (max-width: 700px) {
+    .vdesc-filter-menu {
+        width: min(88vw, 420px);
+        grid-template-columns: 1fr;
+    }
 }

@@ -383,20 +383,15 @@
 
 .admin-title {
   margin: 0 0 24px;
-}
-
-.admin-card-header {
-  grid-template-columns: auto minmax(220px, 1fr) auto;
-  gap: 12px;
+  font-size: 44px;
+  font-weight: 640;
+  letter-spacing: -1px;
+  line-height: 1.1;
 }
 
 .admin-search,
 .admin-add-btn {
-  height: 46px;
-}
-
-.admin-search input,
-.admin-add-btn {
+  height: 48px;
   font-size: 15px;
 }
 
@@ -406,34 +401,35 @@
   flex-direction: column;
 }
 
-.admin-role-actions {
-  margin-top: auto;
-  padding-top: 20px;
+.admin-permissions-list {
+  flex: 1;
 }
 
 .admin-permission-row input {
-  appearance: none;
-  -webkit-appearance: none;
-  position: relative;
-  box-sizing: border-box;
-  border: 1.4px solid #8d8d8d;
-  border-radius: 4px;
   background: #ffffff;
 }
 
-.admin-permission-row input:checked {
-  border-color: #106aff;
-  background: #106aff;
+.admin-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.admin-permission-row input:checked::after {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 2px;
-  width: 5px;
-  height: 10px;
-  border: solid #ffffff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+.admin-add-form input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border: 1px solid #d8dbe2;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111111;
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.admin-add-form input:focus {
+  border-color: #106aff;
 }

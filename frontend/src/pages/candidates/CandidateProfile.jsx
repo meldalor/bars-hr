@@ -45,7 +45,7 @@ function VacancyCard({ vacancy, candidate }) {
   const isFinal = candidate.status === "accepted" || candidate.status === "rejected";
 
   return (
-    <article className="cp-vacancy-card" onClick={() => navigate(`/app/vacancies/${vacancy.id}`)}>
+    <article className="cp-vacancy-card">
       <div className="cp-vacancy-head">
         <div
           className="cp-vacancy-icon"
@@ -58,10 +58,7 @@ function VacancyCard({ vacancy, candidate }) {
           type="button"
           className="cp-vacancy-link"
           aria-label="Открыть вакансию"
-          onClick={(event) => {
-            event.stopPropagation();
-            navigate(`/app/vacancies/${vacancy.id}`);
-          }}
+          onClick={() => navigate(`/app/vacancies/${vacancy.id}`)}
         >
           <IconArrowUpRight size={22} />
         </button>
@@ -115,10 +112,7 @@ function VacancyCard({ vacancy, candidate }) {
             </span>
           )}
           {isFinal && (
-            <button type="button" className="cp-print-btn" onClick={(event) => {
-              event.stopPropagation();
-              window.print();
-            }}>
+            <button type="button" className="cp-print-btn" onClick={() => window.print()}>
               <IconPrinter size={15} />
               Распечатать
             </button>
@@ -224,7 +218,13 @@ export default function CandidateProfile() {
                   {skill}
                 </span>
               ))}
-              <button type="button" className="cp-add-skill" onClick={() => navigate(`/app/candidates/edit/${candidate.id}`)}>+ Добавить</button>
+              <button
+                type="button"
+                className="cp-add-skill"
+                onClick={() => navigate(`/app/candidates/edit/${candidate.id}`)}
+              >
+                + Добавить
+              </button>
             </div>
           </section>
 
@@ -322,7 +322,7 @@ export default function CandidateProfile() {
                 <button
                   type="button"
                   className="cp-primary-btn"
-                  onClick={() => navigate("/app/meetings", { state: { meetingId: nearestInterview.id } })}
+                  onClick={() => navigate(`/app/meetings/${nearestInterview.id}`)}
                 >
                   Перейти
                 </button>

@@ -346,23 +346,17 @@
     }
 }
 
-.vac-card {
-    min-height: 220px;
-    height: 100%;
-    box-sizing: border-box;
-}
-
 .vac-dropdown-wrap {
     position: relative;
 }
 
-.vac-dropdown-menu {
+.vac-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    z-index: 90;
-    padding: 16px;
+    z-index: 80;
     box-sizing: border-box;
+
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 18px;
@@ -370,10 +364,12 @@
 }
 
 .vac-filter-menu {
-    width: min(620px, calc(100vw - 64px));
+    width: 560px;
+    max-width: calc(100vw - 64px);
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18px;
+    padding: 18px;
 }
 
 .vac-filter-column {
@@ -391,7 +387,7 @@
 
 .vac-check-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     color: #374151;
     font-size: 14px;
@@ -400,34 +396,9 @@
 }
 
 .vac-check-row input {
-    appearance: none;
-    -webkit-appearance: none;
-    position: relative;
-    box-sizing: border-box;
     width: 16px;
     height: 16px;
-    margin: 1px 0 0;
-    border: 1.4px solid #8d8d8d;
-    border-radius: 4px;
-    background: #ffffff;
-    cursor: pointer;
-}
-
-.vac-check-row input:checked {
-    border-color: #2563eb;
-    background: #2563eb;
-}
-
-.vac-check-row input:checked::after {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 1px;
-    width: 4px;
-    height: 8px;
-    border: solid #ffffff;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
+    margin: 0;
 }
 
 .vac-filter-clear {
@@ -448,19 +419,14 @@
 }
 
 .vac-sort-menu {
-    width: 240px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    min-width: 220px;
+    padding: 8px;
 }
 
-.vac-sort-item {
+.vac-sort-option {
+    width: 100%;
     min-height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     border: none;
     border-radius: 10px;
     background: transparent;
@@ -471,23 +437,35 @@
     cursor: pointer;
 }
 
-.vac-sort-item:hover,
-.vac-sort-item.active {
+.vac-sort-option:hover,
+.vac-sort-option.active {
+    background: #edf4ff;
+    color: #2563eb;
+}
+
+.vac-card {
+    min-height: 196px;
+}
+
+.interview .vac-back,
+.vacancies .vac-back {
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #ffffff;
+}
+
+.interview .vac-back:hover,
+.vacancies .vac-back:hover {
+    border-color: #cfe0ff;
     background: #edf4ff;
     color: #2563eb;
 }
 
 @media (max-width: 760px) {
     .vac-filter-menu {
-        grid-template-columns: 1fr;
         width: min(88vw, 420px);
+        grid-template-columns: 1fr;
     }
-}
-
-.vac-back {
-    min-height: 40px;
-    padding: 0 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 999px;
-    background: #ffffff;
 }

@@ -4,30 +4,31 @@
     align-items: center;
     gap: 16px;
     flex-wrap: wrap;
-    margin-top: 16px;
+    margin-top: 22px;
 }
 
 .pager-more {
-    height: 44px;
-    padding: 0 22px;
+    height: 48px;
+    padding: 0 28px;
 
-    border: 1px solid #106aff;
-    border-radius: 12px;
+    border: 2px solid #c9d9f6;
+    border-radius: 0;
     background: #ffffff;
 
-    color: #106aff;
+    color: #2563eb;
     font-family: inherit;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
     text-transform: uppercase;
 
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
 }
 
-.pager-more:hover {
-    background: #eef4ff;
+.pager-more:hover:not(:disabled) {
+    border-color: #2563eb;
+    background: #f8fbff;
 }
 
 .pager-more:disabled {
@@ -38,35 +39,40 @@
 .pager-pages {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .pager-page {
-    min-width: 32px;
-    height: 32px;
-    padding: 0 8px;
+    min-width: auto;
+    height: 28px;
+    padding: 0 2px;
 
     border: none;
-    border-radius: 8px;
+    border-radius: 0;
     background: transparent;
 
-    color: #374151;
+    color: #111827;
     font-family: inherit;
     font-size: 15px;
     font-weight: 500;
 
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: color 0.2s ease, opacity 0.2s ease;
 }
 
-.pager-page:hover {
-    background: #eef4ff;
-    color: #106aff;
-}
-
+.pager-page:hover:not(:disabled),
 .pager-page.active {
-    background: #e7f0ff;
-    color: #106aff;
+    color: #2563eb;
     font-weight: 700;
+}
+
+.pager-page:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.pager-next {
+    font-size: 24px;
+    line-height: 1;
 }

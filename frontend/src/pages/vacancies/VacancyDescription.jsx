@@ -28,7 +28,7 @@ import {
     IconChevronDown,
 } from "./icons.jsx";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 8;
 
 const LOG_COLUMNS = [
     { key: "datetime", label: "Дата и время" },
@@ -53,7 +53,7 @@ function toInputDate(value) {
     return `${year}-${month}-${day}`;
 }
 
-function compareLog(a, b, key) {
+function compareLogRows(a, b, key) {
     if (key === "datetime") {
         return parseDisplayDate(a.datetime) - parseDisplayDate(b.datetime);
     }
@@ -66,6 +66,8 @@ function compareLog(a, b, key) {
 
 export default function VacancyDescription({ vacancy }) {
     const navigate = useNavigate();
+    const filterRef = useRef(null);
+    const dateRef = useRef(null);
 
     const [query, setQuery] = useState("");
     const [sort, setSort] = useState({ key: "datetime", direction: "desc" });
@@ -77,9 +79,6 @@ export default function VacancyDescription({ vacancy }) {
     const [confirmClose, setConfirmClose] = useState(false);
     const [confirmCopy, setConfirmCopy] = useState(false);
     const [page, setPage] = useState(1);
-
-    const filterRef = useRef(null);
-    const dateRef = useRef(null);
 
     const handleClose = () => {
         updateVacancy(vacancy.id, { status: "completed" });
@@ -146,25 +145,25 @@ export default function VacancyDescription({ vacancy }) {
 
         return log
             .filter((entry) => {
-                const searchSource = [entry.datetime, entry.user, entry.role, entry.action, entry.details]
+                const source = [entry.datetime, entry.user, entry.role, entry.action, entry.details]
                     .join(" ")
                     .toLowerCase();
-
-                return !search || searchSource.includes(search);
+                return !search || source.includes(search);
             })
             .filter((entry) => selectedRoles.length === 0 || selectedRoles.includes(entry.role))
             .filter((entry) => selectedActions.length === 0 || selectedActions.includes(entry.action))
             .filter((entry) => !selectedDate || toInputDate(entry.datetime) === selectedDate)
             .sort((a, b) => {
-                const result = compareLog(a, b, sort.key);
+                const result = compareLogRows(a, b, sort.key);
                 return sort.direction === "asc" ? result : -result;
             });
     }, [log, query, selectedActions, selectedDate, selectedRoles, sort]);
 
+    const hasFilters = selectedRoles.length > 0 || selectedActions.length > 0;
+
     const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
     const safePage = Math.min(page, totalPages);
     const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-    const hasFilters = selectedRoles.length > 0 || selectedActions.length > 0;
 
     return (
         <div className="vdesc">
@@ -283,7 +282,7 @@ export default function VacancyDescription({ vacancy }) {
                     </button>
 
                     {isFilterOpen && (
-                        <div className="vdesc-dropdown-menu vdesc-filter-menu">
+                        <div className="vdesc-dropdown vdesc-filter-menu">
                             <div className="vdesc-filter-group">
                                 <div className="vdesc-filter-title">Роль</div>
                                 {roles.map((role) => (
@@ -314,7 +313,7 @@ export default function VacancyDescription({ vacancy }) {
 
                             <button
                                 type="button"
-                                className="vdesc-filter-clear"
+                                className="vdesc-clear-btn"
                                 onClick={() => {
                                     setSelectedRoles([]);
                                     setSelectedActions([]);
@@ -338,7 +337,7 @@ export default function VacancyDescription({ vacancy }) {
                     </button>
 
                     {isDateOpen && (
-                        <div className="vdesc-dropdown-menu vdesc-date-menu">
+                        <div className="vdesc-dropdown vdesc-date-menu">
                             <label className="vdesc-date-label">
                                 Дата события
                                 <input
@@ -353,7 +352,7 @@ export default function VacancyDescription({ vacancy }) {
 
                             <button
                                 type="button"
-                                className="vdesc-filter-clear"
+                                className="vdesc-clear-btn"
                                 onClick={() => {
                                     setSelectedDate("");
                                     setPage(1);
