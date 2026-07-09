@@ -26,6 +26,10 @@ public class Application
     [Column("status")]
     public string Status { get; set; } = "New";
 
+    [MaxLength(50)]
+    [Column("sub_status")]
+    public string? SubStatus { get; set; }
+
     [Column("notes")]
     public string? Notes { get; set; } // Комментарий / сопроводительное письмо
 

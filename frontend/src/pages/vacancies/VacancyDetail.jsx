@@ -1,12 +1,18 @@
 import "./vacancies.css";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 import { LANGUAGES, TAG_COLORS } from "../../mocks/vacancies.js";
+import { STATUSES, STATUS_ORDER } from "../../mocks/candidates.js";
 import { fetchVacancy } from "../../api/vacancies.js";
+import { fetchApplications } from "../../api/applications.js";
 
 import Navigation_Bar from "../../components/ui/Navigation_Bar/Navigation_Bar";
+import CandidatesTable from "./CandidatesTable.jsx";
 import VacancyDescription from "./VacancyDescription.jsx";
+import { IconInfo } from "./icons.jsx";
+
+const CANDIDATE_STATUSES = STATUS_ORDER.filter((key) => key !== "free");
 
 export default function VacancyDetail() {
     const { id } = useParams();
@@ -14,19 +20,24 @@ export default function VacancyDetail() {
     const location = useLocation();
 
     const [vacancy, setVacancy] = useState(null);
+    const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState("");
-    const [activeTab, setActiveTab] = useState(() =>
-        location.state?.tab === "candidates" ? "candidates" : "description"
-    );
+    const [activeTab, setActiveTab] = useState(() => location.state?.tab || "description");
+
+    const reloadApplications = useCallback(async () => {
+        const list = await fetchApplications({ vacancyId: id });
+        setApplications(list);
+    }, [id]);
 
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
-        fetchVacancy(id)
-            .then((data) => {
+        Promise.all([fetchVacancy(id), fetchApplications({ vacancyId: id })])
+            .then(([loadedVacancy, loadedApplications]) => {
                 if (!cancelled) {
-                    setVacancy(data);
+                    setVacancy(loadedVacancy);
+                    setApplications(loadedApplications);
                     setLoadError("");
                 }
             })
@@ -45,14 +56,23 @@ export default function VacancyDetail() {
         };
     }, [id]);
 
+    const counts = useMemo(() => {
+        const result = { all: applications.length };
+        CANDIDATE_STATUSES.forEach((key) => {
+            result[key] = 0;
+        });
+        applications.forEach((app) => {
+            if (result[app.statusKey] !== undefined) {
+                result[app.statusKey] += 1;
+            }
+        });
+        return result;
+    }, [applications]);
+
     if (loading || !vacancy) {
         return (
             <div className="vacancies">
-                <button
-                    type="button"
-                    className="vac-back"
-                    onClick={() => navigate("/app/vacancies")}
-                >
+                <button type="button" className="vac-back" onClick={() => navigate("/app/vacancies")}>
                     ← Назад к вакансиям
                 </button>
                 <h1 className="vac-detail-title">
@@ -64,18 +84,14 @@ export default function VacancyDetail() {
 
     const lang = LANGUAGES[vacancy.lang];
 
-    const tabs = [
-        { id: "description", label: "Описание" },
-        { id: "candidates", label: "Кандидаты" },
+    const statusTabs = [
+        { id: "all", label: `Все ${counts.all}` },
+        ...CANDIDATE_STATUSES.map((key) => ({ id: key, label: `${STATUSES[key].label} ${counts[key]}` })),
     ];
 
     return (
         <div className="vacancies">
-            <button
-                type="button"
-                className="vac-back"
-                onClick={() => navigate("/app/vacancies")}
-            >
+            <button type="button" className="vac-back" onClick={() => navigate("/app/vacancies")}>
                 ← Назад к вакансиям
             </button>
 
@@ -83,40 +99,42 @@ export default function VacancyDetail() {
 
             <div className="vac-tags">
                 {lang && (
-                    <span
-                        className="vac-tag"
-                        style={{ backgroundColor: lang.color, color: lang.text }}
-                    >
+                    <span className="vac-tag" style={{ backgroundColor: lang.color, color: lang.text }}>
                         {lang.label}
                     </span>
                 )}
-                <span className="vac-tag" style={{ backgroundColor: TAG_COLORS.experience }}>
-                    {vacancy.experience}
-                </span>
-                <span className="vac-tag" style={{ backgroundColor: TAG_COLORS.employment }}>
-                    {vacancy.employment}
-                </span>
-                <span className="vac-tag" style={{ backgroundColor: TAG_COLORS.city }}>
-                    {vacancy.city}
-                </span>
+                <span className="vac-tag" style={{ backgroundColor: TAG_COLORS.experience }}>{vacancy.experience}</span>
+                <span className="vac-tag" style={{ backgroundColor: TAG_COLORS.employment }}>{vacancy.employment}</span>
+                <span className="vac-tag" style={{ backgroundColor: TAG_COLORS.city }}>{vacancy.city}</span>
             </div>
 
             <div className="vd-tabs-row">
                 <div className="vd-tabs">
                     <Navigation_Bar
-                        items={tabs}
-                        activeItem={activeTab}
+                        items={statusTabs}
+                        activeItem={activeTab === "description" ? "" : activeTab}
                         onItemClick={setActiveTab}
                     />
                 </div>
+
+                <button
+                    type="button"
+                    className={`vd-desc-btn ${activeTab === "description" ? "active" : ""}`}
+                    onClick={() => setActiveTab("description")}
+                >
+                    <IconInfo size={16} />
+                    Описание вакансии
+                </button>
             </div>
 
             {activeTab === "description" ? (
                 <VacancyDescription vacancy={vacancy} />
             ) : (
-                <div className="vac-empty">
-                    Список кандидатов по вакансии подключается на следующем шаге интеграции.
-                </div>
+                <CandidatesTable
+                    applications={applications}
+                    statusFilter={activeTab}
+                    onChanged={reloadApplications}
+                />
             )}
         </div>
     );

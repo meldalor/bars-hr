@@ -164,8 +164,9 @@ public static class DbSeeder
                 InterviewerId = hrId
             };
             context.Interviews.AddRange(interview1, interview2);
-            applications[0].Status = "Viewed";
-            applications[1].Status = "Viewed";
+            applications[0].Status = ApplicationStatuses.Interview;
+            applications[1].Status = ApplicationStatuses.Interview;
+            applications[1].SubStatus = "Интервью назначено";
             await context.SaveChangesAsync();
 
             // оценки по матрице первого интервью + положительное решение (для оффера)

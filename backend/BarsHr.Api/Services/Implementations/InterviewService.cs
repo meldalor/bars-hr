@@ -77,9 +77,9 @@ public class InterviewService : IInterviewService
         var interview = request.ToEntity(currentUserId);
         _context.Interviews.Add(interview);
 
-
-        if (application.Status == "New")
-            application.Status = "Viewed";
+        // назначение интервью двигает отклик на стадию «Интервью»
+        if (application.Status is ApplicationStatuses.New or ApplicationStatuses.Testing)
+            application.Status = ApplicationStatuses.Interview;
 
         await _context.SaveChangesAsync();
 

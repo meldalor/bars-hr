@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "./client.js";
+import { apiGet, apiPost, apiPut } from "./client.js";
 import { formatDateShort } from "./format.js";
 import { statusKey } from "./candidates.js";
 
@@ -9,12 +9,22 @@ export function mapApplication(dto) {
         candidateName: dto.candidateFullName,
         vacancyId: String(dto.vacancyId),
         vacancyTitle: dto.vacancyTitle,
-        status: dto.status, // сырой статус бэка (New/Viewed/Approved/Rejected)
+        status: dto.status, // сырой статус бэка (New/Testing/Interview/Offer/Approved/Rejected)
         statusKey: statusKey(dto.status),
+        subStatus: dto.subStatus ?? null,
         notes: dto.notes ?? "",
         appliedAt: formatDateShort(dto.appliedAt),
         interviewsCount: dto.interviewsCount ?? 0,
     };
+}
+
+// смена статуса/подстатуса отклика; status — сырой статус бэка
+export async function updateApplicationStatus(id, { status, subStatus }) {
+    const dto = await apiPut(`/applications/${id}/status`, {
+        status,
+        subStatus: subStatus || null,
+    });
+    return mapApplication(dto);
 }
 
 export async function fetchApplications({ candidateId, vacancyId } = {}) {

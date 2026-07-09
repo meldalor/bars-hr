@@ -24,17 +24,33 @@ export function serializeSkills(list) {
     return JSON.stringify(list ?? []);
 }
 
-// статус отклика на бэке → ключ статусного словаря фронта (mocks/candidates STATUSES)
+// статус отклика на бэке ↔ ключ статусного словаря фронта (mocks/candidates STATUSES)
 const STATUS_TO_KEY = {
     New: "in_progress",
-    Viewed: "interview",
+    Testing: "testing",
+    Interview: "interview",
+    Offer: "offer",
     Approved: "accepted",
     Rejected: "rejected",
     Free: "free",
 };
 
+const KEY_TO_STATUS = {
+    in_progress: "New",
+    testing: "Testing",
+    interview: "Interview",
+    offer: "Offer",
+    accepted: "Approved",
+    rejected: "Rejected",
+};
+
 export function statusKey(backendStatus) {
     return STATUS_TO_KEY[backendStatus] ?? "free";
+}
+
+// ключ фронта → статус бэка (для смены статуса отклика)
+export function backendStatus(key) {
+    return KEY_TO_STATUS[key] ?? "New";
 }
 
 // элемент списка кандидатов под таблицу candidates.jsx (богатые поля упрощены)

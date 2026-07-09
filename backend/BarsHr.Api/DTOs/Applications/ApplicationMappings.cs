@@ -12,6 +12,7 @@ public static class ApplicationMappings
         a.VacancyId,
         a.Vacancy?.Title ?? string.Empty,
         a.Status,
+        a.SubStatus,
         a.Notes,
         a.AppliedAt,
         a.Interviews.Count
