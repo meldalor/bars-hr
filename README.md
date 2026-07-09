@@ -22,33 +22,32 @@
 
 ## Как запустить
 
+Требования: Docker Desktop, .NET 10 SDK, Node.js. Порядок важен: сначала БД, потом API, потом фронт.
+
 ```bash
-# 1. База данных и pgAdmin
+# 1. База данных (Postgres + pgAdmin)
 docker compose up -d
 
-# 2. API
+# 2. API — порт 5080
 cd backend/BarsHr.Api
-dotnet run
+dotnet ef database update          # накатить миграции (первый раз / после сброса)
+dotnet run --launch-profile http   # при старте сидит демо-данные
+
+# 3. Фронтенд — порт 5173
+cd frontend
+npm install                        # первый раз
+npm run dev
 ```
+
+Схема БД накатывается только миграциями (в `Program.cs` нет `Migrate()`). Сбросить начисто: `dotnet ef database drop -f && dotnet ef database update`, затем перезапустить API. Если нет `dotnet ef`: `dotnet tool install --global dotnet-ef`.
 
 | Что | Адрес |
 |---|---|
+| Веб-приложение | http://localhost:5173 |
 | Swagger (API) | http://localhost:5080/swagger |
 | pgAdmin | http://localhost:5050 (логин `admin@bars.ru`, пароль `admin`) |
 | PostgreSQL | localhost:5432, БД/юзер `barshr`, пароль `barshr_dev` |
 
 Подключение сервера в pgAdmin: host `postgres`, port `5432`.
 
-
-## Как запустить
-
-Требования: Docker Desktop, .NET 10 SDK.
-
-```bash
-# 1. База данных и pgAdmin
-docker compose up -d
-
-# 2. API
-cd backend/BarsHr.Api
-dotnet run
-```
+Демо-логины: `admin` / `Admin123!` · `hr` / `Hr123456!` · `decision` / `Decision123!`.
