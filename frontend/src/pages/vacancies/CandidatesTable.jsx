@@ -32,7 +32,7 @@ import {
     IconXCircle,
 } from "./icons.jsx";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 20;
 
 const STATUS_ICONS = {
     free: IconUser,
@@ -456,7 +456,11 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                     )}
                 </div>
 
-                <button type="button" className="vac-btn vac-btn-primary">
+                <button
+                    type="button"
+                    className="vac-btn vac-btn-primary"
+                    onClick={() => navigate("/app/candidates/create")}
+                >
                     <IconPlus size={18} />
                     Добавить кандидата
                 </button>
@@ -511,8 +515,15 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                             </tr>
                         ) : (
                             pageRows.map((candidate) => (
-                                <tr key={candidate.id}>
-                                    <td className="ct-col-check">
+                                <tr
+                                    key={candidate.id}
+                                    className="ct-row-clickable"
+                                    onClick={() => navigate(`/app/candidates/${candidate.id}`)}
+                                >
+                                    <td
+                                        className="ct-col-check"
+                                        onClick={(event) => event.stopPropagation()}
+                                    >
                                         <input
                                             type="checkbox"
                                             checked={selected.has(candidate.id)}
@@ -543,7 +554,7 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                                         <div>{candidate.date}</div>
                                         <div className="ct-time">{candidate.time}</div>
                                     </td>
-                                    <td>
+                                    <td onClick={(event) => event.stopPropagation()}>
                                         <StatusCell
                                             candidate={candidate}
                                             openKey={openKey}

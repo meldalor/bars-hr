@@ -4,7 +4,6 @@ import profileImage from "../../../../assets/overview/profile.jpg";
 import phoneIcon from "../../../../assets/overview/phone.svg";
 import mailIcon from "../../../../assets/overview/plane.svg";
 import placeIcon from "../../../../assets/overview/place.png";
-import penIcon from "../../../../assets/overview/pen.svg";
 
 function ProfileCard() {
     return (

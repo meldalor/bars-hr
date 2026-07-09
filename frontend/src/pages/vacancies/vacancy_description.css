@@ -209,3 +209,123 @@
         grid-template-columns: 1fr;
     }
 }
+
+.vdesc-dropdown-wrap {
+    position: relative;
+}
+
+.vdesc-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 80;
+    padding: 16px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    box-shadow: 0 18px 44px rgba(16, 32, 64, 0.16);
+}
+
+.vdesc-filter-menu {
+    width: min(520px, calc(100vw - 64px));
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.vdesc-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vdesc-filter-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.vdesc-check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.25;
+    cursor: pointer;
+}
+
+.vdesc-check-row input {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    margin: 1px 0 0;
+    border: 1.4px solid #8d8d8d;
+    border-radius: 4px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.vdesc-check-row input:checked {
+    border-color: #2563eb;
+    background: #2563eb;
+}
+
+.vdesc-check-row input:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.vdesc-filter-clear {
+    grid-column: 1 / -1;
+    height: 40px;
+    border: none;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #374151;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.vdesc-filter-clear:hover {
+    background: #e5e7eb;
+}
+
+.vdesc-date-menu {
+    width: 260px;
+}
+
+.vdesc-date-label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.vdesc-date-label input {
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #111827;
+    color-scheme: light;
+    font-family: inherit;
+    font-size: 14px;
+}

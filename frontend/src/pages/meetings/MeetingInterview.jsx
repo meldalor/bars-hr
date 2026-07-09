@@ -66,6 +66,7 @@ export default function MeetingInterview() {
     const [finalScore, setFinalScore] = useState(initial.finalScore);
     const [finalComment, setFinalComment] = useState(initial.finalComment);
     const [confirmCancel, setConfirmCancel] = useState(false);
+    const [confirmFinish, setConfirmFinish] = useState(false);
 
     const back = () => navigate("/app/meetings");
 
@@ -126,8 +127,12 @@ export default function MeetingInterview() {
         window.scrollTo({ top: 0 });
     };
 
-    const confirm = () => {
+    const confirm = (withPrint = false) => {
         saveInterview(id, { questions, matrix, skills, finalScore, finalComment });
+        setConfirmFinish(false);
+        if (withPrint) {
+            window.print();
+        }
         back();
     };
 
@@ -240,6 +245,15 @@ export default function MeetingInterview() {
                     <button type="button" className="iv-btn primary">
                         Ссылка на встречу
                     </button>
+                    {meeting.candidateId && (
+                        <button
+                            type="button"
+                            className="iv-btn ghost"
+                            onClick={() => navigate(`/app/candidates/${meeting.candidateId}`)}
+                        >
+                            Профиль кандидата
+                        </button>
+                    )}
                     <button
                         type="button"
                         className="iv-btn primary"
@@ -436,13 +450,38 @@ export default function MeetingInterview() {
                             <button type="button" className="iv-btn danger" onClick={back}>
                                 Отменить
                             </button>
-                            <button type="button" className="iv-btn primary" onClick={confirm}>
+                            <button
+                                type="button"
+                                className="iv-btn primary"
+                                onClick={() => setConfirmFinish(true)}
+                            >
                                 Подтвердить
                             </button>
                         </div>
                     </div>
                 </>
             )}
+
+            <Modal open={confirmFinish} onClose={() => setConfirmFinish(false)}>
+                <p className="iv-modal-title">
+                    Подтвердить результаты интервью и распечатать форму?
+                </p>
+                <div className="iv-modal-actions iv-modal-actions-wide">
+                    <button
+                        type="button"
+                        className="iv-btn ghost"
+                        onClick={() => setConfirmFinish(false)}
+                    >
+                        Отмена
+                    </button>
+                    <button type="button" className="iv-btn primary" onClick={() => confirm(false)}>
+                        Подтвердить
+                    </button>
+                    <button type="button" className="iv-btn primary" onClick={() => confirm(true)}>
+                        Распечатать
+                    </button>
+                </div>
+            </Modal>
 
             <Modal open={confirmCancel} onClose={() => setConfirmCancel(false)}>
                 <p className="iv-modal-title">

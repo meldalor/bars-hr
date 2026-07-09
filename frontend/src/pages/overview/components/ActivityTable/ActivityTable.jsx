@@ -8,7 +8,7 @@ import filterIcon from "../../../../assets/overview/nastroyky.svg";
 import calendarIcon from "../../../../assets/overview/calendar.svg";
 import chevronDownIcon from "../../../../assets/overview/Chevron down.svg";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 20;
 
 const COLUMNS = [
     { key: "datetime", label: "Дата и время" },

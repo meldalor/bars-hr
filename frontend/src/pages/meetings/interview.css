@@ -717,3 +717,27 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+.iv-q-text {
+    font-size: 22px;
+}
+
+.iv-q-hint {
+    font-size: 17px;
+}
+
+.iv-star {
+    font-size: 44px;
+}
+
+.iv-comp-name {
+    font-size: 17px;
+}
+
+.iv-comp-desc {
+    font-size: 15px;
+}
+
+.iv-modal-actions-wide {
+    flex-wrap: wrap;
+}

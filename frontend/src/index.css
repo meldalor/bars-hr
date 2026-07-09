@@ -114,3 +114,9 @@ select,
 textarea {
   color-scheme: light;
 }
+
+input[type="checkbox"] {
+  background: #ffffff;
+  color-scheme: light;
+  accent-color: #2563eb;
+}

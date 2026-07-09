@@ -496,3 +496,38 @@
         grid-template-columns: 1fr;
     }
 }
+
+.ct-row-clickable {
+    cursor: pointer;
+}
+
+.ct-row-clickable:hover {
+    background: #f8fafc;
+}
+
+.ct-check-row input {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    box-sizing: border-box;
+    border: 1.4px solid #8d8d8d;
+    border-radius: 4px;
+    background: #ffffff;
+}
+
+.ct-check-row input:checked {
+    border-color: #2563eb;
+    background: #2563eb;
+}
+
+.ct-check-row input:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}

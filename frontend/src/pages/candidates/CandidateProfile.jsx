@@ -45,7 +45,7 @@ function VacancyCard({ vacancy, candidate }) {
   const isFinal = candidate.status === "accepted" || candidate.status === "rejected";
 
   return (
-    <article className="cp-vacancy-card">
+    <article className="cp-vacancy-card" onClick={() => navigate(`/app/vacancies/${vacancy.id}`)}>
       <div className="cp-vacancy-head">
         <div
           className="cp-vacancy-icon"
@@ -58,7 +58,10 @@ function VacancyCard({ vacancy, candidate }) {
           type="button"
           className="cp-vacancy-link"
           aria-label="Открыть вакансию"
-          onClick={() => navigate(`/app/vacancies/${vacancy.id}`)}
+          onClick={(event) => {
+            event.stopPropagation();
+            navigate(`/app/vacancies/${vacancy.id}`);
+          }}
         >
           <IconArrowUpRight size={22} />
         </button>
@@ -112,7 +115,10 @@ function VacancyCard({ vacancy, candidate }) {
             </span>
           )}
           {isFinal && (
-            <button type="button" className="cp-print-btn">
+            <button type="button" className="cp-print-btn" onClick={(event) => {
+              event.stopPropagation();
+              window.print();
+            }}>
               <IconPrinter size={15} />
               Распечатать
             </button>
@@ -218,7 +224,7 @@ export default function CandidateProfile() {
                   {skill}
                 </span>
               ))}
-              <button type="button" className="cp-add-skill">+ Добавить</button>
+              <button type="button" className="cp-add-skill" onClick={() => navigate(`/app/candidates/edit/${candidate.id}`)}>+ Добавить</button>
             </div>
           </section>
 
@@ -341,7 +347,7 @@ export default function CandidateProfile() {
                 <VacancyCard key={vacancy.id} vacancy={vacancy} candidate={candidate} />
               ))}
             </div>
-            <button type="button" className="cp-add-vacancy">Добавить</button>
+            <button type="button" className="cp-add-vacancy" onClick={() => navigate("/app/vacancies")}>Добавить</button>
           </section>
         </aside>
       </div>

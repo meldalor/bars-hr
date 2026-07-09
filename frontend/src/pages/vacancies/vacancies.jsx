@@ -1,5 +1,5 @@
 import "./vacancies.css";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -38,25 +38,129 @@ const TAB_ITEMS = [
     { id: "completed", label: "Завершенные" },
 ];
 
+const SORT_OPTIONS = [
+    { key: "title", label: "По названию" },
+    { key: "city", label: "По городу" },
+    { key: "candidates", label: "По кандидатам" },
+    { key: "salary", label: "По зарплате" },
+];
+
+function toggleFilter(value, setter) {
+    setter((prev) =>
+        prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+}
+
+function compareVacancies(a, b, key) {
+    if (key === "candidates") {
+        return a.candidates - b.candidates;
+    }
+
+    if (key === "salary") {
+        return a.salaryFrom - b.salaryFrom;
+    }
+
+    return String(a[key]).localeCompare(String(b[key]), "ru", {
+        sensitivity: "base",
+        numeric: true,
+    });
+}
+
 export default function Vacancies() {
     const navigate = useNavigate();
 
     const [tab, setTab] = useState("active");
     const [query, setQuery] = useState("");
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [isSortOpen, setIsSortOpen] = useState(false);
+    const [cityFilters, setCityFilters] = useState([]);
+    const [languageFilters, setLanguageFilters] = useState([]);
+    const [experienceFilters, setExperienceFilters] = useState([]);
+    const [sort, setSort] = useState({ key: "title", direction: "asc" });
 
-    const byStatus = VACANCIES.filter((vacancy) => vacancy.status === tab);
-    const search = query.trim().toLowerCase();
-    const visible = search
-        ? byStatus.filter(
-              (vacancy) =>
-                  vacancy.title.toLowerCase().includes(search) ||
-                  vacancy.city.toLowerCase().includes(search)
-          )
-        : byStatus;
+    const filterRef = useRef(null);
+    const sortRef = useRef(null);
+
+    const byStatus = useMemo(
+        () => VACANCIES.filter((vacancy) => vacancy.status === tab),
+        [tab]
+    );
+
+    const cities = useMemo(
+        () => [...new Set(byStatus.map((vacancy) => vacancy.city))].sort((a, b) => a.localeCompare(b, "ru")),
+        [byStatus]
+    );
+
+    const languages = useMemo(
+        () => [...new Set(byStatus.map((vacancy) => vacancy.lang))],
+        [byStatus]
+    );
+
+    const experiences = useMemo(
+        () => [...new Set(byStatus.map((vacancy) => vacancy.experience))].sort((a, b) => a.localeCompare(b, "ru")),
+        [byStatus]
+    );
+
+    const hasFilters = cityFilters.length > 0 || languageFilters.length > 0 || experienceFilters.length > 0;
+
+    const visible = useMemo(() => {
+        const search = query.trim().toLowerCase();
+
+        return byStatus
+            .filter((vacancy) => cityFilters.length === 0 || cityFilters.includes(vacancy.city))
+            .filter((vacancy) => languageFilters.length === 0 || languageFilters.includes(vacancy.lang))
+            .filter((vacancy) => experienceFilters.length === 0 || experienceFilters.includes(vacancy.experience))
+            .filter((vacancy) => {
+                if (!search) {
+                    return true;
+                }
+
+                const lang = LANGUAGES[vacancy.lang];
+                return [
+                    vacancy.title,
+                    vacancy.city,
+                    vacancy.experience,
+                    vacancy.employment,
+                    vacancy.format,
+                    vacancy.department,
+                    lang?.label,
+                    vacancy.requirements.join(" "),
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase()
+                    .includes(search);
+            })
+            .sort((a, b) => {
+                const result = compareVacancies(a, b, sort.key);
+                return sort.direction === "asc" ? result : -result;
+            });
+    }, [byStatus, cityFilters, experienceFilters, languageFilters, query, sort]);
+
+    useEffect(() => {
+        const handleOutsideClick = (event) => {
+            if (filterRef.current && !filterRef.current.contains(event.target)) {
+                setIsFiltersOpen(false);
+            }
+            if (sortRef.current && !sortRef.current.contains(event.target)) {
+                setIsSortOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, []);
 
     const count = byStatus.length;
 
     const openVacancy = (id) => navigate(`/app/vacancies/${id}`);
+
+    const changeSort = (key) => {
+        setSort((prev) => ({
+            key,
+            direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+        }));
+    };
 
     return (
         <div className="vacancies">
@@ -71,7 +175,12 @@ export default function Vacancies() {
                 <Navigation_Bar
                     items={TAB_ITEMS}
                     activeItem={tab}
-                    onItemClick={setTab}
+                    onItemClick={(value) => {
+                        setTab(value);
+                        setCityFilters([]);
+                        setLanguageFilters([]);
+                        setExperienceFilters([]);
+                    }}
                 />
 
                 <div className="vac-search">
@@ -84,15 +193,103 @@ export default function Vacancies() {
                     />
                 </div>
 
-                <button type="button" className="vac-btn">
-                    <IconFilter size={18} />
-                    Фильтры
-                </button>
+                <div className="vac-dropdown-wrap" ref={filterRef}>
+                    <button
+                        type="button"
+                        className={`vac-btn ${hasFilters ? "vac-btn-active" : ""}`}
+                        onClick={() => setIsFiltersOpen((value) => !value)}
+                    >
+                        <IconFilter size={18} />
+                        Фильтры
+                    </button>
 
-                <button type="button" className="vac-btn">
-                    <IconSort size={18} />
-                    Сортировка
-                </button>
+                    {isFiltersOpen && (
+                        <div className="vac-dropdown-menu vac-filter-menu">
+                            <div className="vac-filter-column">
+                                <div className="vac-filter-title">Город</div>
+                                {cities.map((city) => (
+                                    <label className="vac-check-row" key={city}>
+                                        <input
+                                            type="checkbox"
+                                            checked={cityFilters.includes(city)}
+                                            onChange={() => toggleFilter(city, setCityFilters)}
+                                        />
+                                        <span>{city}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="vac-filter-column">
+                                <div className="vac-filter-title">Технология</div>
+                                {languages.map((language) => (
+                                    <label className="vac-check-row" key={language}>
+                                        <input
+                                            type="checkbox"
+                                            checked={languageFilters.includes(language)}
+                                            onChange={() => toggleFilter(language, setLanguageFilters)}
+                                        />
+                                        <span>{LANGUAGES[language]?.label || language}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="vac-filter-column">
+                                <div className="vac-filter-title">Опыт</div>
+                                {experiences.map((experience) => (
+                                    <label className="vac-check-row" key={experience}>
+                                        <input
+                                            type="checkbox"
+                                            checked={experienceFilters.includes(experience)}
+                                            onChange={() => toggleFilter(experience, setExperienceFilters)}
+                                        />
+                                        <span>{experience}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <button
+                                type="button"
+                                className="vac-filter-clear"
+                                onClick={() => {
+                                    setCityFilters([]);
+                                    setLanguageFilters([]);
+                                    setExperienceFilters([]);
+                                }}
+                            >
+                                Очистить фильтры
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <div className="vac-dropdown-wrap" ref={sortRef}>
+                    <button
+                        type="button"
+                        className="vac-btn"
+                        onClick={() => setIsSortOpen((value) => !value)}
+                    >
+                        <IconSort size={18} />
+                        Сортировка
+                    </button>
+
+                    {isSortOpen && (
+                        <div className="vac-dropdown-menu vac-sort-menu">
+                            {SORT_OPTIONS.map((option) => (
+                                <button
+                                    type="button"
+                                    className={`vac-sort-item ${sort.key === option.key ? "active" : ""}`}
+                                    key={option.key}
+                                    onClick={() => changeSort(option.key)}
+                                >
+                                    <span>{option.label}</span>
+                                    {sort.key === option.key && (
+                                        <span>{sort.direction === "asc" ? "↑" : "↓"}</span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 <button
                     type="button"

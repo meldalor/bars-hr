@@ -23,7 +23,7 @@ import {
 import Modal from "../../components/ui/Modal/Modal.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 20;
 
 const STATUS_ICONS = {
   free: IconUser,
@@ -109,53 +109,59 @@ function CandidateStatus({ candidate }) {
 export default function Candidates() {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState(() => getAllCandidates());
+  const [archivedCandidates, setArchivedCandidates] = useState([]);
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeStatus, setActiveStatus] = useState("all");
   const [selected, setSelected] = useState(() => new Set());
   const [sort, setSort] = useState({ key: "date", direction: "desc" });
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [roleFilters, setRoleFilters] = useState([]);
+  const [specialtyFilters, setSpecialtyFilters] = useState([]);
   const [cityFilters, setCityFilters] = useState([]);
   const [skillFilters, setSkillFilters] = useState([]);
+  const [statusFilters, setStatusFilters] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const filtersRef = useRef(null);
 
+  const sourceCandidates = isArchiveOpen ? archivedCandidates : candidates;
+
   const cities = useMemo(
-    () => [...new Set(candidates.map((candidate) => candidate.city))].sort((a, b) => a.localeCompare(b, "ru")),
-    [candidates]
+    () => [...new Set(sourceCandidates.map((candidate) => candidate.city))].sort((a, b) => a.localeCompare(b, "ru")),
+    [sourceCandidates]
   );
 
   const specialties = useMemo(
-    () => [...new Set(candidates.map((candidate) => candidate.specialty))].sort((a, b) => a.localeCompare(b, "ru")),
-    [candidates]
+    () => [...new Set(sourceCandidates.map((candidate) => candidate.specialty))].sort((a, b) => a.localeCompare(b, "ru")),
+    [sourceCandidates]
   );
 
   const skills = useMemo(
     () =>
-      [...new Set(candidates.flatMap((candidate) => candidate.skills || []))].sort((a, b) =>
+      [...new Set(sourceCandidates.flatMap((candidate) => candidate.skills || []))].sort((a, b) =>
         a.localeCompare(b, "ru")
       ),
-    [candidates]
+    [sourceCandidates]
   );
 
   const counts = useMemo(() => {
-    const result = { all: candidates.length };
+    const result = { all: sourceCandidates.length };
     STATUS_ORDER.forEach((key) => {
       result[key] = 0;
     });
-    candidates.forEach((candidate) => {
+    sourceCandidates.forEach((candidate) => {
       result[candidate.status] += 1;
     });
     return result;
-  }, [candidates]);
+  }, [sourceCandidates]);
 
   const filtered = useMemo(() => {
     const search = query.trim().toLowerCase();
 
-    return candidates
+    return sourceCandidates
       .filter((candidate) => activeStatus === "all" || candidate.status === activeStatus)
-      .filter((candidate) => roleFilters.length === 0 || roleFilters.includes(candidate.specialty))
+      .filter((candidate) => statusFilters.length === 0 || statusFilters.includes(candidate.status))
+      .filter((candidate) => specialtyFilters.length === 0 || specialtyFilters.includes(candidate.specialty))
       .filter((candidate) => cityFilters.length === 0 || cityFilters.includes(candidate.city))
       .filter(
         (candidate) =>
@@ -188,12 +194,14 @@ export default function Candidates() {
         const result = compareCandidates(a, b, sort.key);
         return sort.direction === "asc" ? result : -result;
       });
-  }, [activeStatus, candidates, cityFilters, query, roleFilters, skillFilters, sort]);
+  }, [activeStatus, cityFilters, query, skillFilters, sort, sourceCandidates, specialtyFilters, statusFilters]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const safePage = Math.min(currentPage, totalPages);
+  const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   const allChecked = pageRows.length > 0 && pageRows.every((candidate) => selected.has(candidate.id));
-  const hasFilters = roleFilters.length > 0 || cityFilters.length > 0 || skillFilters.length > 0;
+  const hasFilters =
+    specialtyFilters.length > 0 || cityFilters.length > 0 || skillFilters.length > 0 || statusFilters.length > 0;
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -210,6 +218,11 @@ export default function Candidates() {
     { id: "all", label: `Все` },
     ...STATUS_ORDER.map((key) => ({ id: key, label: STATUSES[key].label })),
   ];
+
+  const resetSelection = () => {
+    setSelected(new Set());
+    setCurrentPage(1);
+  };
 
   const toggleAll = () => {
     setSelected((prev) => {
@@ -250,7 +263,14 @@ export default function Candidates() {
   };
 
   const archiveSelected = () => {
-    setCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
+    if (isArchiveOpen) {
+      setArchivedCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
+    } else {
+      const selectedCandidates = candidates.filter((candidate) => selected.has(candidate.id));
+      setArchivedCandidates((prev) => [...selectedCandidates, ...prev]);
+      setCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
+    }
+
     setSelected(new Set());
     setConfirmArchive(false);
   };
@@ -258,7 +278,8 @@ export default function Candidates() {
   return (
     <div className="candidates-page">
       <h1 className="overview-title">
-        База кандидатов: <span className="overview-title-count">{candidates.length} человек</span>
+        {isArchiveOpen ? "Архив кандидатов" : "База кандидатов:"}{" "}
+        <span className="overview-title-count">{sourceCandidates.length} человек</span>
       </h1>
 
       <div className="candidates-tabs">
@@ -269,7 +290,7 @@ export default function Candidates() {
             className={`candidates-tab ${activeStatus === tab.id ? "active" : ""}`}
             onClick={() => {
               setActiveStatus(tab.id);
-              setCurrentPage(1);
+              resetSelection();
             }}
           >
             {tab.label} {counts[tab.id]}
@@ -302,15 +323,29 @@ export default function Candidates() {
           </button>
 
           {isFiltersOpen && (
-            <div className="candidates-filter-menu">
+            <div className="candidates-filter-menu candidates-filter-menu-four">
+              <div className="candidates-filter-column">
+                <div className="candidates-filter-title">Статус</div>
+                {STATUS_ORDER.map((statusKey) => (
+                  <label className="candidates-check-row" key={statusKey}>
+                    <input
+                      type="checkbox"
+                      checked={statusFilters.includes(statusKey)}
+                      onChange={() => toggleFilterValue(statusKey, setStatusFilters)}
+                    />
+                    <span>{STATUSES[statusKey].label}</span>
+                  </label>
+                ))}
+              </div>
+
               <div className="candidates-filter-column">
                 <div className="candidates-filter-title">Специальность</div>
                 {specialties.map((specialty) => (
                   <label className="candidates-check-row" key={specialty}>
                     <input
                       type="checkbox"
-                      checked={roleFilters.includes(specialty)}
-                      onChange={() => toggleFilterValue(specialty, setRoleFilters)}
+                      checked={specialtyFilters.includes(specialty)}
+                      onChange={() => toggleFilterValue(specialty, setSpecialtyFilters)}
                     />
                     <span>{specialty}</span>
                   </label>
@@ -349,9 +384,10 @@ export default function Candidates() {
                 type="button"
                 className="candidates-filter-clear"
                 onClick={() => {
-                  setRoleFilters([]);
+                  setSpecialtyFilters([]);
                   setCityFilters([]);
                   setSkillFilters([]);
+                  setStatusFilters([]);
                   setCurrentPage(1);
                 }}
               >
@@ -360,6 +396,17 @@ export default function Candidates() {
             </div>
           )}
         </div>
+
+        <button
+          type="button"
+          className={`candidates-toolbar-btn ${isArchiveOpen ? "active" : ""}`}
+          onClick={() => {
+            setIsArchiveOpen((value) => !value);
+            resetSelection();
+          }}
+        >
+          Архив
+        </button>
 
         <button
           type="button"
@@ -376,7 +423,7 @@ export default function Candidates() {
             className="candidates-toolbar-btn danger"
             onClick={() => setConfirmArchive(true)}
           >
-            Перенести в архив ({selected.size})
+            {isArchiveOpen ? "Удалить" : "Перенести в архив"} ({selected.size})
           </button>
         )}
       </div>
@@ -465,11 +512,13 @@ export default function Candidates() {
         </table>
       </div>
 
-      <Pagination page={currentPage} totalPages={totalPages} onChange={setCurrentPage} />
+      <Pagination page={safePage} totalPages={totalPages} onChange={setCurrentPage} />
 
       <Modal open={confirmArchive} onClose={() => setConfirmArchive(false)}>
         <p className="cand-modal-title">
-          Перенести выбранных кандидатов ({selected.size}) в архив?
+          {isArchiveOpen
+            ? `Удалить выбранных кандидатов (${selected.size})?`
+            : `Перенести выбранных кандидатов (${selected.size}) в архив?`}
         </p>
         <div className="cand-modal-actions">
           <button
@@ -480,7 +529,7 @@ export default function Candidates() {
             Отмена
           </button>
           <button type="button" className="cand-modal-btn danger" onClick={archiveSelected}>
-            Перенести в архив
+            {isArchiveOpen ? "Удалить" : "Перенести в архив"}
           </button>
         </div>
       </Modal>
