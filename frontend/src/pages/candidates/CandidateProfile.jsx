@@ -7,6 +7,12 @@ import { fetchCandidate, archiveCandidate } from "../../api/candidates.js";
 import { fetchApplications } from "../../api/applications.js";
 import { apiGet } from "../../api/client.js";
 import { formatDateTime } from "../../api/format.js";
+import {
+  downloadCandidateCard,
+  downloadRejection,
+  downloadInvitation,
+  downloadOffer,
+} from "../../api/documents.js";
 import Modal from "../../components/ui/Modal/Modal.jsx";
 import { IconArrowUpRight } from "../vacancies/icons.jsx";
 
@@ -38,6 +44,16 @@ export default function CandidateProfile() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [docError, setDocError] = useState("");
+
+  const runDownload = async (task) => {
+    setDocError("");
+    try {
+      await task();
+    } catch (error) {
+      setDocError(error.message || "Не удалось скачать документ");
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -130,6 +146,13 @@ export default function CandidateProfile() {
               <button
                 type="button"
                 className="cp-soft-btn"
+                onClick={() => runDownload(() => downloadCandidateCard(candidate.id))}
+              >
+                Скачать карточку
+              </button>
+              <button
+                type="button"
+                className="cp-soft-btn"
                 onClick={() => setConfirmArchive(true)}
               >
                 В архив
@@ -142,6 +165,7 @@ export default function CandidateProfile() {
                 Изменить
               </button>
             </div>
+            {docError && <div className="cp-doc-error">{docError}</div>}
 
             <div className="cp-contacts">
               {candidate.city && <ContactRow icon="⌖">{candidate.city}</ContactRow>}
@@ -245,6 +269,29 @@ export default function CandidateProfile() {
                           {status.label}
                         </span>
                         <span className="cp-active-vacancy">Отклик от {application.appliedAt}</span>
+                      </div>
+                      <div className="cp-doc-buttons">
+                        <button
+                          type="button"
+                          className="cp-doc-btn"
+                          onClick={() => runDownload(() => downloadInvitation(application.id))}
+                        >
+                          Приглашение
+                        </button>
+                        <button
+                          type="button"
+                          className="cp-doc-btn"
+                          onClick={() => runDownload(() => downloadOffer(application.id))}
+                        >
+                          Оффер
+                        </button>
+                        <button
+                          type="button"
+                          className="cp-doc-btn"
+                          onClick={() => runDownload(() => downloadRejection(application.id))}
+                        >
+                          Отказ
+                        </button>
                       </div>
                     </article>
                   );

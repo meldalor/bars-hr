@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { fetchInterview, saveEvaluations, makeDecision } from "../../api/interviews.js";
 import { fetchVacancy } from "../../api/vacancies.js";
+import { downloadInterviewProtocol } from "../../api/documents.js";
 import { formatDateTime } from "../../api/format.js";
 import { getSession } from "../../auth/session.js";
 import { IconCalendar } from "../vacancies/icons.jsx";
@@ -196,6 +197,13 @@ export default function MeetingInterview() {
                         }
                     >
                         Профиль кандидата
+                    </button>
+                    <button
+                        type="button"
+                        className="iv-btn primary"
+                        onClick={() => downloadInterviewProtocol(id).catch(() => {})}
+                    >
+                        Скачать протокол
                     </button>
                 </div>
             </div>
