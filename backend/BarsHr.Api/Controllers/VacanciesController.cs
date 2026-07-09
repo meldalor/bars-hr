@@ -1,3 +1,5 @@
+using BarsHr.Api.Authorization;
+using BarsHr.Api.Domain;
 using BarsHr.Api.DTOs.Vacancies;
 using BarsHr.Api.Services.Interfaces;
 using BarsHr.Api.Extensions;
@@ -39,6 +41,7 @@ public class VacanciesController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.VacanciesEdit)]
     public async Task<ActionResult<VacancyDto>> Create([FromBody] CreateVacancyRequest request)
     {
         var currentUserId = User.GetUserId();
@@ -55,6 +58,7 @@ public class VacanciesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [RequirePermission(Permissions.VacanciesEdit)]
     public async Task<ActionResult<VacancyDto>> Update(int id, [FromBody] UpdateVacancyRequest request)
     {
         var currentUserId = User.GetUserId();
@@ -72,6 +76,7 @@ public class VacanciesController : ControllerBase
     }
 
     [HttpPut("{id}/competencies")]
+    [RequirePermission(Permissions.VacanciesEdit)]
     public async Task<ActionResult<VacancyDto>> SetCompetencies(
         int id,
         [FromBody] List<CompetencyItem> competencies)
@@ -94,6 +99,7 @@ public class VacanciesController : ControllerBase
     }
 
     [HttpPost("{id}/archive")]
+    [RequirePermission(Permissions.VacanciesEdit)]
     public async Task<IActionResult> Archive(int id)
     {
         var success = await _vacancyService.SetArchivedAsync(id, archived: true);

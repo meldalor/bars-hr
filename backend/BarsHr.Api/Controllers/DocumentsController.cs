@@ -1,3 +1,5 @@
+using BarsHr.Api.Authorization;
+using BarsHr.Api.Domain;
 using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +9,7 @@ namespace BarsHr.Api.Controllers;
 
 [ApiController]
 [Authorize]
+[RequirePermission(Permissions.DocumentsPrint)]
 [Route("api/[controller]")]
 public class DocumentsController : ControllerBase
 {
