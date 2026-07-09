@@ -1,7 +1,15 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import Navigation_Bar from "../ui/Navigation_Bar/Navigation_Bar";
+import { getSession, clearSession } from "../../auth/session.js";
 import "./layout.css";
+
+// роли бэка → человекочитаемая подпись в шапке
+const ROLE_LABELS = {
+  Admin: "Администратор",
+  HR: "HR-менеджер",
+  DecisionMaker: "Руководитель направления",
+};
 
 import settingsIcon from "../../assets/icons/settings.svg";
 import bellIcon from "../../assets/icons/bell.svg";
@@ -15,6 +23,10 @@ function Layout() {
   const profileRef = useRef(null);
   
   const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const session = getSession();
+  const fullName = session?.fullName ?? "Пользователь";
+  const roleLabel = ROLE_LABELS[session?.role] ?? session?.role ?? "";
 
   const menuItems = [
     { id: "overview", label: "Обзор" },
@@ -32,6 +44,7 @@ function Layout() {
 
   const handleLogout = () => {
     setIsProfileOpen(false);
+    clearSession();
     navigate("/login");
   };
 
@@ -107,14 +120,14 @@ function Layout() {
             {/* Профиль */}
             <div className="profile-container" ref={profileRef}>
               <div className="user-profile" onClick={() => setIsProfileOpen(!isProfileOpen)}>
-                <img 
+                <img
                   src="https://i.pinimg.com/736x/64/ea/92/64ea92c0a30a561961ad6af3dd34ecfd.jpg"
-                  alt="Петрова Арина" 
+                  alt={fullName}
                   className="user-avatar"
                 />
                 <div className="user-info">
-                  <span className="user-name">Петрова Арина</span>
-                  <span className="user-role">HR-менеджер</span>
+                  <span className="user-name">{fullName}</span>
+                  <span className="user-role">{roleLabel}</span>
                 </div>
                 <img 
                   src={chevronIcon} 

@@ -17,13 +17,15 @@ import Admin from "../pages/admin/Admin.jsx";
 import MeetingInterview from "../pages/meetings/MeetingInterview.jsx";
 
 import Layout from "../components/layout/layout";
+import RequireAuth from "../auth/RequireAuth.jsx";
 
 function App_Router() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/app" element={<Layout />}>
+      <Route element={<RequireAuth />}>
+        <Route path="/app" element={<Layout />}>
         <Route path="overview" element={<Overview />} />
         <Route path="vacancies" element={<Vacancies />} />
         <Route path="vacancies/new" element={<VacancyCreate />} />
@@ -36,7 +38,8 @@ function App_Router() {
         <Route path="candidates/:id" element={<CandidateProfile />} />
         <Route path="meetings" element={<Meetings />} />
         <Route path="meetings/:id" element={<MeetingInterview />} />
-        <Route path="admin" element={<Admin />} />
+          <Route path="admin" element={<Admin />} />
+        </Route>
       </Route>
     </Routes>
   );

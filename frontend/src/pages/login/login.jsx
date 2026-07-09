@@ -6,7 +6,7 @@ import Input from "../../components/ui/Input/Input.jsx";
 import Button from "../../components/ui/Button/Button.jsx";
 import FloatingBadge from "../../components/landing/floating_badge.jsx";
 
-import { authenticate } from "../../mocks/users.js";
+import { login as loginRequest } from "../../api/auth.js";
 
 import pythonIcon from "../../assets/landing/python.png";
 import javascriptIcon from "../../assets/landing/javascript.png";
@@ -47,7 +47,7 @@ export default function Login() {
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
         if (isSubmitting) {
@@ -64,20 +64,13 @@ export default function Login() {
         setError("");
         setIsSubmitting(true);
 
-        setTimeout(() => {
-            const user = authenticate(trimmedLogin, password);
-
-            if (!user) {
-                setError("Неверный логин или пароль");
-                setIsSubmitting(false);
-                return;
-            }
-
-            const storage = remember ? localStorage : sessionStorage;
-            storage.setItem("huntly_session", JSON.stringify(user));
-
+        try {
+            await loginRequest(trimmedLogin, password, remember);
             navigate("/app/overview");
-        }, 600);
+        } catch (requestError) {
+            setError(requestError.message || "Неверный логин или пароль");
+            setIsSubmitting(false);
+        }
     };
 
     return (

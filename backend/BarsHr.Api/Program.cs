@@ -66,6 +66,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// CORS для локального фронтенда (Vite на 5173); Content-Disposition нужен клиенту,
+// чтобы вытащить имя файла при скачивании PDF через blob
+const string FrontendCorsPolicy = "frontend";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy => policy
+        .WithOrigins("http://localhost:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .WithExposedHeaders("Content-Disposition"));
+});
+
 var app = builder.Build();
 
 // стартовые пользователи и демо-данные: без них на чистой БД невозможно войти
@@ -81,6 +93,8 @@ if (app.Environment.IsDevelopment())
 
     app.UseSwaggerUI(options => options.EnablePersistAuthorization());
 }
+
+app.UseCors(FrontendCorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
