@@ -6,5 +6,9 @@ public record CandidateListItemDto(
     string? City,
     int ApplicationsCount,
     int InterviewsCount,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    // для списка на фронте: статус выводится из откликов, навыки — чипы, архив — вкладка
+    string Status,
+    string? Skills,
+    bool IsArchived
 );

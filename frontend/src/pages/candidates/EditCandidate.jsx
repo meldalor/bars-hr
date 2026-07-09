@@ -1,64 +1,99 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CandidateForm from "../../components/forms/CandidateForm";
+import { fetchCandidate, updateCandidate, buildCandidateRequest } from "../../api/candidates.js";
 import "../../pages/candidates/CreateCandidate.css";
 
-// Моковые данные (имитация данных из базы)
-const MOCK_CANDIDATE = {
-  id: "1",
-  lastName: "Иванов",
-  firstName: "Иван",
-  middleName: "Иванович",
-  city: "Казань",
-  phone: "+7 (999) 888-77-66",
-  telegram: "@ivanov_dev",
-  vacancy: "Frontend-разработчик",
-  info: "Опыт работы 5 лет, готов к переезду.",
-  selectedSkills: ["Язык JS", "Язык Py", "Английский"],
-  education: [
-    { id: "edu1", level: "Бакалавриат", institution: "КФУ", faculty: "Прикладная математика", start: "01-02-2019", end: "01-02-2019" },
-  ],
-  experience: [
-    { id: "exp1", company: "ООО Ромашка", position: "Middle Frontend", start: "01-02-2019", end: "01-02-2019", info: "Разработка корпоративных порталов" },
-  ],
-};
+// CandidateDto (плоские поля) → initialData формы (ФИО по словам, образование/опыт одним блоком)
+function toInitialData(candidate) {
+  const parts = candidate.fullName.split(/\s+/);
+  return {
+    lastName: parts[0] || "",
+    firstName: parts[1] || "",
+    middleName: parts.slice(2).join(" "),
+    city: candidate.city,
+    phone: candidate.phone,
+    telegram: "",
+    vacancy: "",
+    info: "",
+    selectedSkills: candidate.skills,
+    education: candidate.education
+      ? [{ id: "edu-1", level: "", institution: candidate.education, faculty: "", start: "", end: "" }]
+      : [],
+    experience: candidate.previousWork
+      ? [{ id: "exp-1", company: "", position: "", start: "", end: "", info: candidate.previousWork }]
+      : [],
+  };
+}
 
 function EditCandidate() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [candidateData, setCandidateData] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Имитация запроса к API по ID
-    setTimeout(() => {
-      setCandidateData(MOCK_CANDIDATE);
-      setLoading(false);
-    }, 500);
+    let cancelled = false;
+    setLoading(true);
+    fetchCandidate(id)
+      .then((candidate) => {
+        if (!cancelled) {
+          setCandidateData(toInitialData(candidate));
+          setError("");
+        }
+      })
+      .catch((loadError) => {
+        if (!cancelled) {
+          setError(loadError.message || "Не удалось загрузить кандидата");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
-  const handleSubmit = (data) => {
-    console.log("Сохраняем изменения для кандидата:", id, data);
-    navigate("/app/candidates");
+  const handleSubmit = async (data) => {
+    try {
+      await updateCandidate(id, buildCandidateRequest(data));
+      navigate(`/app/candidates/${id}`);
+    } catch (submitError) {
+      setError(submitError.message || "Не удалось сохранить изменения");
+    }
   };
 
   const handleCancel = () => {
-    navigate("/app/candidates");
+    navigate(`/app/candidates/${id}`);
   };
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center' }}>Загрузка данных кандидата...</div>;
+    return <div style={{ padding: 40, textAlign: "center" }}>Загрузка данных кандидата...</div>;
+  }
+
+  if (!candidateData) {
+    return <div style={{ padding: 40, textAlign: "center" }}>{error || "Кандидат не найден"}</div>;
   }
 
   return (
     <div className="create-candidate-page">
       <button className="back-button" onClick={handleCancel}>
-        ← Вернуться к списку
+        ← Вернуться к кандидату
       </button>
 
       <div className="title-row">
         <h1 className="page-title-create">Редактирование кандидата</h1>
       </div>
+
+      {error && (
+        <div className="field-error" role="alert" style={{ marginBottom: 12 }}>
+          {error}
+        </div>
+      )}
 
       <CandidateForm
         mode="edit"

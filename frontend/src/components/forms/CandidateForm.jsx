@@ -5,7 +5,7 @@ import Modal from "../ui/Modal/Modal.jsx";
 import "../../pages/candidates/CreateCandidate.css"; // Путь к CSS
 
 const MOCK_SKILLS = ["Язык C#", "Язык JS", "Язык Py", "Язык Kotlin", "Знания Git", "Английский"];
-const REQUIRED_FIELDS = ["lastName", "firstName", "middleName", "city", "phone", "vacancy"];
+const REQUIRED_FIELDS = ["lastName", "firstName", "middleName", "city", "phone"];
 
 let uidCounter = 0;
 const nextId = () => `row-${Date.now()}-${uidCounter++}`;
@@ -323,7 +323,7 @@ export default function CandidateForm({
         </div>
         <div className="section-grid">
           {/* ИЗМЕНЕНО: Вакансия -> Специальность */}
-          <InputField id="vacancy" label="Специальность" required placeholder="Введите специальность" name="vacancy" value={formData.vacancy} onChange={handleChange} error={errors.vacancy} />
+          <InputField id="vacancy" label="Специальность" placeholder="Введите специальность" name="vacancy" value={formData.vacancy} onChange={handleChange} />
           <TextAreaField id="info" label="Дополнительная информация" value={formData.info} onChange={handleChange} name="info" placeholder="Например: готов к переезду, доступен с понедельника" maxLength={2000} />
         </div>
       </div>

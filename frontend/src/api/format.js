@@ -13,6 +13,23 @@ export function formatDateTime(iso) {
     return format(date, "d MMMM HH:mm", { locale: ru });
 }
 
+// ISO → «30.06.26» и «17:35» для таблиц кандидатов
+export function formatDateShort(iso) {
+    if (!iso) {
+        return "";
+    }
+    const date = new Date(iso);
+    return Number.isNaN(date.getTime()) ? "" : format(date, "dd.MM.yy");
+}
+
+export function formatTimeShort(iso) {
+    if (!iso) {
+        return "";
+    }
+    const date = new Date(iso);
+    return Number.isNaN(date.getTime()) ? "" : format(date, "HH:mm");
+}
+
 // многострочное текстовое поле бэка → массив строк (навыки, обязанности)
 export function splitLines(text) {
     if (!text) {

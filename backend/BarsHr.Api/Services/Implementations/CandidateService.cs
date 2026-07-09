@@ -42,7 +42,15 @@ public class CandidateService : ICandidateService
                 c.City,
                 c.Applications.Count,
                 c.Applications.SelectMany(a => a.Interviews).Count(),
-                c.CreatedAt
+                c.CreatedAt,
+                // сводный статус кандидата: берём самый «продвинутый» из откликов
+                c.Applications.Any(a => a.Status == "Approved") ? "Approved"
+                    : c.Applications.Any(a => a.Status == "Rejected") ? "Rejected"
+                    : c.Applications.Any(a => a.Status == "Viewed") ? "Viewed"
+                    : c.Applications.Any(a => a.Status == "New") ? "New"
+                    : "Free",
+                c.Skills,
+                c.IsArchived
             ))
             .ToListAsync();
     }
