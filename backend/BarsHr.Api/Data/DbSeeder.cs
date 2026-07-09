@@ -211,7 +211,14 @@ public static class DbSeeder
             await context.SaveChangesAsync();
 
             var applications = candidates
-                .Select(c => new Application { CandidateId = c.Id, VacancyId = vacancy.Id, CreatedById = hrId, Status = "New" })
+                .Select(c => new Application
+                {
+                    CandidateId = c.Id,
+                    VacancyId = vacancy.Id,
+                    CreatedById = hrId,
+                    Status = ApplicationStatuses.New,
+                    SubStatus = ApplicationStatuses.DefaultSubStatus(ApplicationStatuses.New)
+                })
                 .ToArray();
             context.Applications.AddRange(applications);
             await context.SaveChangesAsync();
@@ -236,6 +243,7 @@ public static class DbSeeder
             };
             context.Interviews.AddRange(interview1, interview2);
             applications[0].Status = ApplicationStatuses.Interview;
+            applications[0].SubStatus = "Интервью назначено";
             applications[1].Status = ApplicationStatuses.Interview;
             applications[1].SubStatus = "Интервью назначено";
             await context.SaveChangesAsync();
@@ -267,10 +275,12 @@ public static class DbSeeder
                 Comment = "Кандидат принят, готовим оффер",
                 MadeById = decisionId
             });
-            applications[0].Status = "Approved";
+            applications[0].Status = ApplicationStatuses.Approved;
+            applications[0].SubStatus = null;
 
             // третий отклик — отклонён (для формы отказа с фидбеком)
-            applications[2].Status = "Rejected";
+            applications[2].Status = ApplicationStatuses.Rejected;
+            applications[2].SubStatus = null;
             applications[2].Notes = "Недостаточно опыта с C# для текущей позиции";
 
             await context.SaveChangesAsync();

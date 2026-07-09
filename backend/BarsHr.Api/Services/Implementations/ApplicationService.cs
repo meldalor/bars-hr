@@ -93,11 +93,42 @@ public class ApplicationService : IApplicationService
         if (application == null) return null;
 
         application.Status = request.Status;
-        application.SubStatus = string.IsNullOrWhiteSpace(request.SubStatus) ? null : request.SubStatus;
+        // подстатус не передан — ставим дефолтный для нового статуса, чтобы не остался чужой
+        application.SubStatus = string.IsNullOrWhiteSpace(request.SubStatus)
+            ? ApplicationStatuses.DefaultSubStatus(request.Status)
+            : request.SubStatus;
         application.UpdatedAt = DateTime.UtcNow;
         application.UpdatedById = currentUserId;
+
+        await CloseVacancyIfStaffedAsync(application);
+
         await _context.SaveChangesAsync();
 
         return await GetByIdAsync(id);
+    }
+
+    // вакансия закрывается, когда принявших оффер набралось на все места (PositionsCount)
+    private async Task CloseVacancyIfStaffedAsync(Domain.Entities.Application application)
+    {
+        if (application.Status != ApplicationStatuses.Offer ||
+            application.SubStatus != ApplicationStatuses.OfferAccepted)
+            return;
+
+        var vacancy = await _context.Vacancies.FirstOrDefaultAsync(v => v.Id == application.VacancyId);
+        if (vacancy == null || vacancy.Status == "Closed")
+            return;
+
+        // текущий отклик ещё не сохранён, поэтому считаем остальных и добавляем его вручную
+        var acceptedOthers = await _context.Applications.CountAsync(a =>
+            a.VacancyId == application.VacancyId &&
+            a.Id != application.Id &&
+            a.Status == ApplicationStatuses.Offer &&
+            a.SubStatus == ApplicationStatuses.OfferAccepted);
+
+        if (acceptedOthers + 1 >= vacancy.PositionsCount)
+        {
+            vacancy.Status = "Closed";
+            vacancy.UpdatedAt = DateTime.UtcNow;
+        }
     }
 }

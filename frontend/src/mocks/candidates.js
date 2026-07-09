@@ -3,32 +3,38 @@ export const STATUSES = {
     in_progress: { label: "В работе", color: "#2563eb", bg: "#e7f0fe" },
     testing: { label: "Тестирование", color: "#7c3aed", bg: "#f1eafe" },
     interview: { label: "Интервью", color: "#db2777", bg: "#fceef5" },
-    offer: { label: "Оффер", color: "#b45309", bg: "#fbf0db" },
+    pending: { label: "В ожидании", color: "#0e7490", bg: "#e0f4f8" },
     accepted: { label: "Принят", color: "#16a34a", bg: "#e6f6ec" },
+    offer: { label: "Оффер", color: "#b45309", bg: "#fbf0db" },
     rejected: { label: "Отказ", color: "#dc2626", bg: "#fbeaea" },
 };
 
+// порядок пайплайна: в работе → тестирование → интервью → в ожидании → принят → оффер; отказ последним
 export const STATUS_ORDER = [
     "free",
     "in_progress",
     "testing",
     "interview",
-    "offer",
+    "pending",
     "accepted",
+    "offer",
     "rejected",
 ];
 
+// подстатусы — строго дочерние своему статусу (синхронизированы с ApplicationStatuses на бэке);
+// первый в списке — дефолтный
 export const SUBSTATUSES = {
-    free: ["В резерве"],
+    free: [],
     in_progress: [
         "Назначен на вакансию",
         "Связь с кандидатом",
         "Ожидание ответа кандидата",
     ],
-    testing: ["ТЗ отправлено", "ТЗ на проверке"],
-    interview: ["Интервью не назначено", "Интервью назначено"],
-    offer: ["Ожидание ответа", "Оффер принят"],
+    testing: ["ТЗ отправлено", "ТЗ на проверке", "ТЗ пройдено", "ТЗ не пройдено"],
+    interview: ["Назначить интервью", "Интервью назначено"],
+    pending: [],
     accepted: [],
+    offer: ["Не отправлен", "Отправлен", "Ожидание ответа", "Принят", "Отказ"],
     rejected: [],
 };
 

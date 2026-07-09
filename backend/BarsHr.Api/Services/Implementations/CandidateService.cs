@@ -43,11 +43,14 @@ public class CandidateService : ICandidateService
                 c.Applications.Count,
                 c.Applications.SelectMany(a => a.Interviews).Count(),
                 c.CreatedAt,
-                // сводный статус кандидата: берём самый «продвинутый» из откликов
-                c.Applications.Any(a => a.Status == "Approved") ? "Approved"
-                    : c.Applications.Any(a => a.Status == "Rejected") ? "Rejected"
-                    : c.Applications.Any(a => a.Status == "Viewed") ? "Viewed"
+                // сводный статус кандидата: самый «продвинутый» из активных откликов, отказ — в последнюю очередь
+                c.Applications.Any(a => a.Status == "Offer") ? "Offer"
+                    : c.Applications.Any(a => a.Status == "Approved") ? "Approved"
+                    : c.Applications.Any(a => a.Status == "Pending") ? "Pending"
+                    : c.Applications.Any(a => a.Status == "Interview") ? "Interview"
+                    : c.Applications.Any(a => a.Status == "Testing") ? "Testing"
                     : c.Applications.Any(a => a.Status == "New") ? "New"
+                    : c.Applications.Any(a => a.Status == "Rejected") ? "Rejected"
                     : "Free",
                 c.Skills,
                 c.IsArchived

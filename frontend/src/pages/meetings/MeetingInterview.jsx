@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { fetchInterview, saveEvaluations, makeDecision, cancelInterview } from "../../api/interviews.js";
+import { updateApplicationStatus } from "../../api/applications.js";
 import { fetchVacancy } from "../../api/vacancies.js";
 import { downloadInterviewProtocol } from "../../api/documents.js";
 import { formatDateTime } from "../../api/format.js";
@@ -48,6 +49,8 @@ export default function MeetingInterview() {
     const [confirm, setConfirm] = useState(null); // "Accepted" | "Rejected" | null
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [cancelError, setCancelError] = useState("");
+    const [approvalSent, setApprovalSent] = useState(false);
+    const [approvalError, setApprovalError] = useState("");
 
     useEffect(() => {
         let cancelled = false;
@@ -144,6 +147,17 @@ export default function MeetingInterview() {
             setInterview(refreshed);
         } catch (error) {
             setDecisionError(error.message || "Не удалось сохранить решение");
+        }
+    };
+
+    // HR провёл собеседование → отклик уходит в статус «В ожидании» решения
+    const handleSendForApproval = async () => {
+        setApprovalError("");
+        try {
+            await updateApplicationStatus(interview.applicationId, { status: "Pending" });
+            setApprovalSent(true);
+        } catch (error) {
+            setApprovalError(error.message || "Не удалось отправить на согласование");
         }
     };
 
@@ -392,7 +406,21 @@ export default function MeetingInterview() {
                         </div>
                     </>
                 ) : (
-                    <p className="cp-muted">Итоговое решение выносит руководитель направления.</p>
+                    <>
+                        <p className="cp-muted">Итоговое решение выносит руководитель направления.</p>
+                        {approvalError && <div className="schedule-error">{approvalError}</div>}
+                        {approvalSent && <div className="iv-save-ok">Кандидат отправлен на согласование</div>}
+                        <div className="iv-footer iv-footer-end">
+                            <button
+                                type="button"
+                                className="iv-btn primary"
+                                onClick={handleSendForApproval}
+                                disabled={approvalSent}
+                            >
+                                Отправить на согласование
+                            </button>
+                        </div>
+                    </>
                 )}
             </div>
 

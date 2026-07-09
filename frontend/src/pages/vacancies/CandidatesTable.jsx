@@ -140,7 +140,8 @@ export default function CandidatesTable({ applications, statusFilter, onChanged 
                                         </td>
                                         <td onClick={(event) => event.stopPropagation()}>
                                             {subs.length === 0 ? (
-                                                <span className="ct-muted">{app.subStatus || "—"}</span>
+                                                // у статуса нет подстатусов — чужой (устаревший) не показываем
+                                                <span className="ct-muted">—</span>
                                             ) : (
                                                 <div className="ct-status-wrap">
                                                     <button
@@ -150,7 +151,7 @@ export default function CandidatesTable({ applications, statusFilter, onChanged 
                                                         disabled={busyId === app.id}
                                                         onClick={() => setOpenKey(openKey === subMenu ? null : subMenu)}
                                                     >
-                                                        <span>{app.subStatus || "Выбрать"}</span>
+                                                        <span>{subs.includes(app.subStatus) ? app.subStatus : "Выбрать"}</span>
                                                         <IconChevronDown size={15} />
                                                     </button>
                                                     {openKey === subMenu && (
