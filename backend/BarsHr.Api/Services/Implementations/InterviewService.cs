@@ -85,6 +85,57 @@ public class InterviewService : IInterviewService
 
         return (await GetByIdAsync(interview.Id))!;
     }
+
+    public async Task<InterviewDto?> UpdateAsync(int id, UpdateInterviewRequest request, int currentUserId)
+    {
+        var interview = await _context.Interviews.FirstOrDefaultAsync(i => i.Id == id);
+        if (interview == null) return null;
+
+        if (request.InterviewerId.HasValue)
+        {
+            var interviewerOk = await _context.Users
+                .AnyAsync(u => u.Id == request.InterviewerId.Value && u.IsActive);
+            if (!interviewerOk)
+                throw new ArgumentException("Интервьюер не найден или заблокирован");
+            interview.InterviewerId = request.InterviewerId;
+        }
+
+        if (request.ScheduledAt.HasValue) interview.ScheduledAt = request.ScheduledAt.Value;
+        if (request.Plan != null) interview.Plan = request.Plan;
+
+        interview.UpdatedAt = DateTime.UtcNow;
+        interview.UpdatedById = currentUserId;
+        await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(id);
+    }
+
+    // отмена = удаление, но только пока нет решения; каскад безопасен (оценок/решения нет)
+    public async Task<bool> CancelAsync(int id, int currentUserId)
+    {
+        var interview = await _context.Interviews
+            .Include(i => i.Application)
+            .Include(i => i.Decision)
+            .FirstOrDefaultAsync(i => i.Id == id);
+        if (interview == null) return false;
+
+        if (interview.Decision != null)
+            throw new InvalidOperationException("Нельзя отменить интервью с вынесенным решением");
+
+        // откат отклика со стадии «Интервью», если других интервью на нём не осталось
+        if (interview.Application is { Status: ApplicationStatuses.Interview })
+        {
+            var hasOther = await _context.Interviews
+                .AnyAsync(i => i.ApplicationId == interview.ApplicationId && i.Id != id);
+            if (!hasOther)
+                interview.Application.Status = ApplicationStatuses.New;
+        }
+
+        _context.Interviews.Remove(interview);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<DecisionDto?> MakeDecisionAsync(
         int interviewId, 
         CreateDecisionRequest request, 

@@ -80,12 +80,13 @@ export default function CandidatesTable({ applications, statusFilter, onChanged 
                             <th>Дата отклика</th>
                             <th>Статус</th>
                             <th>Подстатус</th>
+                            <th>Интервью</th>
                         </tr>
                     </thead>
                     <tbody>
                         {rows.length === 0 ? (
                             <tr>
-                                <td colSpan={4} className="ct-empty">Кандидаты не найдены</td>
+                                <td colSpan={5} className="ct-empty">Кандидаты не найдены</td>
                             </tr>
                         ) : (
                             rows.map((app) => {
@@ -166,6 +167,34 @@ export default function CandidatesTable({ applications, statusFilter, onChanged 
                                                         </div>
                                                     )}
                                                 </div>
+                                            )}
+                                        </td>
+                                        <td onClick={(event) => event.stopPropagation()}>
+                                            {app.interviewsCount > 0 ? (
+                                                <button
+                                                    type="button"
+                                                    className="ct-schedule"
+                                                    onClick={() => navigate("/app/meetings")}
+                                                >
+                                                    К встречам
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="ct-schedule"
+                                                    onClick={() =>
+                                                        navigate("/app/meetings", {
+                                                            state: {
+                                                                schedule: {
+                                                                    candidateId: app.candidateId,
+                                                                    vacancyId: app.vacancyId,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
+                                                >
+                                                    Назначить
+                                                </button>
                                             )}
                                         </td>
                                     </tr>
