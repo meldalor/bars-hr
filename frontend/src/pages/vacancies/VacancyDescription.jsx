@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import { formatSalaryFull } from "../../mocks/vacancies.js";
 import { closeVacancy, duplicateVacancy } from "../../api/vacancies.js";
-import { getActivityByVacancy } from "../../mocks/activity.js";
+import { fetchAudit } from "../../api/audit.js";
 
 import Modal from "../../components/ui/Modal/Modal.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
@@ -97,7 +97,21 @@ export default function VacancyDescription({ vacancy }) {
         navigate(`/app/vacancies/${vacancy.id}/assessment`);
     };
 
-    const log = useMemo(() => getActivityByVacancy(vacancy.id), [vacancy.id]);
+    const [log, setLog] = useState([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetchAudit()
+            .then((rows) => {
+                if (!cancelled) {
+                    setLog(rows);
+                }
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const roles = useMemo(
         () => [...new Set(log.map((entry) => entry.role))].sort((a, b) => a.localeCompare(b, "ru")),
