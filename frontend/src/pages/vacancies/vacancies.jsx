@@ -175,7 +175,8 @@ export default function Vacancies() {
 
     const count = byStatus.length;
 
-    const openVacancy = (id) => navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
+    // при открытии вакансии по умолчанию — список её кандидатов («все»)
+    const openVacancy = (id) => navigate(`/app/vacancies/${id}`);
 
     const clearFilters = () => {
         setCityFilters([]);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./candidates.css";
 
 import { STATUSES, STATUS_ORDER } from "../../mocks/candidates.js";
@@ -109,6 +109,12 @@ function CandidateStatus({ candidate }) {
 
 export default function Candidates() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // переход с плитки статуса на «Обзоре» сразу включает нужный фильтр
+  const initialStatus =
+    location.state?.status && STATUS_ORDER.includes(location.state.status)
+      ? location.state.status
+      : "all";
   const [allCandidates, setAllCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -138,7 +144,7 @@ export default function Candidates() {
     [allCandidates]
   );
   const [query, setQuery] = useState("");
-  const [activeStatus, setActiveStatus] = useState("all");
+  const [activeStatus, setActiveStatus] = useState(initialStatus);
   const [selected, setSelected] = useState(() => new Set());
   const [sort, setSort] = useState({ key: "date", direction: "desc" });
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -430,14 +436,14 @@ export default function Candidates() {
 
         <button
           type="button"
-          className={`candidates-toolbar-btn ${showArchive ? "dark" : ""}`}
+          className={`candidates-toolbar-btn ${showArchive ? "active" : ""}`}
           onClick={() => {
             setShowArchive((value) => !value);
             setSelected(new Set());
             setCurrentPage(1);
           }}
         >
-          {showArchive ? "Кандидаты" : "Архив"}
+          Архив
         </button>
 
         <button

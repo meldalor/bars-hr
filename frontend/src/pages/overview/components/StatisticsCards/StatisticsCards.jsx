@@ -37,7 +37,8 @@ function StatisticsCards() {
                     return;
                 }
                 const next = {};
-                list.forEach((candidate) => {
+                // архивные кандидаты в статистику не попадают
+                list.filter((candidate) => !candidate.isArchived).forEach((candidate) => {
                     next[candidate.status] = (next[candidate.status] || 0) + 1;
                 });
                 setCounts(next);
@@ -55,7 +56,7 @@ function StatisticsCards() {
                     <div
                         className={`statistics-card statistics-card--${card.statusKey}`}
                         key={card.title}
-                        onClick={() => navigate("/app/candidates")}
+                        onClick={() => navigate("/app/candidates", { state: { status: card.statusKey } })}
                         style={{ cursor: "pointer" }}
                     >
                         <img src={card.icon} alt={card.title} className="statistics-icon" />
