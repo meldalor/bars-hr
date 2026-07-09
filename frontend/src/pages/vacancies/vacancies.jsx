@@ -168,7 +168,7 @@ export default function Vacancies() {
 
     const count = byStatus.length;
 
-    const openVacancy = (id) => navigate(`/app/vacancies/${id}`);
+    const openVacancy = (id) => navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
 
     const clearFilters = () => {
         setCityFilters([]);

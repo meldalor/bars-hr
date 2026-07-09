@@ -18,7 +18,7 @@ export default function VacancyDetail() {
     const vacancy = getVacancyById(id);
 
     const [candidates, setCandidates] = useState(() => getCandidatesByVacancy(id));
-    const [activeTab, setActiveTab] = useState(() => location.state?.tab || "all");
+    const [activeTab, setActiveTab] = useState(() => location.state?.tab || "description");
 
     const counts = useMemo(() => {
         const result = { all: candidates.length };

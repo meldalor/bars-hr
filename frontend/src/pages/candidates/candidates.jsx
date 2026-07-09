@@ -198,7 +198,7 @@ export default function Candidates() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
-  const pageRows = filtered.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
+  const pageRows = filtered.slice(0, safeCurrentPage * PAGE_SIZE);
   const allChecked = pageRows.length > 0 && pageRows.every((candidate) => selected.has(candidate.id));
   const hasFilters = statusFilters.length > 0 || roleFilters.length > 0 || cityFilters.length > 0 || skillFilters.length > 0;
 
