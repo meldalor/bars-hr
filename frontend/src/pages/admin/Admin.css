@@ -184,7 +184,7 @@
   color: #7c2de8;
 }
 
-.admin-role-Решала {
+.admin-role-Согласующий {
   background: #fff0cc;
   color: #ba7500;
 }
@@ -271,9 +271,15 @@
 
 .admin-role-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   margin-top: 24px;
+}
+
+.admin-role-actions-right {
+  display: flex;
+  gap: 12px;
 }
 
 .admin-cancel-btn,
@@ -295,6 +301,60 @@
 
 .admin-save-btn {
   background: #106aff;
+}
+
+.admin-delete-btn {
+  height: 42px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 999px;
+  background: #e40004;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-delete-btn:hover {
+  background: #c40003;
+}
+
+.admin-ghost-btn {
+  height: 42px;
+  min-width: 120px;
+  padding: 0 22px;
+  border: 1px solid #d8dbe2;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-ghost-btn:hover {
+  background: #f3f4f6;
+}
+
+.admin-modal-title {
+  margin: 0 0 22px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #111111;
+}
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.admin-modal-actions .admin-save-btn,
+.admin-modal-actions .admin-delete-btn {
+  min-width: 120px;
 }
 
 @media (max-width: 1400px) {

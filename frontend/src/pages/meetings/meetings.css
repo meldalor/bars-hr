@@ -104,11 +104,10 @@
   overflow: hidden;
 }
 
-/* --- СЕТКА 30 МИНУТ (высота строки 40px) --- */
 .grid-body {
   display: grid;
   grid-template-columns: 52px repeat(7, 1fr);
-  grid-auto-rows: 40px; /* Было 20px, стало 40px (30 минут) */
+  grid-auto-rows: 20px;
   border-top: 1px solid #e5e7eb;
   border-left: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
@@ -122,14 +121,14 @@
   padding-right: 12px;
   box-sizing: border-box;
   border-bottom: 1px solid #eef1f4;
-  line-height: 40px; /* Синхронизировано с высотой строки */
-  height: 40px;
+  line-height: 20px;
+  height: 20px;
 }
 
 .grid-cell {
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #eef1f4;
-  height: 40px;
+  height: 20px;
   box-sizing: border-box;
 }
 

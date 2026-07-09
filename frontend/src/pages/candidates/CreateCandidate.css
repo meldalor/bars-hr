@@ -481,6 +481,20 @@
   line-height: 1;
 }
 
+.cf-modal-title {
+  margin: 0 0 22px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #111111;
+}
+
+.cf-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fade-in {
     animation: none;

@@ -1,6 +1,6 @@
 import "./vacancies.css";
 import "./candidates_table.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -14,10 +14,11 @@ import {
     cancelInterview,
     formatMeetingSlot,
 } from "../../mocks/interviews.js";
+import Modal from "../../components/ui/Modal/Modal.jsx";
+import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 import {
     IconSearch,
     IconFilter,
-    IconEdit,
     IconPlus,
     IconChevronDown,
     IconPrinter,
@@ -30,6 +31,8 @@ import {
     IconCheckCircle,
     IconXCircle,
 } from "./icons.jsx";
+
+const PAGE_SIZE = 8;
 
 const STATUS_ICONS = {
     free: IconUser,
@@ -184,6 +187,52 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
     const [selected, setSelected] = useState(() => new Set());
     const [openKey, setOpenKey] = useState(null);
     const [, setScheduleTick] = useState(0);
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [cityFilters, setCityFilters] = useState([]);
+    const [specialtyFilters, setSpecialtyFilters] = useState([]);
+    const [skillFilters, setSkillFilters] = useState([]);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const [page, setPage] = useState(1);
+    const filtersRef = useRef(null);
+
+    const cities = useMemo(
+        () =>
+            [...new Set(candidates.map((candidate) => candidate.city))].sort((a, b) =>
+                a.localeCompare(b, "ru")
+            ),
+        [candidates]
+    );
+
+    const specialties = useMemo(
+        () =>
+            [...new Set(candidates.map((candidate) => candidate.specialty))].sort((a, b) =>
+                a.localeCompare(b, "ru")
+            ),
+        [candidates]
+    );
+
+    const skills = useMemo(
+        () =>
+            [...new Set(candidates.flatMap((candidate) => candidate.skills || []))].sort((a, b) =>
+                a.localeCompare(b, "ru")
+            ),
+        [candidates]
+    );
+
+    const hasFilters =
+        cityFilters.length > 0 || specialtyFilters.length > 0 || skillFilters.length > 0;
+
+    const toggleFilterValue = (value, setter) => {
+        setter((prev) =>
+            prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+        );
+    };
+
+    const deleteSelected = () => {
+        setCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
+        setSelected(new Set());
+        setConfirmDelete(false);
+    };
 
     const scheduleCandidate = (candidate) => {
         navigate("/app/meetings", {
@@ -221,6 +270,21 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
         return () => document.removeEventListener("mousedown", handler);
     }, [openKey]);
 
+    useEffect(() => {
+        if (!isFiltersOpen) {
+            return;
+        }
+
+        const handler = (event) => {
+            if (filtersRef.current && !filtersRef.current.contains(event.target)) {
+                setIsFiltersOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [isFiltersOpen]);
+
     const rows = useMemo(() => {
         let list =
             statusFilter === "all"
@@ -236,20 +300,39 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
             );
         }
 
+        if (cityFilters.length > 0) {
+            list = list.filter((candidate) => cityFilters.includes(candidate.city));
+        }
+
+        if (specialtyFilters.length > 0) {
+            list = list.filter((candidate) => specialtyFilters.includes(candidate.specialty));
+        }
+
+        if (skillFilters.length > 0) {
+            list = list.filter((candidate) =>
+                skillFilters.some((skill) => (candidate.skills || []).includes(skill))
+            );
+        }
+
         return [...list].sort((a, b) =>
             sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
         );
-    }, [candidates, statusFilter, query, sortAsc]);
+    }, [candidates, statusFilter, query, sortAsc, cityFilters, specialtyFilters, skillFilters]);
 
-    const allChecked = rows.length > 0 && rows.every((candidate) => selected.has(candidate.id));
+    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+    const allChecked =
+        pageRows.length > 0 && pageRows.every((candidate) => selected.has(candidate.id));
 
     const toggleAll = () => {
         setSelected((prev) => {
             const next = new Set(prev);
             if (allChecked) {
-                rows.forEach((candidate) => next.delete(candidate.id));
+                pageRows.forEach((candidate) => next.delete(candidate.id));
             } else {
-                rows.forEach((candidate) => next.add(candidate.id));
+                pageRows.forEach((candidate) => next.add(candidate.id));
             }
             return next;
         });
@@ -302,20 +385,91 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                     />
                 </div>
 
-                <button type="button" className="vac-btn">
-                    <IconFilter size={18} />
-                    Фильтры
-                </button>
+                <div className="ct-filter-wrap" ref={filtersRef}>
+                    <button
+                        type="button"
+                        className={`vac-btn ${hasFilters ? "vac-btn-active" : ""}`}
+                        onClick={() => setIsFiltersOpen((value) => !value)}
+                    >
+                        <IconFilter size={18} />
+                        Фильтры
+                    </button>
 
-                <button type="button" className="vac-btn">
-                    <IconEdit size={18} />
-                    Редактировать
-                </button>
+                    {isFiltersOpen && (
+                        <div className="ct-filter-menu">
+                            <div className="ct-filter-column">
+                                <div className="ct-filter-title">Специальность</div>
+                                {specialties.map((specialty) => (
+                                    <label className="ct-check-row" key={specialty}>
+                                        <input
+                                            type="checkbox"
+                                            checked={specialtyFilters.includes(specialty)}
+                                            onChange={() =>
+                                                toggleFilterValue(specialty, setSpecialtyFilters)
+                                            }
+                                        />
+                                        <span>{specialty}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="ct-filter-column">
+                                <div className="ct-filter-title">Город</div>
+                                {cities.map((city) => (
+                                    <label className="ct-check-row" key={city}>
+                                        <input
+                                            type="checkbox"
+                                            checked={cityFilters.includes(city)}
+                                            onChange={() => toggleFilterValue(city, setCityFilters)}
+                                        />
+                                        <span>{city}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="ct-filter-column">
+                                <div className="ct-filter-title">Навыки</div>
+                                {skills.map((skill) => (
+                                    <label className="ct-check-row" key={skill}>
+                                        <input
+                                            type="checkbox"
+                                            checked={skillFilters.includes(skill)}
+                                            onChange={() => toggleFilterValue(skill, setSkillFilters)}
+                                        />
+                                        <span>{skill}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <button
+                                type="button"
+                                className="ct-filter-clear"
+                                onClick={() => {
+                                    setCityFilters([]);
+                                    setSpecialtyFilters([]);
+                                    setSkillFilters([]);
+                                }}
+                            >
+                                Очистить фильтры
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 <button type="button" className="vac-btn vac-btn-primary">
                     <IconPlus size={18} />
                     Добавить кандидата
                 </button>
+
+                {selected.size > 0 && (
+                    <button
+                        type="button"
+                        className="vac-btn vac-btn-danger"
+                        onClick={() => setConfirmDelete(true)}
+                    >
+                        Удалить ({selected.size})
+                    </button>
+                )}
             </div>
 
             <div className="ct-card">
@@ -349,14 +503,14 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                         </tr>
                     </thead>
                     <tbody>
-                        {rows.length === 0 ? (
+                        {pageRows.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="ct-empty">
                                     Кандидаты не найдены
                                 </td>
                             </tr>
                         ) : (
-                            rows.map((candidate) => (
+                            pageRows.map((candidate) => (
                                 <tr key={candidate.id}>
                                     <td className="ct-col-check">
                                         <input
@@ -406,6 +560,30 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
                     </tbody>
                 </table>
             </div>
+
+            <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
+
+            <Modal open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+                <p className="ct-modal-title">
+                    Удалить выбранных кандидатов ({selected.size}) из вакансии?
+                </p>
+                <div className="ct-modal-actions">
+                    <button
+                        type="button"
+                        className="ct-modal-btn ghost"
+                        onClick={() => setConfirmDelete(false)}
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        type="button"
+                        className="ct-modal-btn danger"
+                        onClick={deleteSelected}
+                    >
+                        Удалить
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }

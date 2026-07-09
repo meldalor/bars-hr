@@ -12,6 +12,7 @@ import {
 import { getActivityByVacancy } from "../../mocks/activity.js";
 
 import Modal from "../../components/ui/Modal/Modal.jsx";
+import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 
 import {
     IconBriefcase,
@@ -27,6 +28,8 @@ import {
     IconChevronDown,
 } from "./icons.jsx";
 
+const PAGE_SIZE = 8;
+
 export default function VacancyDescription({ vacancy }) {
     const navigate = useNavigate();
 
@@ -34,6 +37,7 @@ export default function VacancyDescription({ vacancy }) {
     const [orderDesc, setOrderDesc] = useState(true);
     const [confirmClose, setConfirmClose] = useState(false);
     const [confirmCopy, setConfirmCopy] = useState(false);
+    const [page, setPage] = useState(1);
 
     const handleClose = () => {
         updateVacancy(vacancy.id, { status: "completed" });
@@ -71,6 +75,10 @@ export default function VacancyDescription({ vacancy }) {
 
         return orderDesc ? filtered : [...filtered].reverse();
     }, [log, query, orderDesc]);
+
+    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
     return (
         <div className="vdesc">
@@ -209,14 +217,14 @@ export default function VacancyDescription({ vacancy }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {rows.length === 0 ? (
+                        {pageRows.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="ct-empty">
                                     Записей не найдено
                                 </td>
                             </tr>
                         ) : (
-                            rows.map((entry) => (
+                            pageRows.map((entry) => (
                                 <tr key={entry.id}>
                                     <td className="ct-date">{entry.datetime}</td>
                                     <td className="vdesc-log-user">{entry.user}</td>
@@ -229,6 +237,8 @@ export default function VacancyDescription({ vacancy }) {
                     </tbody>
                 </table>
             </div>
+
+            <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
 
             <Modal open={confirmClose} onClose={() => setConfirmClose(false)}>
                 <p className="vdesc-modal-title">Закрыть вакансию «{vacancy.title}»?</p>

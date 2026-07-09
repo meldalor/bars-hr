@@ -101,6 +101,12 @@ export default function VacancyCreate() {
     const [newReq, setNewReq] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [errors, setErrors] = useState({});
+    const [confirmSave, setConfirmSave] = useState(false);
+
+    const goBack = () =>
+        editing
+            ? navigate(`/app/vacancies/${id}`, { state: { tab: "description" } })
+            : navigate("/app/vacancies");
 
     const update = (key) => (event) =>
         setForm((prev) => ({ ...prev, [key]: event.target.value }));
@@ -140,6 +146,10 @@ export default function VacancyCreate() {
             return;
         }
 
+        setConfirmSave(true);
+    };
+
+    const doSave = () => {
         const stamp = nowStamp();
         const data = {
             lang: deriveLang(requirements),
@@ -160,9 +170,11 @@ export default function VacancyCreate() {
                 .filter(Boolean),
         };
 
+        setConfirmSave(false);
+
         if (editing) {
             updateVacancy(id, { ...data, updatedAt: stamp });
-            navigate(`/app/vacancies/${id}`);
+            navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
         } else {
             addVacancy({ ...data, createdAt: stamp, updatedAt: stamp });
             navigate("/app/vacancies");
@@ -171,12 +183,8 @@ export default function VacancyCreate() {
 
     return (
         <div className="vacancies">
-            <button
-                type="button"
-                className="vac-back"
-                onClick={() => navigate("/app/vacancies")}
-            >
-                ← Назад к вакансиям
+            <button type="button" className="vac-back" onClick={goBack}>
+                {editing ? "← Назад к описанию" : "← Назад к вакансиям"}
             </button>
 
             <h1 className="vac-detail-title">
@@ -377,7 +385,7 @@ export default function VacancyCreate() {
                     <button
                         type="button"
                         className="vcreate-btn danger"
-                        onClick={() => navigate("/app/vacancies")}
+                        onClick={goBack}
                     >
                         <IconXCircle size={18} />
                         Отменить
@@ -405,6 +413,30 @@ export default function VacancyCreate() {
                         onClick={confirmDelete}
                     >
                         Удалить
+                    </button>
+                </div>
+            </Modal>
+
+            <Modal open={confirmSave} onClose={() => setConfirmSave(false)}>
+                <p className="vcreate-modal-title">
+                    {editing
+                        ? `Сохранить изменения вакансии «${form.title.trim()}»?`
+                        : `Создать вакансию «${form.title.trim()}»?`}
+                </p>
+                <div className="vcreate-modal-actions">
+                    <button
+                        type="button"
+                        className="vcreate-btn ghost"
+                        onClick={() => setConfirmSave(false)}
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        type="button"
+                        className="vcreate-btn primary"
+                        onClick={doSave}
+                    >
+                        {editing ? "Сохранить" : "Создать вакансию"}
                     </button>
                 </div>
             </Modal>

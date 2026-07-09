@@ -105,6 +105,16 @@
   color: #ffffff;
 }
 
+.candidates-toolbar-btn.danger {
+  background: #e40004;
+  color: #ffffff;
+}
+
+.candidates-toolbar-btn.danger:hover {
+  background: #c40003;
+  color: #ffffff;
+}
+
 .candidates-toolbar-btn:disabled {
   opacity: .55;
   cursor: not-allowed;
@@ -124,9 +134,10 @@
   top: calc(100% + 8px);
   left: 0;
   z-index: 70;
-  width: 620px;
+  width: 660px;
+  max-width: calc(100vw - 48px);
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 18px;
   padding: 18px;
   background: #ffffff;
@@ -204,19 +215,23 @@
 }
 
 .candidates-table th:nth-child(2) {
-  width: 27%;
+  width: 20%;
 }
 
 .candidates-table th:nth-child(3) {
-  width: 10%;
+  width: 8%;
 }
 
 .candidates-table th:nth-child(4) {
-  width: 29%;
+  width: 21%;
 }
 
 .candidates-table th:nth-child(5) {
-  width: 11%;
+  width: 9%;
+}
+
+.candidates-table th:nth-child(6) {
+  width: 40%;
 }
 
 .candidates-table td {
@@ -358,7 +373,7 @@
 .cand-status-cell {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
 }
 
@@ -397,28 +412,49 @@
   font-size: 15px;
 }
 
-.candidates-pagination-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.cand-modal-title {
+  margin: 0 0 22px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #111111;
 }
 
-.candidates-pagination-actions button {
-  height: 38px;
-  padding: 0 16px;
+.cand-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cand-modal-btn {
+  height: 42px;
+  min-width: 120px;
+  padding: 0 22px;
   border: none;
   border-radius: 999px;
-  background: #ffffff;
-  color: #111111;
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
 }
 
-.candidates-pagination-actions button:disabled {
-  opacity: .45;
-  cursor: not-allowed;
+.cand-modal-btn.ghost {
+  border: 1px solid #d8dbe2;
+  background: #ffffff;
+  color: #374151;
+}
+
+.cand-modal-btn.ghost:hover {
+  background: #f3f4f6;
+}
+
+.cand-modal-btn.danger {
+  background: #e40004;
+  color: #ffffff;
+}
+
+.cand-modal-btn.danger:hover {
+  background: #c40003;
 }
 
 @media (max-width: 1200px) {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IMaskInput } from "react-imask";
+import Modal from "../ui/Modal/Modal.jsx";
 import "../../pages/candidates/CreateCandidate.css"; // Путь к CSS
 
 const MOCK_SKILLS = ["Язык C#", "Язык JS", "Язык Py", "Язык Kotlin", "Знания Git", "Английский"];
@@ -19,7 +20,7 @@ const calculateTotalExperience = (experienceList) => {
   experienceList.forEach((exp) => {
     if (!exp.start) return;
 
-    let startDate = null;
+    let startDate;
     if (exp.start.includes('.')) {
       const [d, m, y] = exp.start.split('.');
       startDate = new Date(`${y}-${m}-${d}`);
@@ -29,7 +30,7 @@ const calculateTotalExperience = (experienceList) => {
 
     if (isNaN(startDate.getTime())) return;
 
-    let endDate = null;
+    let endDate;
     if (exp.end) {
       if (exp.end.includes('.')) {
         const [d, m, y] = exp.end.split('.');
@@ -203,6 +204,7 @@ export default function CandidateForm({
   const [errors, setErrors] = useState({});
   const [newSkillInput, setNewSkillInput] = useState("");
   const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [confirmSave, setConfirmSave] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -243,14 +245,6 @@ export default function CandidateForm({
   const updateExperience = (id, field, value) =>
     setExperience((prev) => prev.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
 
-  const progress = () => {
-    const total = REQUIRED_FIELDS.length + 1;
-    const filled =
-      REQUIRED_FIELDS.filter((f) => formData[f].trim() !== "").length +
-      (formData.selectedSkills.length > 0 ? 1 : 0);
-    return Math.round((filled / total) * 100);
-  };
-
   const mainSectionDone =
     REQUIRED_FIELDS.every((f) => formData[f].trim() !== "") && formData.selectedSkills.length > 0;
 
@@ -278,12 +272,15 @@ export default function CandidateForm({
       return;
     }
 
-    // Отправка данных родителю
+    setConfirmSave(true);
+  };
+
+  const doSubmit = () => {
+    setConfirmSave(false);
+
     if (onSubmitCallback) {
       onSubmitCallback({ formData, education, experience });
     } else {
-      // По умолчанию просто логируем и уходим на список
-      console.log("Форма отправлена:", { formData, education, experience });
       navigate("/app/candidates");
     }
   };
@@ -297,6 +294,7 @@ export default function CandidateForm({
   };
 
   return (
+    <>
     <form
       className="candidate-form"
       onSubmit={handleSubmit}
@@ -556,5 +554,20 @@ export default function CandidateForm({
         </div>
       </div>
     </form>
+
+    <Modal open={confirmSave} onClose={() => setConfirmSave(false)}>
+      <p className="cf-modal-title">
+        {mode === "create" ? "Создать кандидата?" : "Сохранить изменения?"}
+      </p>
+      <div className="cf-modal-actions">
+        <button type="button" className="btn-cancel" onClick={() => setConfirmSave(false)}>
+          Отмена
+        </button>
+        <button type="button" className="btn-submit" onClick={doSubmit}>
+          {mode === "create" ? "Создать" : "Сохранить"}
+        </button>
+      </div>
+    </Modal>
+    </>
   );
 }

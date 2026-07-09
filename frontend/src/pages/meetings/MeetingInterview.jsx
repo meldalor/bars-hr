@@ -93,9 +93,6 @@ export default function MeetingInterview() {
         handleCancelMeeting();
     };
 
-    const handleReschedule = () =>
-        navigate("/app/meetings", { state: { reschedule: { meetingId: meeting.id } } });
-
     const setQuestionRating = (index, rating) =>
         setQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, rating } : q)));
 
@@ -246,7 +243,15 @@ export default function MeetingInterview() {
                     <button
                         type="button"
                         className="iv-btn primary"
-                        onClick={handleReschedule}
+                        onClick={() =>
+                            navigate("/app/meetings", {
+                                state: {
+                                    reschedule: { meetingId: meeting.id },
+                                    meetingId: meeting.id,
+                                    editTime: true,
+                                },
+                            })
+                        }
                     >
                         Изменить время
                     </button>
