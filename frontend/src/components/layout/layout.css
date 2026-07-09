@@ -204,7 +204,7 @@
 .main-content {
   flex: 1;
   padding: 0 0 40px 0; 
-  overflow: auto;
+  overflow: visible;
   box-sizing: border-box;
 }
 

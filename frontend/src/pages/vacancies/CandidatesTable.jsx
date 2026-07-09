@@ -326,7 +326,7 @@ export default function CandidatesTable({ candidates, setCandidates, statusFilte
 
     const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
     const safePage = Math.min(page, totalPages);
-    const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+    const pageRows = rows.slice(0, safePage * PAGE_SIZE);
 
     const allChecked =
         pageRows.length > 0 && pageRows.every((candidate) => selected.has(candidate.id));

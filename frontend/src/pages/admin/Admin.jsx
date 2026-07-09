@@ -102,7 +102,7 @@ export default function Admin() {
 
   const totalPages = Math.max(1, Math.ceil(visibleUsers.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageUsers = visibleUsers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pageUsers = visibleUsers.slice(0, safePage * PAGE_SIZE);
 
   const changeUserRole = (userId, role) => {
     setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, role } : user)));
