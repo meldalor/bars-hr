@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IMaskInput } from "react-imask";
 import Modal from "../ui/Modal/Modal.jsx";
+import { calculateTotalExperience } from "../../utils/experience.js";
+import { periodError, phoneError } from "../../utils/validation.js";
 import "../../pages/candidates/CreateCandidate.css"; // Путь к CSS
 
 const MOCK_SKILLS = ["Язык C#", "Язык JS", "Язык Py", "Язык Kotlin", "Знания Git", "Английский"];
@@ -12,53 +14,6 @@ const nextId = () => `row-${Date.now()}-${uidCounter++}`;
 
 const emptyEducation = () => ({ id: nextId(), level: "", institution: "", faculty: "", start: "", end: "" });
 const emptyExperience = () => ({ id: nextId(), company: "", position: "", start: "", end: "", info: "" });
-
-// --- ФУНКЦИЯ РАСЧЕТА ОБЩЕГО СТАЖА ---
-const calculateTotalExperience = (experienceList) => {
-  let totalMonths = 0;
-
-  experienceList.forEach((exp) => {
-    if (!exp.start) return;
-
-    let startDate;
-    if (exp.start.includes('.')) {
-      const [d, m, y] = exp.start.split('.');
-      startDate = new Date(`${y}-${m}-${d}`);
-    } else {
-      startDate = new Date(exp.start);
-    }
-
-    if (isNaN(startDate.getTime())) return;
-
-    let endDate;
-    if (exp.end) {
-      if (exp.end.includes('.')) {
-        const [d, m, y] = exp.end.split('.');
-        endDate = new Date(`${y}-${m}-${d}`);
-      } else {
-        endDate = new Date(exp.end);
-      }
-    } else {
-      endDate = new Date();
-    }
-
-    if (startDate <= endDate) {
-      const diffMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
-                         (endDate.getMonth() - startDate.getMonth());
-      totalMonths += diffMonths;
-    }
-  });
-
-  const years = Math.floor(totalMonths / 12);
-  const months = totalMonths % 12;
-
-  let result = "";
-  if (years > 0) result += `${years} ${years === 1 ? 'год' : 'года'}`;
-  if (months > 0) result += ` ${months} ${months === 1 ? 'месяц' : 'месяца'}`;
-  if (!result) return "Опыт не указан";
-
-  return result.trim();
-};
 
 // ---------- Мелкие переиспользуемые поля ----------
 const FieldError = ({ id, message }) =>
@@ -237,13 +192,17 @@ export default function CandidateForm({
 
   const addEducation = () => setEducation((prev) => [...prev, emptyEducation()]);
   const removeEducation = (id) => setEducation((prev) => prev.filter((e) => e.id !== id));
-  const updateEducation = (id, field, value) =>
+  const updateEducation = (id, field, value) => {
     setEducation((prev) => prev.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+    if (errors[`edu-period-${id}`]) setErrors((prev) => ({ ...prev, [`edu-period-${id}`]: undefined }));
+  };
 
   const addExperience = () => setExperience((prev) => [...prev, emptyExperience()]);
   const removeExperience = (id) => setExperience((prev) => prev.filter((e) => e.id !== id));
-  const updateExperience = (id, field, value) =>
+  const updateExperience = (id, field, value) => {
     setExperience((prev) => prev.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+    if (errors[`exp-period-${id}`]) setErrors((prev) => ({ ...prev, [`exp-period-${id}`]: undefined }));
+  };
 
   const mainSectionDone =
     REQUIRED_FIELDS.every((f) => formData[f].trim() !== "") && formData.selectedSkills.length > 0;
@@ -259,6 +218,20 @@ export default function CandidateForm({
       if (!formData[field].trim()) newErrors[field] = "Обязательное поле";
     });
     if (formData.selectedSkills.length === 0) newErrors.selectedSkills = "Укажите хотя бы один навык";
+
+    if (!newErrors.phone) {
+      const phoneProblem = phoneError(formData.phone);
+      if (phoneProblem) newErrors.phone = phoneProblem;
+    }
+    // вменяемость дат: формат, не из будущего, не слишком старая, конец не раньше начала
+    education.forEach((edu) => {
+      const problem = periodError(edu.start, edu.end);
+      if (problem) newErrors[`edu-period-${edu.id}`] = problem;
+    });
+    experience.forEach((exp) => {
+      const problem = periodError(exp.start, exp.end);
+      if (problem) newErrors[`exp-period-${exp.id}`] = problem;
+    });
 
     setErrors(newErrors);
 
@@ -373,7 +346,7 @@ export default function CandidateForm({
                     onChange={(e) => updateEducation(edu.id, "start", e.target.value)}
                     name={`edu-start-${edu.id}`}
                   />
-                  <div className="period-sep">по</div>
+                  <div className="period-sep">—</div>
                   <MaskDateField
                     className="date-end"
                     value={edu.end}
@@ -381,6 +354,7 @@ export default function CandidateForm({
                     name={`edu-end-${edu.id}`}
                   />
                 </div>
+                <FieldError id={`edu-period-${edu.id}-error`} message={errors[`edu-period-${edu.id}`]} />
               </div>
             </div>
             <div className="section-grid">
@@ -441,7 +415,7 @@ export default function CandidateForm({
                     onChange={(e) => updateExperience(exp.id, "start", e.target.value)}
                     name={`exp-start-${exp.id}`}
                   />
-                  <div className="period-sep">по</div>
+                  <div className="period-sep">—</div>
                   <MaskDateField
                     className="date-end"
                     value={exp.end}
@@ -449,6 +423,7 @@ export default function CandidateForm({
                     name={`exp-end-${exp.id}`}
                   />
                 </div>
+                <FieldError id={`exp-period-${exp.id}-error`} message={errors[`exp-period-${exp.id}`]} />
               </div>
             </div>
             <TextAreaField

@@ -57,6 +57,6 @@ public class DocumentsController : ControllerBase
     {
         var pdf = await _documentService.GenerateCandidateCardAsync(candidateId);
         if (pdf == null) return NotFound();
-        return File(pdf, "application/pdf", $"kartochka-{candidateId}.pdf");
+        return File(pdf, "application/pdf", $"rezyume-{candidateId}.pdf");
     }
 }

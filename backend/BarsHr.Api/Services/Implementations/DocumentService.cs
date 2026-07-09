@@ -166,13 +166,70 @@ public class DocumentService : IDocumentService
             candidate.FullName,
             candidate.Phone,
             candidate.City,
-            candidate.Education,
-            candidate.PreviousWork,
+            candidate.Telegram,
+            candidate.Specialty,
+            candidate.AdditionalInfo,
+            FormatEducation(candidate.Education),
+            FormatWork(candidate.PreviousWork),
             ParseSkills(candidate.Skills),
             applications);
 
         return new CandidateCardDocument(model).GeneratePdf();
     }
+
+    // образование хранится JSON-массивом {level, institution, faculty, start, end}; легаси — плоский текст
+    private static string? FormatEducation(string? raw) =>
+        FormatEntries(raw, row =>
+        {
+            var head = string.Join(", ", new[] { Prop(row, "level"), Prop(row, "institution"), Prop(row, "faculty") }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+            return AppendPeriod(head, Prop(row, "start"), Prop(row, "end"));
+        });
+
+    // опыт хранится JSON-массивом {company, position, start, end, info}; легаси — плоский текст
+    private static string? FormatWork(string? raw) =>
+        FormatEntries(raw, row =>
+        {
+            var head = string.Join(" — ", new[] { Prop(row, "company"), Prop(row, "position") }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+            var line = AppendPeriod(head, Prop(row, "start"), Prop(row, "end"));
+            var info = Prop(row, "info");
+            return string.IsNullOrWhiteSpace(info) ? line : $"{line}{(line.Length > 0 ? ": " : "")}{info}";
+        });
+
+    private static string? FormatEntries(string? raw, Func<JsonElement, string> formatRow)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return raw;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(raw);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array)
+                return raw;
+
+            var lines = doc.RootElement.EnumerateArray()
+                .Select(formatRow)
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .ToList();
+            return lines.Count > 0 ? string.Join("\n", lines) : null;
+        }
+        catch (JsonException)
+        {
+            return raw;
+        }
+    }
+
+    private static string AppendPeriod(string head, string start, string end)
+    {
+        var period = string.Join(" — ", new[] { start, end }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        return string.IsNullOrWhiteSpace(period) ? head : $"{head} ({period})".Trim();
+    }
+
+    private static string Prop(JsonElement row, string name) =>
+        row.ValueKind == JsonValueKind.Object && row.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString() ?? ""
+            : "";
 
     // навыки хранятся в JSONB: обычно массив строк, но терпим и произвольный текст
     private static List<string> ParseSkills(string? json)

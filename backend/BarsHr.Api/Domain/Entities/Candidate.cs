@@ -26,9 +26,22 @@ public class Candidate
     [Column("city")]
     public string? City { get; set; }
 
+    [MaxLength(100)]
+    [Column("telegram")]
+    public string? Telegram { get; set; }
+
+    [MaxLength(200)]
+    [Column("specialty")]
+    public string? Specialty { get; set; }
+
+    [Column("additional_info")]
+    public string? AdditionalInfo { get; set; }
+
+    // JSON-массив записей {level, institution, faculty, start, end}; легаси-данные — плоский текст
     [Column("education")]
     public string? Education { get; set; }
 
+    // JSON-массив записей {company, position, start, end, info}; легаси-данные — плоский текст
     [Column("previous_work")]
     public string? PreviousWork { get; set; }
 

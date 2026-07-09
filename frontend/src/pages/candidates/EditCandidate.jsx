@@ -4,7 +4,7 @@ import CandidateForm from "../../components/forms/CandidateForm";
 import { fetchCandidate, updateCandidate, buildCandidateRequest } from "../../api/candidates.js";
 import "../../pages/candidates/CreateCandidate.css";
 
-// CandidateDto (плоские поля) → initialData формы (ФИО по словам, образование/опыт одним блоком)
+// mapCandidate → initialData формы: ФИО по словам, образование/опыт уже приходят списками записей
 function toInitialData(candidate) {
   const parts = candidate.fullName.split(/\s+/);
   return {
@@ -13,16 +13,12 @@ function toInitialData(candidate) {
     middleName: parts.slice(2).join(" "),
     city: candidate.city,
     phone: candidate.phone,
-    telegram: "",
-    vacancy: "",
-    info: "",
+    telegram: candidate.telegram,
+    vacancy: candidate.specialty,
+    info: candidate.additionalInfo,
     selectedSkills: candidate.skills,
-    education: candidate.education
-      ? [{ id: "edu-1", level: "", institution: candidate.education, faculty: "", start: "", end: "" }]
-      : [],
-    experience: candidate.previousWork
-      ? [{ id: "exp-1", company: "", position: "", start: "", end: "", info: candidate.previousWork }]
-      : [],
+    education: candidate.education,
+    experience: candidate.experience,
   };
 }
 

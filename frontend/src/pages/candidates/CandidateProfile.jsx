@@ -5,6 +5,7 @@ import "./CandidateProfile.css";
 import { STATUSES } from "../../mocks/candidates.js";
 import { fetchCandidate, archiveCandidate } from "../../api/candidates.js";
 import { fetchApplications } from "../../api/applications.js";
+import { fetchInterview } from "../../api/interviews.js";
 import { apiGet } from "../../api/client.js";
 import { formatDateTime } from "../../api/format.js";
 import {
@@ -13,8 +14,17 @@ import {
   downloadInvitation,
   downloadOffer,
 } from "../../api/documents.js";
+import { calculateTotalExperience } from "../../utils/experience.js";
 import Modal from "../../components/ui/Modal/Modal.jsx";
 import { IconArrowUpRight } from "../vacancies/icons.jsx";
+
+import locationIcon from "../../assets/candidate/location.svg";
+import phoneIcon from "../../assets/candidate/phone.svg";
+import telegramIcon from "../../assets/candidate/telegram.svg";
+import editIcon from "../../assets/candidate/edit.svg";
+import archiveIcon from "../../assets/candidate/archive.svg";
+import educationIcon from "../../assets/candidate/education.svg";
+import workIcon from "../../assets/candidate/work.svg";
 
 function initials(name) {
   return name
@@ -25,13 +35,18 @@ function initials(name) {
     .toUpperCase();
 }
 
-function ContactRow({ icon, children }) {
+function ContactRow({ icon, alt, children }) {
   return (
     <div className="cp-contact-row">
-      <span className="cp-contact-icon">{icon}</span>
+      <img className="cp-contact-icon" src={icon} alt={alt} />
       <span>{children}</span>
     </div>
   );
+}
+
+// строка периода: длинное тире между датами, если заполнены обе
+function periodLabel(start, end) {
+  return [start, end].filter(Boolean).join(" — ");
 }
 
 export default function CandidateProfile() {
@@ -41,6 +56,7 @@ export default function CandidateProfile() {
   const [candidate, setCandidate] = useState(null);
   const [applications, setApplications] = useState([]);
   const [interviews, setInterviews] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [confirmArchive, setConfirmArchive] = useState(false);
@@ -63,7 +79,7 @@ export default function CandidateProfile() {
       fetchApplications({ candidateId: id }),
       apiGet(`/interviews?candidateId=${id}`),
     ])
-      .then(([loadedCandidate, loadedApplications, loadedInterviews]) => {
+      .then(async ([loadedCandidate, loadedApplications, loadedInterviews]) => {
         if (cancelled) {
           return;
         }
@@ -71,6 +87,19 @@ export default function CandidateProfile() {
         setApplications(loadedApplications);
         setInterviews(loadedInterviews);
         setLoadError("");
+
+        // оценки и комментарии HR лежат в деталях интервью — тянем их отдельно
+        const details = await Promise.all(
+          loadedInterviews.map((item) => fetchInterview(item.id).catch(() => null))
+        );
+        if (!cancelled) {
+          setReviews(
+            details.filter(
+              (item) =>
+                item && (item.generalNotes || item.decision?.comment || item.overallScore != null)
+            )
+          );
+        }
       })
       .catch((error) => {
         if (!cancelled) {
@@ -98,12 +127,8 @@ export default function CandidateProfile() {
     return upcoming[0] || interviews[0];
   }, [interviews]);
 
-  const educationLines = useMemo(
-    () => (candidate?.education ? candidate.education.split("\n").filter(Boolean) : []),
-    [candidate]
-  );
-  const experienceLines = useMemo(
-    () => (candidate?.previousWork ? candidate.previousWork.split("\n").filter(Boolean) : []),
+  const totalExperience = useMemo(
+    () => calculateTotalExperience(candidate?.experience || []),
     [candidate]
   );
 
@@ -139,6 +164,7 @@ export default function CandidateProfile() {
               <span className="cp-avatar">{initials(candidate.fullName)}</span>
               <div>
                 <h1>{candidate.fullName}</h1>
+                {candidate.specialty && <div className="cp-specialty">{candidate.specialty}</div>}
               </div>
             </div>
 
@@ -148,13 +174,14 @@ export default function CandidateProfile() {
                 className="cp-soft-btn"
                 onClick={() => runDownload(() => downloadCandidateCard(candidate.id))}
               >
-                Скачать карточку
+                Скачать резюме кандидата
               </button>
               <button
                 type="button"
                 className="cp-soft-btn"
                 onClick={() => setConfirmArchive(true)}
               >
+                <img className="cp-btn-icon" src={archiveIcon} alt="" />
                 В архив
               </button>
               <button
@@ -162,14 +189,16 @@ export default function CandidateProfile() {
                 className="cp-primary-btn"
                 onClick={() => navigate(`/app/candidates/edit/${candidate.id}`)}
               >
+                <img className="cp-btn-icon" src={editIcon} alt="" />
                 Изменить
               </button>
             </div>
             {docError && <div className="cp-doc-error">{docError}</div>}
 
             <div className="cp-contacts">
-              {candidate.city && <ContactRow icon="⌖">{candidate.city}</ContactRow>}
-              {candidate.phone && <ContactRow icon="☎">{candidate.phone}</ContactRow>}
+              {candidate.city && <ContactRow icon={locationIcon} alt="Город">{candidate.city}</ContactRow>}
+              {candidate.phone && <ContactRow icon={phoneIcon} alt="Телефон">{candidate.phone}</ContactRow>}
+              {candidate.telegram && <ContactRow icon={telegramIcon} alt="Телеграм">{candidate.telegram}</ContactRow>}
             </div>
           </section>
 
@@ -189,30 +218,87 @@ export default function CandidateProfile() {
           </section>
 
           <section className="cp-card">
-            <h2>Образование</h2>
-            {educationLines.length === 0 ? (
+            <h2 className="cp-section-title">
+              <img className="cp-section-icon" src={educationIcon} alt="" />
+              Образование
+            </h2>
+            {candidate.education.length === 0 ? (
               <p className="cp-muted">Образование не заполнено</p>
             ) : (
-              educationLines.map((line, index) => (
-                <div className="cp-timeline-row" key={index}>
-                  <div className="cp-row-title">{line}</div>
+              candidate.education.map((edu) => (
+                <div className="cp-timeline-row" key={edu.id}>
+                  <div className="cp-row-main">
+                    <div className="cp-row-title">
+                      {[edu.level, edu.institution].filter(Boolean).join(", ") || "—"}
+                    </div>
+                    {edu.faculty && <div className="cp-row-sub">{edu.faculty}</div>}
+                  </div>
+                  {periodLabel(edu.start, edu.end) && (
+                    <div className="cp-row-period">{periodLabel(edu.start, edu.end)}</div>
+                  )}
                 </div>
               ))
             )}
           </section>
 
           <section className="cp-card">
-            <h2>Опыт работы</h2>
-            {experienceLines.length === 0 ? (
+            <h2 className="cp-section-title">
+              <img className="cp-section-icon" src={workIcon} alt="" />
+              Опыт работы
+              {totalExperience !== "Опыт не указан" && (
+                <span className="cp-exp-total">Общий стаж: {totalExperience}</span>
+              )}
+            </h2>
+            {candidate.experience.length === 0 ? (
               <p className="cp-muted">Опыт работы не заполнен</p>
             ) : (
-              experienceLines.map((line, index) => (
-                <div className="cp-work-row" key={index}>
-                  <div className="cp-row-title">{line}</div>
+              candidate.experience.map((exp) => (
+                <div className="cp-timeline-row" key={exp.id}>
+                  <div className="cp-row-main">
+                    <div className="cp-row-title">
+                      {[exp.company, exp.position].filter(Boolean).join(" — ") || "—"}
+                    </div>
+                    {exp.info && <div className="cp-row-sub">{exp.info}</div>}
+                  </div>
+                  {periodLabel(exp.start, exp.end) && (
+                    <div className="cp-row-period">{periodLabel(exp.start, exp.end)}</div>
+                  )}
                 </div>
               ))
             )}
           </section>
+
+          {candidate.additionalInfo && (
+            <section className="cp-card">
+              <h2>Дополнительная информация</h2>
+              <p className="cp-additional-info">{candidate.additionalInfo}</p>
+            </section>
+          )}
+
+          {reviews.length > 0 && (
+            <section className="cp-card">
+              <h2>Оценки и комментарии</h2>
+              {reviews.map((review) => (
+                <article className="cp-review" key={review.id}>
+                  <div className="cp-review-head">
+                    <span className="cp-review-author">{review.interviewerName || "HR-менеджер"}</span>
+                    {review.overallScore != null && (
+                      <span className="cp-review-score">{review.overallScore}</span>
+                    )}
+                  </div>
+                  <div className="cp-review-meta">
+                    {review.vacancyTitle} · {formatDateTime(review.scheduledAt)}
+                  </div>
+                  {review.generalNotes && <p className="cp-review-text">{review.generalNotes}</p>}
+                  {review.decision?.comment && (
+                    <p className="cp-review-text cp-review-decision">
+                      Решение: {review.decision.comment}
+                    </p>
+                  )}
+                </article>
+              ))}
+            </section>
+          )}
         </div>
 
         <aside className="cp-side-column">
