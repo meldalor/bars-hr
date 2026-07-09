@@ -1,365 +1,259 @@
 import "../vacancies/vacancies.css";
 import "./interview.css";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import {
-    getMeetingById,
-    getInterview,
-    saveInterview,
-    removeMeeting,
-    formatMeetingSlot,
-    INTERVIEW_QUESTION_HINT,
-    MATRIX_GROUP_TITLES,
-} from "../../mocks/interviews.js";
-import { setCandidateSubstatus } from "../../mocks/candidates.js";
-import { IconDocument, IconCalendar } from "../vacancies/icons.jsx";
+import { fetchInterview, saveEvaluations, makeDecision } from "../../api/interviews.js";
+import { fetchVacancy } from "../../api/vacancies.js";
+import { formatDateTime } from "../../api/format.js";
+import { getSession } from "../../auth/session.js";
+import { IconCalendar } from "../vacancies/icons.jsx";
 import Modal from "../../components/ui/Modal/Modal.jsx";
 
-const MATRIX_KEYS = ["hard", "soft", "culture"];
+const GROUPS = [
+    { type: "Hard", title: "A. Hard Skills (технические навыки)" },
+    { type: "Soft", title: "B. Soft Skills (личностные качества)" },
+    { type: "CultureFit", title: "C. Culture Fit (соответствие команде)" },
+];
+
+const DECISION_LABELS = { Accepted: "Принят", Rejected: "Отклонён" };
 
 function initials(name) {
-    return name
+    return (name || "")
         .split(" ")
         .slice(0, 2)
-        .map((word) => word[0])
+        .map((word) => word[0] || "")
         .join("")
         .toUpperCase();
-}
-
-function StarRating({ value, onChange }) {
-    return (
-        <div className="iv-stars">
-            {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                    type="button"
-                    key={n}
-                    className={`iv-star ${n <= value ? "on" : ""}`}
-                    aria-label={`${n} из 5`}
-                    onClick={() => onChange(n === value ? 0 : n)}
-                >
-                    ★
-                </button>
-            ))}
-        </div>
-    );
-}
-
-function stat(items) {
-    const count = items.length;
-    const sum = items.reduce((acc, item) => acc + item.rating, 0);
-    return { sum, max: count * 5, avg: count ? sum / count : 0 };
 }
 
 export default function MeetingInterview() {
     const navigate = useNavigate();
     const { id } = useParams();
-    const meeting = getMeetingById(id);
+    const session = getSession();
+    const canDecide = session?.role === "DecisionMaker" || session?.role === "Admin";
 
-    const [initial] = useState(() => getInterview(meeting));
-    const [step, setStep] = useState(1);
-    const [questions, setQuestions] = useState(initial.questions);
-    const [matrix, setMatrix] = useState(initial.matrix);
-    const [skills, setSkills] = useState(initial.skills);
-    const [addingSkill, setAddingSkill] = useState(false);
-    const [newSkill, setNewSkill] = useState("");
-    const [finalScore, setFinalScore] = useState(initial.finalScore);
-    const [finalComment, setFinalComment] = useState(initial.finalComment);
-    const [confirmCancel, setConfirmCancel] = useState(false);
-    const [confirmFinish, setConfirmFinish] = useState(false);
-    const [linkCopied, setLinkCopied] = useState(false);
+    const [interview, setInterview] = useState(null);
+    const [competencies, setCompetencies] = useState([]);
+    const [scores, setScores] = useState({}); // competencyId -> { score, comment }
+    const [generalNotes, setGeneralNotes] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
+    const [saving, setSaving] = useState(false);
+    const [saveMessage, setSaveMessage] = useState("");
+    const [saveError, setSaveError] = useState("");
+    const [decisionComment, setDecisionComment] = useState("");
+    const [decisionError, setDecisionError] = useState("");
+    const [confirm, setConfirm] = useState(null); // "Accepted" | "Rejected" | null
 
-    const back = () => navigate("/app/meetings");
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        (async () => {
+            try {
+                const loadedInterview = await fetchInterview(id);
+                const vacancy = await fetchVacancy(loadedInterview.vacancyId);
+                if (cancelled) {
+                    return;
+                }
+                setInterview(loadedInterview);
+                setCompetencies(vacancy.competencies || []);
+                const preset = {};
+                (loadedInterview.evaluations || []).forEach((evaluation) => {
+                    preset[evaluation.competencyId] = {
+                        score: String(evaluation.score),
+                        comment: evaluation.comment ?? "",
+                    };
+                });
+                setScores(preset);
+                setGeneralNotes(loadedInterview.generalNotes || "");
+                setLoadError("");
+            } catch (error) {
+                if (!cancelled) {
+                    setLoadError(error.message || "Не удалось загрузить встречу");
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [id]);
 
-    if (!meeting) {
+    const grouped = useMemo(() => {
+        const map = { Hard: [], Soft: [], CultureFit: [] };
+        competencies.forEach((competency) => {
+            if (map[competency.skillType]) {
+                map[competency.skillType].push(competency);
+            }
+        });
+        return map;
+    }, [competencies]);
+
+    const setScore = (competencyId, maxScore, value) => {
+        const raw = value === "" ? "" : String(Math.max(0, Math.min(maxScore, Number(value) || 0)));
+        setScores((prev) => ({
+            ...prev,
+            [competencyId]: { score: raw, comment: prev[competencyId]?.comment ?? "" },
+        }));
+    };
+
+    const setComment = (competencyId, comment) => {
+        setScores((prev) => ({
+            ...prev,
+            [competencyId]: { score: prev[competencyId]?.score ?? "", comment },
+        }));
+    };
+
+    const handleSave = async () => {
+        const evaluations = Object.entries(scores)
+            .map(([competencyId, value]) => ({
+                competencyId: Number(competencyId),
+                score: Number(value.score),
+                comment: value.comment || null,
+            }))
+            .filter((item) => item.score >= 1);
+
+        setSaving(true);
+        setSaveError("");
+        setSaveMessage("");
+        try {
+            const updated = await saveEvaluations(id, { evaluations, generalNotes });
+            setInterview(updated);
+            setSaveMessage("Оценки сохранены");
+        } catch (error) {
+            setSaveError(error.message || "Не удалось сохранить оценки");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDecision = async () => {
+        const decisionType = confirm;
+        setConfirm(null);
+        setDecisionError("");
+        try {
+            await makeDecision(id, { decisionType, comment: decisionComment });
+            const refreshed = await fetchInterview(id);
+            setInterview(refreshed);
+        } catch (error) {
+            setDecisionError(error.message || "Не удалось сохранить решение");
+        }
+    };
+
+    if (loading || !interview) {
         return (
             <div className="interview">
-                <button type="button" className="vac-back" onClick={back}>
+                <button type="button" className="vac-back" onClick={() => navigate("/app/meetings")}>
                     ← Вернуться назад
                 </button>
-                <h1 className="vac-detail-title">Встреча не найдена</h1>
+                <h1 className="vac-detail-title">
+                    {loading ? "Загрузка…" : loadError || "Встреча не найдена"}
+                </h1>
             </div>
         );
     }
 
-    const handleCancelMeeting = () => {
-        if (meeting.candidateId) {
-            setCandidateSubstatus(meeting.candidateId, "Интервью не назначено");
-        }
-        removeMeeting(meeting.id);
-        navigate("/app/meetings");
-    };
-
-    const confirmCancelMeeting = () => {
-        setConfirmCancel(false);
-        handleCancelMeeting();
-    };
-
-    const setQuestionRating = (index, rating) =>
-        setQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, rating } : q)));
-
-    const setQuestionComment = (index, comment) =>
-        setQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, comment } : q)));
-
-    const setSkillRating = (key, index, rating) =>
-        setMatrix((prev) => ({
-            ...prev,
-            [key]: prev[key].map((item, i) => (i === index ? { ...item, rating } : item)),
-        }));
-
-    const setSkillComment = (key, index, comment) =>
-        setMatrix((prev) => ({
-            ...prev,
-            [key]: prev[key].map((item, i) => (i === index ? { ...item, comment } : item)),
-        }));
-
-    const addSkill = () => {
-        const value = newSkill.trim();
-        if (!value) {
-            return;
-        }
-        setSkills((prev) => (prev.includes(value) ? prev : [...prev, value]));
-        setNewSkill("");
-        setAddingSkill(false);
-    };
-
-    const goStep = (next) => {
-        setStep(next);
-        window.scrollTo({ top: 0 });
-    };
-
-    const confirm = (shouldPrint = false) => {
-        saveInterview(id, { questions, matrix, skills, finalScore, finalComment });
-        setConfirmFinish(false);
-        if (shouldPrint) {
-            window.print();
-        }
-        back();
-    };
-
-    const qStats = stat(questions);
-    const groupStats = {
-        hard: stat(matrix.hard),
-        soft: stat(matrix.soft),
-        culture: stat(matrix.culture),
-    };
-
-    const allItems = [...questions, ...matrix.hard, ...matrix.soft, ...matrix.culture];
-    const rated = allItems.filter((item) => item.rating > 0);
-    const overall = rated.length
-        ? rated.reduce((acc, item) => acc + item.rating, 0) / rated.length
-        : 0;
-
-    const results = [
-        { title: "Вопросы", stats: qStats },
-        { title: "Hard Skills", stats: groupStats.hard },
-        { title: "Soft Skills", stats: groupStats.soft },
-        { title: "Culture Fit", stats: groupStats.culture },
-    ];
+    const decision = interview.decision;
 
     return (
         <div className="interview">
-            <button type="button" className="vac-back" onClick={back}>
+            <button type="button" className="vac-back" onClick={() => navigate("/app/meetings")}>
                 ← Вернуться назад
             </button>
 
             <div className="iv-subtitle">Оценка кандидата по интервью</div>
-            <h1 className="vac-detail-title">{meeting.vacancy}</h1>
-
-            <div className="vac-tags">
-                {meeting.tags.map((tag) => (
-                    <span
-                        key={tag.label}
-                        className="vac-tag"
-                        style={{ backgroundColor: tag.color }}
-                    >
-                        {tag.label}
-                    </span>
-                ))}
-            </div>
+            <h1 className="vac-detail-title">{interview.vacancyTitle}</h1>
 
             <div className="iv-candidate">
                 <div className="iv-cand-head">
-                    <div className="iv-cand-avatar">{initials(meeting.fullName)}</div>
+                    <div className="iv-cand-avatar">{initials(interview.candidateName)}</div>
                     <div>
-                        <div className="iv-cand-name">{meeting.fullName}</div>
-                        <div className="iv-cand-role">{meeting.role}</div>
+                        <div className="iv-cand-name">{interview.candidateName}</div>
+                        <div className="iv-cand-role">
+                            {interview.interviewerName ? `Интервьюер: ${interview.interviewerName}` : ""}
+                        </div>
                     </div>
                 </div>
-
-                <div className="iv-cand-label">Навыки</div>
-                <div className="iv-chips">
-                    {skills.map((skill) => (
-                        <span key={skill} className="iv-chip">
-                            {skill}
-                        </span>
-                    ))}
-
-                    {addingSkill ? (
-                        <span className="iv-chip-form">
-                            <input
-                                className="iv-chip-input"
-                                placeholder="Навык"
-                                value={newSkill}
-                                autoFocus
-                                onChange={(event) => setNewSkill(event.target.value)}
-                                onKeyDown={(event) => {
-                                    if (event.key === "Enter") {
-                                        event.preventDefault();
-                                        addSkill();
-                                    }
-                                }}
-                            />
-                            <button type="button" className="iv-chip-ok" onClick={addSkill}>
-                                OK
-                            </button>
-                        </span>
-                    ) : (
-                        <button
-                            type="button"
-                            className="iv-chip-add"
-                            onClick={() => setAddingSkill(true)}
-                        >
-                            + Добавить
-                        </button>
-                    )}
-                </div>
-
-                <div className="iv-cand-label iv-cand-info-label">
-                    <IconDocument size={16} />
-                    Дополнительная информация:
-                </div>
-                <div className="iv-cand-info">{meeting.additionalInfo}</div>
 
                 <div className="iv-cand-actions">
                     <span className="iv-slot-badge">
                         <IconCalendar size={16} />
-                        {formatMeetingSlot(meeting)}
+                        {formatDateTime(interview.scheduledAt)}
                     </span>
-                    <button
-                        type="button"
-                        className="iv-btn danger"
-                        onClick={() => setConfirmCancel(true)}
-                    >
-                        Отменить встречу
-                    </button>
                     <button
                         type="button"
                         className="iv-btn ghost"
                         onClick={() =>
-                            navigate(meeting.candidateId ? `/app/candidates/${meeting.candidateId}` : "/app/candidates")
+                            navigate(
+                                interview.candidateId
+                                    ? `/app/candidates/${interview.candidateId}`
+                                    : "/app/candidates"
+                            )
                         }
                     >
                         Профиль кандидата
                     </button>
-                    <button
-                        type="button"
-                        className="iv-btn primary"
-                        onClick={() => setLinkCopied(true)}
-                    >
-                        {linkCopied ? "Ссылка скопирована" : "Ссылка на встречу"}
-                    </button>
-                    <button
-                        type="button"
-                        className="iv-btn primary"
-                        onClick={() =>
-                            navigate("/app/meetings", {
-                                state: {
-                                    reschedule: { meetingId: meeting.id },
-                                    meetingId: meeting.id,
-                                    editTime: true,
-                                },
-                            })
-                        }
-                    >
-                        Изменить время
-                    </button>
                 </div>
             </div>
 
-            {step === 1 && (
-                <>
-                    <div className="iv-card">
-                        <h3 className="iv-step-title">Этап 1: Вопросы</h3>
-
-                        {questions.map((question, index) => (
-                            <div className="iv-question" key={index}>
-                                <div className="iv-q-head">
-                                    <span className="iv-q-num">{index + 1}</span>
-                                    <div>
-                                        <div className="iv-q-text">{question.text}</div>
-                                        <div className="iv-q-hint">
-                                            {question.hint || INTERVIEW_QUESTION_HINT}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="iv-field-label">Оценка</div>
-                                <StarRating
-                                    value={question.rating}
-                                    onChange={(rating) => setQuestionRating(index, rating)}
-                                />
-
-                                <div className="iv-field-label">Комментарий</div>
-                                <div className="iv-textarea-wrap">
-                                    <textarea
-                                        className="iv-textarea"
-                                        maxLength={2000}
-                                        placeholder="Комментарий к ответу..."
-                                        value={question.comment}
-                                        onChange={(event) =>
-                                            setQuestionComment(index, event.target.value)
-                                        }
-                                    />
-                                    <span className="iv-counter">
-                                        {question.comment.length}/2000
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="iv-footer iv-footer-end">
-                        <button type="button" className="iv-btn danger" onClick={back}>
-                            Отменить
-                        </button>
-                        <button type="button" className="iv-btn primary" onClick={() => goStep(2)}>
-                            Далее →
-                        </button>
-                    </div>
-                </>
+            {interview.plan && (
+                <div className="iv-card">
+                    <h3 className="iv-step-title">План собеседования</h3>
+                    <p style={{ whiteSpace: "pre-line" }}>{interview.plan}</p>
+                </div>
             )}
 
-            {step === 2 && (
-                <>
-                    <div className="iv-card">
-                        <h3 className="iv-step-title">Этап 2: Матрица компетенций</h3>
+            {interview.defaultQuestions.length > 0 && (
+                <div className="iv-card">
+                    <h3 className="iv-step-title">Обязательные вопросы</h3>
+                    <ol>
+                        {interview.defaultQuestions.map((question, index) => (
+                            <li key={index} style={{ marginBottom: 6 }}>{question}</li>
+                        ))}
+                    </ol>
+                </div>
+            )}
 
-                        {MATRIX_KEYS.map((key) => (
-                            <div className="iv-mgroup" key={key}>
-                                <h4 className="iv-mgroup-title">{MATRIX_GROUP_TITLES[key]}</h4>
+            <div className="iv-card">
+                <h3 className="iv-step-title">Матрица компетенций</h3>
+
+                {competencies.length === 0 ? (
+                    <p className="cp-muted">У вакансии не настроена матрица компетенций.</p>
+                ) : (
+                    GROUPS.map((group) =>
+                        grouped[group.type].length === 0 ? null : (
+                            <div className="iv-mgroup" key={group.type}>
+                                <h4 className="iv-mgroup-title">{group.title}</h4>
                                 <table className="iv-table">
                                     <thead>
                                         <tr>
                                             <th>Компетенция</th>
-                                            <th className="iv-th-score">Оценка</th>
+                                            <th className="iv-th-score">Балл</th>
                                             <th>Комментарий</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {matrix[key].map((item, index) => (
-                                            <tr key={index}>
+                                        {grouped[group.type].map((competency) => (
+                                            <tr key={competency.id}>
                                                 <td>
-                                                    <div className="iv-comp-name">{item.name}</div>
+                                                    <div className="iv-comp-name">{competency.skillName}</div>
                                                     <div className="iv-comp-desc">
-                                                        {item.description}
+                                                        макс. {competency.maxScore}
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <StarRating
-                                                        value={item.rating}
-                                                        onChange={(rating) =>
-                                                            setSkillRating(key, index, rating)
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        max={competency.maxScore}
+                                                        className="iv-input iv-score-input"
+                                                        value={scores[competency.id]?.score ?? ""}
+                                                        onChange={(event) =>
+                                                            setScore(competency.id, competency.maxScore, event.target.value)
                                                         }
                                                     />
                                                 </td>
@@ -367,13 +261,9 @@ export default function MeetingInterview() {
                                                     <input
                                                         className="iv-comp-comment"
                                                         placeholder="Написать..."
-                                                        value={item.comment}
+                                                        value={scores[competency.id]?.comment ?? ""}
                                                         onChange={(event) =>
-                                                            setSkillComment(
-                                                                key,
-                                                                index,
-                                                                event.target.value
-                                                            )
+                                                            setComment(competency.id, event.target.value)
                                                         }
                                                     />
                                                 </td>
@@ -382,124 +272,84 @@ export default function MeetingInterview() {
                                     </tbody>
                                 </table>
                             </div>
-                        ))}
+                        )
+                    )
+                )}
+
+                <div className="iv-field-label">Общий комментарий</div>
+                <div className="iv-textarea-wrap">
+                    <textarea
+                        className="iv-textarea"
+                        maxLength={2000}
+                        placeholder="Общее впечатление о кандидате..."
+                        value={generalNotes}
+                        onChange={(event) => setGeneralNotes(event.target.value)}
+                    />
+                    <span className="iv-counter">{generalNotes.length}/2000</span>
+                </div>
+
+                {saveError && <div className="schedule-error">{saveError}</div>}
+                {saveMessage && <div className="iv-save-ok">{saveMessage}</div>}
+
+                <div className="iv-footer iv-footer-end">
+                    <button type="button" className="iv-btn primary" onClick={handleSave} disabled={saving}>
+                        {saving ? "Сохранение…" : "Сохранить оценки"}
+                    </button>
+                </div>
+            </div>
+
+            <div className="iv-card">
+                <h3 className="iv-step-title">Итоговое решение</h3>
+
+                {decision ? (
+                    <div>
+                        <p>
+                            Решение: <b>{DECISION_LABELS[decision.decisionType] ?? decision.decisionType}</b>
+                            {decision.madeByName ? ` — ${decision.madeByName}` : ""}
+                        </p>
+                        {decision.comment && <p>Комментарий: {decision.comment}</p>}
                     </div>
-
-                    <div className="iv-footer">
-                        <button type="button" className="iv-btn ghost" onClick={() => goStep(1)}>
-                            ← Назад
-                        </button>
-                        <div className="iv-footer-right">
-                            <button type="button" className="iv-btn danger" onClick={back}>
-                                Отменить
-                            </button>
-                            <button
-                                type="button"
-                                className="iv-btn primary"
-                                onClick={() => goStep(3)}
-                            >
-                                Далее →
-                            </button>
-                        </div>
-                    </div>
-                </>
-            )}
-
-            {step === 3 && (
-                <>
-                    <div className="iv-card">
-                        <h3 className="iv-step-title">Этап 3: Итоговое решение</h3>
-
-                        <div className="iv-results-label">Результаты по категориям</div>
-                        <div className="iv-results">
-                            {results.map((result) => (
-                                <div className="iv-stat" key={result.title}>
-                                    <div className="iv-stat-title">{result.title}</div>
-                                    <div className="iv-stat-line">
-                                        Суммарный балл: {result.stats.sum}/{result.stats.max}
-                                    </div>
-                                    <div className="iv-stat-line">
-                                        Средний балл: {result.stats.avg.toFixed(1)}/5
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="iv-field-label">Итоговая оценка</div>
-                        <input
-                            className="iv-input"
-                            placeholder="Например: 4.4/5"
-                            value={finalScore}
-                            onChange={(event) => setFinalScore(event.target.value)}
-                        />
-
-                        <div className="iv-field-label">Итоговый комментарий</div>
+                ) : canDecide ? (
+                    <>
+                        <div className="iv-field-label">Комментарий к решению</div>
                         <div className="iv-textarea-wrap">
                             <textarea
                                 className="iv-textarea"
                                 maxLength={2000}
-                                placeholder="Общее впечатление о кандидате..."
-                                value={finalComment}
-                                onChange={(event) => setFinalComment(event.target.value)}
+                                placeholder="Обоснование решения..."
+                                value={decisionComment}
+                                onChange={(event) => setDecisionComment(event.target.value)}
                             />
-                            <span className="iv-counter">{finalComment.length}/2000</span>
                         </div>
-                    </div>
-
-                    <div className="iv-footer">
-                        <button type="button" className="iv-btn ghost" onClick={() => goStep(2)}>
-                            ← Назад
-                        </button>
-                        <span className="iv-badge">{overall.toFixed(1)}/5</span>
-                        <div className="iv-footer-right">
-                            <button type="button" className="iv-btn danger" onClick={back}>
-                                Отменить
+                        {decisionError && <div className="schedule-error">{decisionError}</div>}
+                        <div className="iv-footer iv-footer-end">
+                            <button type="button" className="iv-btn danger" onClick={() => setConfirm("Rejected")}>
+                                Отклонить
                             </button>
-                            <button type="button" className="iv-btn primary" onClick={() => setConfirmFinish(true)}>
-                                Подтвердить
+                            <button type="button" className="iv-btn primary" onClick={() => setConfirm("Accepted")}>
+                                Принять
                             </button>
                         </div>
-                    </div>
-                </>
-            )}
+                    </>
+                ) : (
+                    <p className="cp-muted">Итоговое решение выносит руководитель направления.</p>
+                )}
+            </div>
 
-            <Modal open={confirmFinish} onClose={() => setConfirmFinish(false)}>
-                <p className="iv-modal-title">Подтвердить итоговое решение?</p>
-                <div className="iv-modal-actions iv-modal-actions-wide">
-                    <button
-                        type="button"
-                        className="iv-btn ghost"
-                        onClick={() => setConfirmFinish(false)}
-                    >
-                        Отмена
-                    </button>
-                    <button type="button" className="iv-btn primary" onClick={() => confirm(false)}>
-                        Подтвердить
-                    </button>
-                    <button type="button" className="iv-btn primary" onClick={() => confirm(true)}>
-                        Подтвердить и распечатать
-                    </button>
-                </div>
-            </Modal>
-
-            <Modal open={confirmCancel} onClose={() => setConfirmCancel(false)}>
+            <Modal open={confirm !== null} onClose={() => setConfirm(null)}>
                 <p className="iv-modal-title">
-                    Отменить встречу с {meeting.fullName}?
+                    {confirm === "Accepted" ? "Принять кандидата?" : "Отклонить кандидата?"}
                 </p>
                 <div className="iv-modal-actions">
-                    <button
-                        type="button"
-                        className="iv-btn ghost"
-                        onClick={() => setConfirmCancel(false)}
-                    >
-                        Нет
+                    <button type="button" className="iv-btn ghost" onClick={() => setConfirm(null)}>
+                        Отмена
                     </button>
                     <button
                         type="button"
-                        className="iv-btn danger"
-                        onClick={confirmCancelMeeting}
+                        className={confirm === "Accepted" ? "iv-btn primary" : "iv-btn danger"}
+                        onClick={handleDecision}
                     >
-                        Отменить встречу
+                        {confirm === "Accepted" ? "Принять" : "Отклонить"}
                     </button>
                 </div>
             </Modal>

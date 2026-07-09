@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   format,
   addWeeks,
@@ -18,64 +18,17 @@ import { ru } from "date-fns/locale";
 import "./meetings.css";
 import "./interview.css";
 
-import {
-  MEETINGS as MOCK_MEETINGS,
-  getMeetingById,
-  getMeetingForCandidate,
-  saveInterviewSlot,
-  updateMeetingTime,
-  cancelInterview,
-  removeMeeting,
-  formatMeetingSlot,
-  toMinutes,
-  DAY_END,
-} from "../../mocks/interviews.js";
-import { getCandidateById, setCandidateSubstatus } from "../../mocks/candidates.js";
-import { getVacancyById } from "../../mocks/vacancies.js";
-import { IconCalendar } from "../vacancies/icons.jsx";
-import Modal from "../../components/ui/Modal/Modal.jsx";
-import MeetingTimeModal from "./MeetingTimeModal.jsx";
-
-function initials(name) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-}
+import { fetchInterviews, mapInterviewToMeeting } from "../../api/interviews.js";
 
 function Meetings() {
-  const location = useLocation();
   const navigate = useNavigate();
 
-  const schedule = location.state?.schedule || null;
-  const reschedule = location.state?.reschedule || null;
-
-  const candidate = schedule ? getCandidateById(schedule.candidateId) : null;
-  const vacancy = schedule ? getVacancyById(schedule.vacancyId) : null;
-  const scheduling = Boolean((candidate && vacancy) || reschedule);
-
   const [meetings, setMeetings] = useState([]);
-  const [picking, setPicking] = useState(() => {
-    if (reschedule) return false;
-    if (!schedule) return false;
-    return !getMeetingForCandidate(schedule.candidateId);
-  });
-  const [scheduleError, setScheduleError] = useState("");
-  const [confirmCancel, setConfirmCancel] = useState(false);
-  const [editTime, setEditTime] = useState(Boolean(location.state?.editTime));
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    const existing = reschedule
-      ? getMeetingById(reschedule.meetingId)
-      : schedule
-        ? getMeetingForCandidate(schedule.candidateId)
-        : null;
-    const base = existing ? parseISO(existing.date) : new Date(2026, 6, 6);
-    return startOfWeek(base, { weekStartsOn: 1 });
-  });
+  const [loadError, setLoadError] = useState("");
+  const [currentWeekStart, setCurrentWeekStart] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  );
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
-  const selectedMeetingId = location.state?.meetingId || null;
   const calendarBodyRef = useRef(null);
 
   const HOUR_START = 8;
@@ -86,9 +39,22 @@ function Meetings() {
   const SLOTS_PER_HOUR = 60 / STEP_MINUTES;
 
   useEffect(() => {
-    setTimeout(() => {
-      setMeetings(MOCK_MEETINGS);
-    }, 300);
+    let cancelled = false;
+    fetchInterviews()
+      .then((list) => {
+        if (!cancelled) {
+          setMeetings(list.map(mapInterviewToMeeting));
+          setLoadError("");
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setLoadError(error.message || "Не удалось загрузить встречи");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const weekDays = eachDayOfInterval({
@@ -111,18 +77,13 @@ function Meetings() {
   useEffect(() => {
     const updateTimeLine = () => {
       const now = new Date();
-      const currentHour = getHours(now);
-      const currentMinute = getMinutes(now);
-
-      const minutesFromStart = (currentHour - HOUR_START) * 60 + currentMinute;
+      const minutesFromStart = (getHours(now) - HOUR_START) * 60 + getMinutes(now);
       const pixelsPerMinute = ROW_HEIGHT_PX / STEP_MINUTES;
       let position = minutesFromStart * pixelsPerMinute;
-
       const maxPosition = (HOUR_END - HOUR_START) * 60 * pixelsPerMinute;
       if (position > maxPosition) {
         position = maxPosition;
       }
-
       setCurrentTimePosition(Math.max(0, position));
     };
 
@@ -151,74 +112,6 @@ function Meetings() {
     return colors[type] || colors.blue;
   };
 
-  const handleMeetingClick = (id) => {
-    if (picking) return;
-    navigate(`/app/meetings/${id}`);
-  };
-
-  const currentMeeting = reschedule
-    ? getMeetingById(reschedule.meetingId)
-    : schedule
-      ? getMeetingForCandidate(schedule.candidateId)
-      : null;
-
-  const panelName = schedule ? candidate.name : currentMeeting ? currentMeeting.fullName : "";
-  const panelRole = schedule ? candidate.specialty : currentMeeting ? currentMeeting.role : "";
-  const panelSkills = schedule ? vacancy.requirements : currentMeeting ? currentMeeting.skills : [];
-  const panelTitle = reschedule ? "Изменение времени встречи" : "Назначение интервью";
-
-  const applySlot = (date, startTime, durationMinutes) => {
-    const result = reschedule
-      ? updateMeetingTime(reschedule.meetingId, { date, startTime, durationMinutes })
-      : saveInterviewSlot(candidate, vacancy, { date, startTime, durationMinutes });
-    if (!result.ok) {
-      setScheduleError("Это время пересекается с другой встречей");
-      return false;
-    }
-    if (schedule) {
-      setCandidateSubstatus(schedule.candidateId, "Интервью назначено");
-    }
-    setScheduleError("");
-    setMeetings([...MOCK_MEETINGS]);
-    return true;
-  };
-
-  const handleCellClick = (day, slot) => {
-    if (!scheduling || !picking) return;
-    const date = format(day, "yyyy-MM-dd");
-    const duration = currentMeeting
-      ? toMinutes(currentMeeting.endTime) - toMinutes(currentMeeting.startTime)
-      : 60;
-    if (toMinutes(slot) + duration > DAY_END) {
-      setScheduleError("Интервью не помещается в рабочий день");
-      return;
-    }
-    if (applySlot(date, slot, duration)) {
-      setPicking(false);
-    }
-  };
-
-  const handleCancelMeeting = () => {
-    if (reschedule) {
-      if (currentMeeting && currentMeeting.candidateId) {
-        setCandidateSubstatus(currentMeeting.candidateId, "Интервью не назначено");
-      }
-      removeMeeting(reschedule.meetingId);
-      setMeetings([...MOCK_MEETINGS]);
-      navigate("/app/meetings");
-      return;
-    }
-    cancelInterview(schedule.candidateId);
-    setCandidateSubstatus(schedule.candidateId, "Интервью не назначено");
-    setMeetings([...MOCK_MEETINGS]);
-    navigate(`/app/vacancies/${schedule.vacancyId}`);
-  };
-
-  const confirmCancelMeeting = () => {
-    setConfirmCancel(false);
-    handleCancelMeeting();
-  };
-
   const monthLabel = format(currentWeekStart, "LLLL yyyy", { locale: ru });
 
   const getMeetingStyle = (meeting) => {
@@ -237,16 +130,10 @@ function Meetings() {
 
     const totalWidth = `calc(100% - ${TIME_COLUMN_WIDTH}px)`;
     const columnWidth = `calc(${totalWidth} / 7)`;
-
     const leftPx = `calc(${TIME_COLUMN_WIDTH}px + ${dayIndex} * (${columnWidth}) + 3px)`;
     const widthPx = `calc(${columnWidth} - 6px)`;
 
-    return {
-      top: topPx,
-      height: heightPx - 2,
-      left: leftPx,
-      width: widthPx,
-    };
+    return { top: topPx, height: heightPx - 2, left: leftPx, width: widthPx };
   };
 
   return (
@@ -254,6 +141,7 @@ function Meetings() {
       <h1 className="overview-title">
         Встречи: <span className="overview-title-count">назначено {meetings.length} встреч</span>
       </h1>
+      {loadError && <div className="schedule-error">{loadError}</div>}
 
       <div className="meetings-layout-full">
         <div className="calendar-container-full">
@@ -270,18 +158,14 @@ function Meetings() {
           <div className="calendar-grid">
             <div className="grid-header-row">
               <div className="grid-time-header-cell"></div>
-              {weekDays.map((day) => {
-                const isTodayFlag = isToday(day);
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={`grid-header-cell ${isTodayFlag ? "today-header" : ""}`}
-                  >
-                    {format(day, "EEEE d MMM", { locale: ru })
-                      .replace(/^./, (char) => char.toUpperCase())}
-                  </div>
-                );
-              })}
+              {weekDays.map((day) => (
+                <div
+                  key={day.toISOString()}
+                  className={`grid-header-cell ${isToday(day) ? "today-header" : ""}`}
+                >
+                  {format(day, "EEEE d MMM", { locale: ru }).replace(/^./, (char) => char.toUpperCase())}
+                </div>
+              ))}
             </div>
 
             <div className="grid-body-scroll" ref={calendarBodyRef}>
@@ -297,11 +181,7 @@ function Meetings() {
                         {index % SLOTS_PER_HOUR === 0 ? timeLabels[index / SLOTS_PER_HOUR] : ""}
                       </div>
                       {weekDays.map((day) => (
-                        <div
-                          key={`${day.toISOString()}-${slot}`}
-                          className={`grid-cell${scheduling && picking ? " picking" : ""}`}
-                          onClick={() => handleCellClick(day, slot)}
-                        ></div>
+                        <div key={`${day.toISOString()}-${slot}`} className="grid-cell"></div>
                       ))}
                     </div>
                   ))}
@@ -310,12 +190,10 @@ function Meetings() {
                 <div className="meetings-overlay">
                   {meetings.map((meeting) => {
                     const meetingDate = parseISO(meeting.date);
-
                     const isInWeek = isWithinInterval(meetingDate, {
                       start: startOfWeek(currentWeekStart, { weekStartsOn: 1 }),
                       end: endOfWeek(currentWeekStart, { weekStartsOn: 1 }),
                     });
-
                     if (!isInWeek) return null;
 
                     const styles = getColorStyles(meeting.type);
@@ -326,10 +204,8 @@ function Meetings() {
                       <button
                         type="button"
                         key={meeting.id}
-                        className={`meeting-card-absolute ${
-                          selectedMeetingId === meeting.id ? "meeting-card-absolute--selected" : ""
-                        }`}
-                        onClick={() => handleMeetingClick(meeting.id)}
+                        className="meeting-card-absolute"
+                        onClick={() => navigate(`/app/meetings/${meeting.id}`)}
                         style={{
                           top: `${pos.top}px`,
                           left: pos.left,
@@ -360,104 +236,6 @@ function Meetings() {
           </div>
         </div>
       </div>
-
-      {scheduling && (
-        <div className="schedule-panel">
-          <div className="schedule-panel-title">{panelTitle}</div>
-
-          {picking && (
-            <div className="schedule-hint">
-              Нажмите на нужную ячейку в таблице (шаг — 15 минут).
-            </div>
-          )}
-          {scheduleError && <div className="schedule-error">{scheduleError}</div>}
-
-          <div className="iv-candidate">
-            <div className="iv-cand-head">
-              <div className="iv-cand-avatar">{initials(panelName)}</div>
-              <div>
-                <div className="iv-cand-name">{panelName}</div>
-                <div className="iv-cand-role">{panelRole}</div>
-              </div>
-            </div>
-
-            <div className="iv-cand-label">Навыки</div>
-            <div className="iv-chips">
-              {panelSkills.map((skill) => (
-                <span key={skill} className="iv-chip">
-                  {skill}
-                </span>
-              ))}
-            </div>
-
-            <div className="schedule-actions">
-              {currentMeeting && (
-                <span className="schedule-slot-badge">
-                  <IconCalendar size={16} />
-                  {formatMeetingSlot(currentMeeting)}
-                </span>
-              )}
-              <button
-                type="button"
-                className="schedule-btn cancel"
-                onClick={() => setConfirmCancel(true)}
-              >
-                Отменить встречу
-              </button>
-              <button
-                type="button"
-                className="schedule-btn link"
-                disabled={!currentMeeting}
-              >
-                Ссылка на встречу
-              </button>
-              <button
-                type="button"
-                className="schedule-btn change"
-                onClick={() => {
-                  setScheduleError("");
-                  setEditTime(true);
-                }}
-                disabled={!currentMeeting}
-              >
-                Изменить время
-              </button>
-            </div>
-          </div>
-
-          <MeetingTimeModal
-            open={editTime}
-            meeting={currentMeeting}
-            onClose={() => setEditTime(false)}
-            onSaved={() => {
-              setScheduleError("");
-              setMeetings([...MOCK_MEETINGS]);
-            }}
-          />
-
-          <Modal open={confirmCancel} onClose={() => setConfirmCancel(false)}>
-            <p className="iv-modal-title">
-              Отменить встречу{panelName ? ` с ${panelName}` : ""}?
-            </p>
-            <div className="iv-modal-actions">
-              <button
-                type="button"
-                className="iv-btn ghost"
-                onClick={() => setConfirmCancel(false)}
-              >
-                Нет
-              </button>
-              <button
-                type="button"
-                className="iv-btn danger"
-                onClick={confirmCancelMeeting}
-              >
-                Отменить встречу
-              </button>
-            </div>
-          </Modal>
-        </div>
-      )}
     </div>
   );
 }
