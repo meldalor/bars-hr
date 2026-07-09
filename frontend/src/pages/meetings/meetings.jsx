@@ -28,14 +28,13 @@ import {
   removeMeeting,
   formatMeetingSlot,
   toMinutes,
-  toTime,
-  DAY_START,
   DAY_END,
 } from "../../mocks/interviews.js";
 import { getCandidateById, setCandidateSubstatus } from "../../mocks/candidates.js";
 import { getVacancyById } from "../../mocks/vacancies.js";
 import { IconCalendar } from "../vacancies/icons.jsx";
 import Modal from "../../components/ui/Modal/Modal.jsx";
+import MeetingTimeModal from "./MeetingTimeModal.jsx";
 
 function initials(name) {
   return name
@@ -45,14 +44,6 @@ function initials(name) {
     .join("")
     .toUpperCase();
 }
-
-const DURATION_OPTIONS = [
-  { value: 15, label: "15 мин" },
-  { value: 30, label: "30 мин" },
-  { value: 60, label: "1 час" },
-  { value: 90, label: "1,5 часа" },
-  { value: 120, label: "2 часа" },
-];
 
 function Meetings() {
   const location = useLocation();
@@ -67,12 +58,13 @@ function Meetings() {
 
   const [meetings, setMeetings] = useState([]);
   const [picking, setPicking] = useState(() => {
-    if (reschedule) return true;
+    if (reschedule) return false;
     if (!schedule) return false;
     return !getMeetingForCandidate(schedule.candidateId);
   });
   const [scheduleError, setScheduleError] = useState("");
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [editTime, setEditTime] = useState(Boolean(location.state?.editTime));
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const existing = reschedule
       ? getMeetingById(reschedule.meetingId)
@@ -83,15 +75,15 @@ function Meetings() {
     return startOfWeek(base, { weekStartsOn: 1 });
   });
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
-  const [selectedMeetingId, setSelectedMeetingId] = useState(location.state?.meetingId || null);
+  const selectedMeetingId = location.state?.meetingId || null;
   const calendarBodyRef = useRef(null);
 
   const HOUR_START = 8;
   const HOUR_END = 19;
-  const STEP_MINUTES = 30; // Шаг 30 минут
-  const ROW_HEIGHT_PX = 40; // Высота одной строки = 30 минут (40px)
+  const STEP_MINUTES = 15;
+  const ROW_HEIGHT_PX = 20;
   const TIME_COLUMN_WIDTH = 52;
-  const SLOTS_PER_HOUR = 60 / STEP_MINUTES; // 60/30 = 2
+  const SLOTS_PER_HOUR = 60 / STEP_MINUTES;
 
   useEffect(() => {
     setTimeout(() => {
@@ -123,7 +115,7 @@ function Meetings() {
       const currentMinute = getMinutes(now);
 
       const minutesFromStart = (currentHour - HOUR_START) * 60 + currentMinute;
-      const pixelsPerMinute = ROW_HEIGHT_PX / STEP_MINUTES; // 40px / 30мин = 1.333px в минуту
+      const pixelsPerMinute = ROW_HEIGHT_PX / STEP_MINUTES;
       let position = minutesFromStart * pixelsPerMinute;
 
       const maxPosition = (HOUR_END - HOUR_START) * 60 * pixelsPerMinute;
@@ -206,25 +198,6 @@ function Meetings() {
     }
   };
 
-  const shiftStart = (delta) => {
-    if (!currentMeeting) return;
-    const startMin = toMinutes(currentMeeting.startTime);
-    const duration = toMinutes(currentMeeting.endTime) - startMin;
-    const next = startMin + delta;
-    if (next < DAY_START || next + duration > DAY_END) return;
-    applySlot(currentMeeting.date, toTime(next), duration);
-  };
-
-  const setDuration = (minutes) => {
-    if (!currentMeeting) return;
-    const startMin = toMinutes(currentMeeting.startTime);
-    if (startMin + minutes > DAY_END) {
-      setScheduleError("Интервью не помещается в рабочий день");
-      return;
-    }
-    applySlot(currentMeeting.date, currentMeeting.startTime, minutes);
-  };
-
   const handleCancelMeeting = () => {
     if (reschedule) {
       if (currentMeeting && currentMeeting.candidateId) {
@@ -259,7 +232,7 @@ function Meetings() {
     const minutesFromStart = (getHours(start) - HOUR_START) * 60 + getMinutes(start);
     const minutesDuration = (getHours(end) - getHours(start)) * 60 + (getMinutes(end) - getMinutes(start));
 
-    const topPx = minutesFromStart * (ROW_HEIGHT_PX / STEP_MINUTES); // 40px за 30 минут
+    const topPx = minutesFromStart * (ROW_HEIGHT_PX / STEP_MINUTES);
     const heightPx = minutesDuration * (ROW_HEIGHT_PX / STEP_MINUTES);
 
     const totalWidth = `calc(100% - ${TIME_COLUMN_WIDTH}px)`;
@@ -394,8 +367,7 @@ function Meetings() {
 
           {picking && (
             <div className="schedule-hint">
-              Нажмите на нужную ячейку в таблице (шаг — 30 минут). Начало и
-              длительность можно изменить ниже.
+              Нажмите на нужную ячейку в таблице (шаг — 15 минут).
             </div>
           )}
           {scheduleError && <div className="schedule-error">{scheduleError}</div>}
@@ -417,53 +389,6 @@ function Meetings() {
                 </span>
               ))}
             </div>
-
-            {currentMeeting && (
-              <div className="schedule-adjust">
-                <div className="schedule-adjust-group">
-                  <span className="schedule-adjust-label">Начало</span>
-                  <button
-                    type="button"
-                    className="schedule-step"
-                    onClick={() => shiftStart(-STEP_MINUTES)}
-                  >
-                    −
-                  </button>
-                  <span className="schedule-adjust-value">
-                    {currentMeeting.startTime}
-                  </span>
-                  <button
-                    type="button"
-                    className="schedule-step"
-                    onClick={() => shiftStart(STEP_MINUTES)}
-                  >
-                    +
-                  </button>
-                </div>
-                <div className="schedule-adjust-group schedule-adjust-duration">
-                  <span className="schedule-adjust-label">Длительность</span>
-                  <div className="schedule-durations">
-                    {DURATION_OPTIONS.map((option) => {
-                      const duration =
-                        toMinutes(currentMeeting.endTime) -
-                        toMinutes(currentMeeting.startTime);
-                      return (
-                        <button
-                          type="button"
-                          key={option.value}
-                          className={`schedule-duration${
-                            duration === option.value ? " active" : ""
-                          }`}
-                          onClick={() => setDuration(option.value)}
-                        >
-                          {option.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
 
             <div className="schedule-actions">
               {currentMeeting && (
@@ -490,8 +415,8 @@ function Meetings() {
                 type="button"
                 className="schedule-btn change"
                 onClick={() => {
-                  setPicking(true);
                   setScheduleError("");
+                  setEditTime(true);
                 }}
                 disabled={!currentMeeting}
               >
@@ -499,6 +424,16 @@ function Meetings() {
               </button>
             </div>
           </div>
+
+          <MeetingTimeModal
+            open={editTime}
+            meeting={currentMeeting}
+            onClose={() => setEditTime(false)}
+            onSaved={() => {
+              setScheduleError("");
+              setMeetings([...MOCK_MEETINGS]);
+            }}
+          />
 
           <Modal open={confirmCancel} onClose={() => setConfirmCancel(false)}>
             <p className="iv-modal-title">

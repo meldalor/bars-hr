@@ -307,3 +307,22 @@
 .va-btn.ghost:hover {
     background: #e5e7eb;
 }
+
+.va-modal-title {
+    margin: 0 0 22px;
+
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #1a1a1a;
+}
+
+.va-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.va-modal-actions .va-btn {
+    height: 42px;
+}

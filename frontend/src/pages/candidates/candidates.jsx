@@ -10,7 +10,6 @@ import {
 import {
   IconSearch,
   IconFilter,
-  IconEdit,
   IconPlus,
   IconChevronDown,
   IconUser,
@@ -21,6 +20,8 @@ import {
   IconCheckCircle,
   IconXCircle,
 } from "../vacancies/icons.jsx";
+import Modal from "../../components/ui/Modal/Modal.jsx";
+import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 
 const PAGE_SIZE = 8;
 
@@ -107,7 +108,7 @@ function CandidateStatus({ candidate }) {
 
 export default function Candidates() {
   const navigate = useNavigate();
-  const [candidates] = useState(() => getAllCandidates());
+  const [candidates, setCandidates] = useState(() => getAllCandidates());
   const [query, setQuery] = useState("");
   const [activeStatus, setActiveStatus] = useState("all");
   const [selected, setSelected] = useState(() => new Set());
@@ -115,7 +116,9 @@ export default function Candidates() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [roleFilters, setRoleFilters] = useState([]);
   const [cityFilters, setCityFilters] = useState([]);
+  const [skillFilters, setSkillFilters] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [confirmArchive, setConfirmArchive] = useState(false);
   const filtersRef = useRef(null);
 
   const cities = useMemo(
@@ -125,6 +128,14 @@ export default function Candidates() {
 
   const specialties = useMemo(
     () => [...new Set(candidates.map((candidate) => candidate.specialty))].sort((a, b) => a.localeCompare(b, "ru")),
+    [candidates]
+  );
+
+  const skills = useMemo(
+    () =>
+      [...new Set(candidates.flatMap((candidate) => candidate.skills || []))].sort((a, b) =>
+        a.localeCompare(b, "ru")
+      ),
     [candidates]
   );
 
@@ -146,6 +157,11 @@ export default function Candidates() {
       .filter((candidate) => activeStatus === "all" || candidate.status === activeStatus)
       .filter((candidate) => roleFilters.length === 0 || roleFilters.includes(candidate.specialty))
       .filter((candidate) => cityFilters.length === 0 || cityFilters.includes(candidate.city))
+      .filter(
+        (candidate) =>
+          skillFilters.length === 0 ||
+          skillFilters.some((skill) => (candidate.skills || []).includes(skill))
+      )
       .filter((candidate) => {
         if (!search) {
           return true;
@@ -172,12 +188,12 @@ export default function Candidates() {
         const result = compareCandidates(a, b, sort.key);
         return sort.direction === "asc" ? result : -result;
       });
-  }, [activeStatus, candidates, cityFilters, query, roleFilters, sort]);
+  }, [activeStatus, candidates, cityFilters, query, roleFilters, skillFilters, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const allChecked = pageRows.length > 0 && pageRows.every((candidate) => selected.has(candidate.id));
-  const hasFilters = roleFilters.length > 0 || cityFilters.length > 0;
+  const hasFilters = roleFilters.length > 0 || cityFilters.length > 0 || skillFilters.length > 0;
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -233,11 +249,10 @@ export default function Candidates() {
     }));
   };
 
-  const handleEditSelected = () => {
-    const firstSelected = [...selected][0];
-    if (firstSelected) {
-      navigate(`/app/candidates/edit/${firstSelected}`);
-    }
+  const archiveSelected = () => {
+    setCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
+    setSelected(new Set());
+    setConfirmArchive(false);
   };
 
   return (
@@ -316,12 +331,27 @@ export default function Candidates() {
                 ))}
               </div>
 
+              <div className="candidates-filter-column">
+                <div className="candidates-filter-title">Навыки</div>
+                {skills.map((skill) => (
+                  <label className="candidates-check-row" key={skill}>
+                    <input
+                      type="checkbox"
+                      checked={skillFilters.includes(skill)}
+                      onChange={() => toggleFilterValue(skill, setSkillFilters)}
+                    />
+                    <span>{skill}</span>
+                  </label>
+                ))}
+              </div>
+
               <button
                 type="button"
                 className="candidates-filter-clear"
                 onClick={() => {
                   setRoleFilters([]);
                   setCityFilters([]);
+                  setSkillFilters([]);
                   setCurrentPage(1);
                 }}
               >
@@ -331,20 +361,6 @@ export default function Candidates() {
           )}
         </div>
 
-        <button type="button" className="candidates-toolbar-btn">
-          Архив
-        </button>
-
-        <button
-          type="button"
-          className={`candidates-toolbar-btn ${selected.size > 0 ? "dark" : ""}`}
-          onClick={handleEditSelected}
-          disabled={selected.size === 0}
-        >
-          <IconEdit size={20} />
-          Редактировать
-        </button>
-
         <button
           type="button"
           className="candidates-toolbar-btn primary"
@@ -353,6 +369,16 @@ export default function Candidates() {
           <IconPlus size={20} />
           Добавить кандидата
         </button>
+
+        {selected.size > 0 && (
+          <button
+            type="button"
+            className="candidates-toolbar-btn danger"
+            onClick={() => setConfirmArchive(true)}
+          >
+            Перенести в архив ({selected.size})
+          </button>
+        )}
       </div>
 
       <div className="candidates-table-card">
@@ -439,30 +465,25 @@ export default function Candidates() {
         </table>
       </div>
 
-      <div className="candidates-pagination">
-        <span>
-          Показано {pageRows.length} из {filtered.length}
-        </span>
-        <div className="candidates-pagination-actions">
+      <Pagination page={currentPage} totalPages={totalPages} onChange={setCurrentPage} />
+
+      <Modal open={confirmArchive} onClose={() => setConfirmArchive(false)}>
+        <p className="cand-modal-title">
+          Перенести выбранных кандидатов ({selected.size}) в архив?
+        </p>
+        <div className="cand-modal-actions">
           <button
             type="button"
-            onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}
-            disabled={currentPage === 1}
+            className="cand-modal-btn ghost"
+            onClick={() => setConfirmArchive(false)}
           >
-            Назад
+            Отмена
           </button>
-          <span>
-            {currentPage} / {totalPages}
-          </span>
-          <button
-            type="button"
-            onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Вперёд
+          <button type="button" className="cand-modal-btn danger" onClick={archiveSelected}>
+            Перенести в архив
           </button>
         </div>
-      </div>
+      </Modal>
     </div>
   );
 }

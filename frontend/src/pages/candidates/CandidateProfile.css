@@ -136,6 +136,80 @@
   color: #ffffff;
 }
 
+.cp-soft-btn,
+.cp-primary-btn,
+.cp-danger-btn,
+.cp-add-skill,
+.cp-add-vacancy,
+.cp-print-btn {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.cp-soft-btn:hover,
+.cp-add-vacancy:hover {
+  background: #d6e6ff;
+}
+
+.cp-primary-btn:hover,
+.cp-add-skill:hover,
+.cp-print-btn:hover {
+  background: #0a58d6;
+}
+
+.cp-danger-btn:hover {
+  background: #c40003;
+}
+
+.cp-back {
+  transition: color 0.2s ease;
+}
+
+.cp-back:hover {
+  color: #106aff;
+}
+
+.cp-vacancy-link {
+  border-radius: 8px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.cp-vacancy-link:hover {
+  background: rgba(16, 106, 255, 0.1);
+  color: #106aff;
+}
+
+.cp-ghost-btn {
+  height: 42px;
+  padding: 0 24px;
+  border: 1px solid #d8dbe2;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cp-ghost-btn:hover {
+  background: #f3f4f6;
+}
+
+.cp-modal-title {
+  margin: 0 0 22px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #111111;
+}
+
+.cp-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .cp-contacts {
   display: flex;
   flex-direction: column;

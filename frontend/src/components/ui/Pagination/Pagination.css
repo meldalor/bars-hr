@@ -1,0 +1,72 @@
+.pager {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.pager-more {
+    height: 44px;
+    padding: 0 22px;
+
+    border: 1px solid #106aff;
+    border-radius: 12px;
+    background: #ffffff;
+
+    color: #106aff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.pager-more:hover {
+    background: #eef4ff;
+}
+
+.pager-more:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.pager-pages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.pager-page {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+
+    color: #374151;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.pager-page:hover {
+    background: #eef4ff;
+    color: #106aff;
+}
+
+.pager-page.active {
+    background: #e7f0ff;
+    color: #106aff;
+    font-weight: 700;
+}

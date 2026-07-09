@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./CandidateProfile.css";
 
 import { getCandidateById, STATUSES } from "../../mocks/candidates.js";
 import { getVacancyById, LANGUAGES, TAG_COLORS, formatSalary } from "../../mocks/vacancies.js";
 import ActivityTable from "../overview/components/ActivityTable/ActivityTable.jsx";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 import {
   IconArrowUpRight,
   IconUsers,
@@ -33,6 +34,8 @@ function ContactRow({ icon, children }) {
 }
 
 function VacancyCard({ vacancy, candidate }) {
+  const navigate = useNavigate();
+
   if (!vacancy) {
     return null;
   }
@@ -51,7 +54,12 @@ function VacancyCard({ vacancy, candidate }) {
           {lang?.code || "HR"}
         </div>
         <h3>{vacancy.title}</h3>
-        <button type="button" className="cp-vacancy-link" aria-label="Открыть вакансию">
+        <button
+          type="button"
+          className="cp-vacancy-link"
+          aria-label="Открыть вакансию"
+          onClick={() => navigate(`/app/vacancies/${vacancy.id}`)}
+        >
           <IconArrowUpRight size={22} />
         </button>
       </div>
@@ -121,6 +129,10 @@ export default function CandidateProfile() {
   const navigate = useNavigate();
   const candidate = getCandidateById(id);
 
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmCancelInterview, setConfirmCancelInterview] = useState(false);
+  const [interviewCancelled, setInterviewCancelled] = useState(false);
+
   const vacancies = useMemo(() => {
     if (!candidate) {
       return [];
@@ -139,8 +151,18 @@ export default function CandidateProfile() {
     );
   }
 
-  const hasInterviews = candidate.interviews.length > 0;
+  const hasInterviews = candidate.interviews.length > 0 && !interviewCancelled;
   const nearestInterview = candidate.interviews[0];
+
+  const archiveCandidate = () => {
+    setConfirmArchive(false);
+    navigate("/app/candidates");
+  };
+
+  const cancelInterview = () => {
+    setConfirmCancelInterview(false);
+    setInterviewCancelled(true);
+  };
 
   return (
     <div className="candidate-profile-page">
@@ -160,7 +182,13 @@ export default function CandidateProfile() {
             </div>
 
             <div className="cp-hero-actions">
-              <button type="button" className="cp-soft-btn">В архив</button>
+              <button
+                type="button"
+                className="cp-soft-btn"
+                onClick={() => setConfirmArchive(true)}
+              >
+                В архив
+              </button>
               <button
                 type="button"
                 className="cp-primary-btn"
@@ -267,8 +295,24 @@ export default function CandidateProfile() {
               <h2>{nearestInterview.title}</h2>
               <div className="cp-interview-date">{nearestInterview.date} {nearestInterview.time}</div>
               <div className="cp-interview-actions">
-                <button type="button" className="cp-danger-btn">Отменить</button>
-                <button type="button" className="cp-soft-btn">Изменить</button>
+                <button
+                  type="button"
+                  className="cp-danger-btn"
+                  onClick={() => setConfirmCancelInterview(true)}
+                >
+                  Отменить
+                </button>
+                <button
+                  type="button"
+                  className="cp-soft-btn"
+                  onClick={() =>
+                    navigate("/app/meetings", {
+                      state: { reschedule: { meetingId: nearestInterview.id } },
+                    })
+                  }
+                >
+                  Изменить
+                </button>
                 <button
                   type="button"
                   className="cp-primary-btn"
@@ -303,6 +347,41 @@ export default function CandidateProfile() {
       </div>
 
       <ActivityTable />
+
+      <Modal open={confirmArchive} onClose={() => setConfirmArchive(false)}>
+        <p className="cp-modal-title">Перенести кандидата {candidate.name} в архив?</p>
+        <div className="cp-modal-actions">
+          <button
+            type="button"
+            className="cp-ghost-btn"
+            onClick={() => setConfirmArchive(false)}
+          >
+            Отмена
+          </button>
+          <button type="button" className="cp-danger-btn" onClick={archiveCandidate}>
+            В архив
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={confirmCancelInterview}
+        onClose={() => setConfirmCancelInterview(false)}
+      >
+        <p className="cp-modal-title">Отменить назначенное интервью?</p>
+        <div className="cp-modal-actions">
+          <button
+            type="button"
+            className="cp-ghost-btn"
+            onClick={() => setConfirmCancelInterview(false)}
+          >
+            Нет
+          </button>
+          <button type="button" className="cp-danger-btn" onClick={cancelInterview}>
+            Отменить
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

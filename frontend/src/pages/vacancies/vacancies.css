@@ -104,10 +104,12 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .vac-card {
+    display: flex;
+    flex-direction: column;
     padding: 18px 20px;
 
     background: #ffffff;
@@ -211,6 +213,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px 16px;
+    margin-top: auto;
 }
 
 .vac-stat {

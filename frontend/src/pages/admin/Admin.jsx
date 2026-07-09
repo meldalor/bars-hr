@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import "./Admin.css";
 import ActivityTable from "../overview/components/ActivityTable/ActivityTable.jsx";
+import Modal from "../../components/ui/Modal/Modal.jsx";
+import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 import { IconSearch, IconPlus } from "../vacancies/icons.jsx";
 
 const INITIAL_USERS = [
@@ -24,7 +26,7 @@ const INITIAL_USERS = [
     id: "u3",
     name: "Скворцова Арина",
     email: "qwerty@yandex.ru",
-    role: "Решала",
+    role: "Согласующий",
     status: "Онлайн",
     lastLogin: "30.06.26\n17:35",
   },
@@ -46,7 +48,9 @@ const INITIAL_USERS = [
   },
 ];
 
-const ROLES = ["HR-менеджер", "Администратор", "Решала"];
+const ROLES = ["HR-менеджер", "Администратор", "Согласующий"];
+
+const PAGE_SIZE = 8;
 
 const PERMISSIONS = [
   "Удаление кандидатов",
@@ -73,6 +77,9 @@ export default function Admin() {
   const [selectedUserId, setSelectedUserId] = useState(INITIAL_USERS[0].id);
   const [draftRole, setDraftRole] = useState(INITIAL_USERS[0].role);
   const [permissions, setPermissions] = useState(["Удаление кандидатов"]);
+  const [confirmSave, setConfirmSave] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [page, setPage] = useState(1);
 
   const selectedUser = users.find((user) => user.id === selectedUserId) || users[0];
 
@@ -89,6 +96,10 @@ export default function Admin() {
         .includes(search)
     );
   }, [query, users]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleUsers.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageUsers = visibleUsers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const changeUserRole = (userId, role) => {
     setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, role } : user)));
@@ -112,6 +123,20 @@ export default function Admin() {
 
   const saveRole = () => {
     changeUserRole(selectedUserId, draftRole);
+    setConfirmSave(false);
+  };
+
+  const deleteUser = () => {
+    setUsers((prev) => {
+      const next = prev.filter((user) => user.id !== selectedUserId);
+      const fallback = next[0];
+      if (fallback) {
+        setSelectedUserId(fallback.id);
+        setDraftRole(fallback.role);
+      }
+      return next;
+    });
+    setConfirmDelete(false);
   };
 
   return (
@@ -144,11 +169,10 @@ export default function Admin() {
                 <th>Роль</th>
                 <th>Статус</th>
                 <th>Последний вход</th>
-                <th>Действия</th>
               </tr>
             </thead>
             <tbody>
-              {visibleUsers.map((user) => (
+              {pageUsers.map((user) => (
                 <tr
                   key={user.id}
                   className={selectedUserId === user.id ? "selected" : ""}
@@ -186,15 +210,12 @@ export default function Admin() {
                       <span key={line}>{line}</span>
                     ))}
                   </td>
-                  <td>
-                    <button type="button" className="admin-dots" aria-label="Действия">
-                      •••
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
         </section>
 
         <aside className="admin-role-card">
@@ -234,17 +255,70 @@ export default function Admin() {
           </div>
 
           <div className="admin-role-actions">
-            <button type="button" className="admin-cancel-btn" onClick={() => setDraftRole(selectedUser.role)}>
-              Отмена
+            <button
+              type="button"
+              className="admin-delete-btn"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Удалить пользователя
             </button>
-            <button type="button" className="admin-save-btn" onClick={saveRole}>
-              Сохранить
-            </button>
+            <div className="admin-role-actions-right">
+              <button
+                type="button"
+                className="admin-cancel-btn"
+                onClick={() => setDraftRole(selectedUser.role)}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className="admin-save-btn"
+                onClick={() => setConfirmSave(true)}
+              >
+                Сохранить
+              </button>
+            </div>
           </div>
         </aside>
       </div>
 
       <ActivityTable />
+
+      <Modal open={confirmSave} onClose={() => setConfirmSave(false)}>
+        <p className="admin-modal-title">
+          Сохранить роль «{draftRole}» для пользователя {selectedUser.name}?
+        </p>
+        <div className="admin-modal-actions">
+          <button
+            type="button"
+            className="admin-ghost-btn"
+            onClick={() => setConfirmSave(false)}
+          >
+            Отмена
+          </button>
+          <button type="button" className="admin-save-btn" onClick={saveRole}>
+            Сохранить
+          </button>
+        </div>
+      </Modal>
+
+      <Modal open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+        <p className="admin-modal-title">
+          Удалить пользователя {selectedUser.name}?
+        </p>
+        <div className="admin-modal-actions">
+          <button
+            type="button"
+            className="admin-ghost-btn"
+            onClick={() => setConfirmDelete(false)}
+          >
+            Отмена
+          </button>
+          <button type="button" className="admin-delete-btn" onClick={deleteUser}>
+            Удалить
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

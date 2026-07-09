@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { getVacancyById, updateVacancy, LANGUAGES, TAG_COLORS } from "../../mocks/vacancies.js";
 import { getAssessment, QUESTION_HINT } from "../../mocks/assessment.js";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 
 const GROUP_ORDER = ["hard", "soft", "culture"];
 
@@ -106,8 +107,10 @@ export default function VacancyAssessment() {
     const [matrix, setMatrix] = useState(initial.matrix);
     const [errors, setErrors] = useState([]);
     const [stepError, setStepError] = useState("");
+    const [confirmSave, setConfirmSave] = useState(false);
 
-    const backToVacancy = () => navigate(`/app/vacancies/${id}`);
+    const backToVacancy = () =>
+        navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
 
     const updateQuestion = (index, field, value) => {
         setQuestions((prev) =>
@@ -172,6 +175,7 @@ export default function VacancyAssessment() {
 
     const save = () => {
         updateVacancy(id, { assessment: { questions, matrix } });
+        setConfirmSave(false);
         navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
     };
 
@@ -295,7 +299,11 @@ export default function VacancyAssessment() {
                                     >
                                         Отменить
                                     </button>
-                                    <button type="button" className="va-btn primary" onClick={save}>
+                                    <button
+                                        type="button"
+                                        className="va-btn primary"
+                                        onClick={() => setConfirmSave(true)}
+                                    >
                                         Сохранить
                                     </button>
                                 </div>
@@ -304,6 +312,22 @@ export default function VacancyAssessment() {
                     )}
                 </>
             )}
+
+            <Modal open={confirmSave} onClose={() => setConfirmSave(false)}>
+                <p className="va-modal-title">Сохранить настройки оценивания?</p>
+                <div className="va-modal-actions">
+                    <button
+                        type="button"
+                        className="va-btn ghost"
+                        onClick={() => setConfirmSave(false)}
+                    >
+                        Отмена
+                    </button>
+                    <button type="button" className="va-btn primary" onClick={save}>
+                        Сохранить
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }

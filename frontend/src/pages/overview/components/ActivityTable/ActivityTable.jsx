@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./ActivityTable.css";
 import { getActivityByVacancy } from "../../../../mocks/activity";
+import Pagination from "../../../../components/ui/Pagination/Pagination.jsx";
 
 import searchIcon from "../../../../assets/overview/search.svg";
 import filterIcon from "../../../../assets/overview/nastroyky.svg";
 import calendarIcon from "../../../../assets/overview/calendar.svg";
 import chevronDownIcon from "../../../../assets/overview/Chevron down.svg";
+
+const PAGE_SIZE = 8;
 
 const COLUMNS = [
     { key: "datetime", label: "Дата и время" },
@@ -51,6 +54,7 @@ function ActivityTable() {
     const [selectedDate, setSelectedDate] = useState("");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isDateOpen, setIsDateOpen] = useState(false);
+    const [page, setPage] = useState(1);
 
     const filterRef = useRef(null);
     const dateRef = useRef(null);
@@ -119,6 +123,10 @@ function ActivityTable() {
     }, [activity, query, selectedRoles, selectedActions, selectedDate, sort]);
 
     const hasFilters = selectedRoles.length > 0 || selectedActions.length > 0;
+
+    const totalPages = Math.max(1, Math.ceil(filteredActivity.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pageRows = filteredActivity.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
     return (
         <section className="activity-table-card">
@@ -256,14 +264,14 @@ function ActivityTable() {
                     </thead>
 
                     <tbody>
-                        {filteredActivity.length === 0 ? (
+                        {pageRows.length === 0 ? (
                             <tr>
                                 <td className="activity-empty" colSpan={5}>
                                     Записи не найдены
                                 </td>
                             </tr>
                         ) : (
-                            filteredActivity.map((item) => (
+                            pageRows.map((item) => (
                                 <tr key={item.id}>
                                     <td>{item.datetime}</td>
                                     <td>{item.user}</td>
@@ -276,6 +284,8 @@ function ActivityTable() {
                     </tbody>
                 </table>
             </div>
+
+            <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
         </section>
     );
 }
