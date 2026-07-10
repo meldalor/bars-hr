@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import Select from "../../components/ui/Select/Select.jsx";
-import {
-    updateMeetingTime,
-    toMinutes,
-    DAY_START,
-    DAY_END,
-} from "../../mocks/interviews.js";
+
+const DAY_START = 8 * 60;
+const DAY_END = 19 * 60;
+
+function toMinutes(time) {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+}
 
 const DURATION_OPTIONS = [
     { value: 15, label: "15 мин" },
@@ -91,18 +93,7 @@ function MeetingTimeForm({ meeting, onClose, onSaved }) {
             return;
         }
 
-        const result = updateMeetingTime(meeting.id, {
-            date,
-            startTime,
-            durationMinutes: duration,
-        });
-
-        if (!result.ok) {
-            setError("Это время пересекается с другой встречей");
-            return;
-        }
-
-        onSaved(result.meeting);
+        onSaved({ date, startTime, durationMinutes: duration });
         onClose();
     };
 

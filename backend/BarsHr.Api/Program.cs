@@ -34,8 +34,11 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddDbContext<BarsHrDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AuditSaveChangesInterceptor>();
+builder.Services.AddDbContext<BarsHrDbContext>((sp, options) =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
+           .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 builder.Services.AddScoped<ICandidateService, CandidateService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -45,6 +48,7 @@ builder.Services.AddScoped<IEvaluationService, EvaluationService>();
 builder.Services.AddScoped<IVacancyService, VacancyService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 var jwt = builder.Configuration.GetSection("Jwt");
 

@@ -1,3 +1,4 @@
+using BarsHr.Api.Authorization;
 using BarsHr.Api.Domain;
 using BarsHr.Api.DTOs.Decisions;
 using BarsHr.Api.DTOs.Interviews;
@@ -38,6 +39,7 @@ public class InterviewsController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.InterviewsSchedule)]
     public async Task<ActionResult<InterviewDto>> Create([FromBody] CreateInterviewRequest request)
     {
         var currentUserId = User.GetUserId();
@@ -52,7 +54,40 @@ public class InterviewsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
-    
+
+    [HttpPut("{id}")]
+    [RequirePermission(Permissions.InterviewsSchedule)]
+    public async Task<ActionResult<InterviewDto>> Update(int id, [FromBody] UpdateInterviewRequest request)
+    {
+        try
+        {
+            var updated = await _interviewService.UpdateAsync(id, request, User.GetUserId());
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // отмена интервью: 409, если по нему уже вынесено решение
+    [HttpDelete("{id}")]
+    [RequirePermission(Permissions.InterviewsSchedule)]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        try
+        {
+            var found = await _interviewService.CancelAsync(id, User.GetUserId());
+            if (!found) return NotFound();
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+    }
+
     // итоговое решение выносит DecisionMaker (админу тоже разрешаем)
     [Authorize(Roles = Roles.DecisionMaker + "," + Roles.Admin)]
     [HttpPost("{interviewId}/decision")]

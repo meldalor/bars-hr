@@ -69,6 +69,9 @@ namespace BarsHr.Api.Controllers
             if (user == null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
                 return Unauthorized("Неверный логин или пароль");
 
+            user.LastLoginAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
             var jwt = _config.GetSection("Jwt");
             var key = Encoding.UTF8.GetBytes(jwt["Key"]!);
 

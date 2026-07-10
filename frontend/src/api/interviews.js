@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { apiGet, apiPost, apiPut } from "./client.js";
+import { apiGet, apiPost, apiPut, apiDelete } from "./client.js";
 
 // цвет карточки в календаре по статусу интервью
 function statusColor(status) {
@@ -74,6 +74,21 @@ export async function createInterview({ applicationId, scheduledAt, plan, interv
         interviewerId: interviewerId ?? null,
     });
     return mapInterview(dto);
+}
+
+// перенос интервью (частичное обновление)
+export async function updateInterview(id, { scheduledAt, plan, interviewerId } = {}) {
+    const dto = await apiPut(`/interviews/${id}`, {
+        scheduledAt: scheduledAt ?? null,
+        plan: plan ?? null,
+        interviewerId: interviewerId ?? null,
+    });
+    return mapInterview(dto);
+}
+
+// отмена интервью (409, если уже есть решение)
+export function cancelInterview(id) {
+    return apiDelete(`/interviews/${id}`);
 }
 
 // сохранение матрицы оценок целиком + общий комментарий

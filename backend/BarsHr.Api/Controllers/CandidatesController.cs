@@ -1,3 +1,5 @@
+using BarsHr.Api.Authorization;
+using BarsHr.Api.Domain;
 using BarsHr.Api.DTOs.Candidates;
 using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
@@ -39,6 +41,7 @@ public class CandidatesController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.CandidatesEdit)]
     public async Task<ActionResult<CandidateDto>> Create([FromBody] CreateCandidateRequest request)
     {
         var currentUserId = User.GetUserId();
@@ -55,6 +58,7 @@ public class CandidatesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [RequirePermission(Permissions.CandidatesEdit)]
     public async Task<ActionResult<CandidateDto>> Update(int id, [FromBody] UpdateCandidateRequest request)
     {
         var currentUserId = User.GetUserId();
@@ -72,6 +76,7 @@ public class CandidatesController : ControllerBase
     }
 
     [HttpPost("{id}/archive")]
+    [RequirePermission(Permissions.CandidatesDelete)]
     public async Task<IActionResult> Archive(int id)
     {
         var found = await _candidateService.SetArchivedAsync(id, archived: true);
@@ -80,6 +85,7 @@ public class CandidatesController : ControllerBase
     }
 
     [HttpPost("{id}/restore")]
+    [RequirePermission(Permissions.CandidatesDelete)]
     public async Task<IActionResult> Restore(int id)
     {
         var found = await _candidateService.SetArchivedAsync(id, archived: false);

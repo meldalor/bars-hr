@@ -54,17 +54,25 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
-        if (!await context.Vacancies.AnyAsync())
+        var adminId = await context.Users
+            .Where(u => u.Login == "admin")
+            .Select(u => u.Id)
+            .FirstAsync();
+
+        var csharpSkill = await context.Skills.FirstAsync(s => s.Name == "C#");
+        var sqlSkill = await context.Skills.FirstAsync(s => s.Name == "SQL");
+        var algoSkill = await context.Skills.FirstAsync(s => s.Name == "Алгоритмы и структуры данных");
+        var gitSkill = await context.Skills.FirstAsync(s => s.Name == "Git");
+        var communicationSkill = await context.Skills.FirstAsync(s => s.Name == "Коммуникация");
+        var teamworkSkill = await context.Skills.FirstAsync(s => s.Name == "Работа в команде");
+        var selfDriveSkill = await context.Skills.FirstAsync(s => s.Name == "Самостоятельность");
+        var valuesSkill = await context.Skills.FirstAsync(s => s.Name == "Совпадение ценностей");
+        var initiativeSkill = await context.Skills.FirstAsync(s => s.Name == "Инициативность");
+
+        static Competency Comp(int skillId) => new() { SkillId = skillId, MaxScore = 5, IsActive = true };
+
+        if (!await context.Vacancies.AnyAsync(v => v.Title == "Junior .NET Developer"))
         {
-            var adminId = await context.Users
-                .Where(u => u.Login == "admin")
-                .Select(u => u.Id)
-                .FirstAsync();
-
-            var csharpSkill = await context.Skills.FirstAsync(s => s.Name == "C#");
-            var sqlSkill = await context.Skills.FirstAsync(s => s.Name == "SQL");
-            var communicationSkill = await context.Skills.FirstAsync(s => s.Name == "Коммуникация");
-
             context.Vacancies.Add(new Vacancy
             {
                 Title = "Junior .NET Developer",
@@ -83,14 +91,77 @@ public static class DbSeeder
                 CreatedById = adminId,
                 Competencies =
                 {
-                    new Competency { SkillId = csharpSkill.Id, MaxScore = 5, IsActive = true },
-                    new Competency { SkillId = sqlSkill.Id, MaxScore = 5, IsActive = true },
-                    new Competency { SkillId = communicationSkill.Id, MaxScore = 5, IsActive = true }
+                    Comp(csharpSkill.Id),
+                    Comp(sqlSkill.Id),
+                    Comp(communicationSkill.Id)
                 }
             });
-
-            await context.SaveChangesAsync();
         }
+
+        if (!await context.Vacancies.AnyAsync(v => v.Title == "Middle .NET Developer"))
+        {
+            context.Vacancies.Add(new Vacancy
+            {
+                Title = "Middle .NET Developer",
+                Description = "Проектирование и разработка сервисов на .NET, участие в архитектурных решениях.",
+                Responsibilities = "Разработка и рефакторинг модулей\nПроектирование API\nМенторинг младших разработчиков\nКод-ревью",
+                Requirements = "Уверенный C# и SQL\nОпыт с ORM и REST\nПонимание алгоритмов",
+                Skills = "C#\nSQL\nАлгоритмы и структуры данных\nGit",
+                WorkFormat = "Гибрид",
+                Location = "Казань",
+                EmploymentType = "Full-time",
+                ExperienceLevel = "Опыт >1 года",
+                SalaryMin = 120000,
+                SalaryMax = 180000,
+                Department = "Разработка",
+                PositionsCount = 1,
+                CreatedById = adminId,
+                Competencies =
+                {
+                    Comp(csharpSkill.Id),
+                    Comp(sqlSkill.Id),
+                    Comp(algoSkill.Id),
+                    Comp(gitSkill.Id),
+                    Comp(communicationSkill.Id),
+                    Comp(teamworkSkill.Id)
+                }
+            });
+        }
+
+        if (!await context.Vacancies.AnyAsync(v => v.Title == "Senior .NET Developer"))
+        {
+            context.Vacancies.Add(new Vacancy
+            {
+                Title = "Senior .NET Developer",
+                Description = "Ведущая разработка и архитектура высоконагруженных сервисов на .NET.",
+                Responsibilities = "Проектирование архитектуры\nТехническое лидерство\nСложный рефакторинг\nМенторинг команды",
+                Requirements = "Глубокий C# и SQL\nОпыт проектирования архитектуры\nОпыт highload\nЛидерские качества",
+                Skills = "C#\nSQL\nАлгоритмы и структуры данных\nGit",
+                WorkFormat = "Удалёнка",
+                Location = "Москва",
+                EmploymentType = "Full-time",
+                ExperienceLevel = "Опыт >3 лет",
+                SalaryMin = 220000,
+                SalaryMax = 320000,
+                Department = "Разработка",
+                PositionsCount = 1,
+                CreatedById = adminId,
+                Competencies =
+                {
+                    Comp(csharpSkill.Id),
+                    Comp(sqlSkill.Id),
+                    Comp(algoSkill.Id),
+                    Comp(gitSkill.Id),
+                    Comp(communicationSkill.Id),
+                    Comp(teamworkSkill.Id),
+                    Comp(selfDriveSkill.Id),
+                    Comp(valuesSkill.Id),
+                    Comp(initiativeSkill.Id)
+                }
+            });
+        }
+
+        await context.SaveChangesAsync();
 
         // демо-кандидаты, отклики, интервью и оценки: без них фронт и PDF-документы пустые
         if (!await context.Applications.AnyAsync())
@@ -164,8 +235,9 @@ public static class DbSeeder
                 InterviewerId = hrId
             };
             context.Interviews.AddRange(interview1, interview2);
-            applications[0].Status = "Viewed";
-            applications[1].Status = "Viewed";
+            applications[0].Status = ApplicationStatuses.Interview;
+            applications[1].Status = ApplicationStatuses.Interview;
+            applications[1].SubStatus = "Интервью назначено";
             await context.SaveChangesAsync();
 
             // оценки по матрице первого интервью + положительное решение (для оффера)

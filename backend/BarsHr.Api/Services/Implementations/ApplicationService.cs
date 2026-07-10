@@ -1,4 +1,5 @@
 using BarsHr.Api.Data;
+using BarsHr.Api.Domain;
 using BarsHr.Api.DTOs.Applications;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,7 @@ public class ApplicationService : IApplicationService
                 a.VacancyId,
                 a.Vacancy!.Title,
                 a.Status,
+                a.SubStatus,
                 a.Notes,
                 a.AppliedAt,
                 a.Interviews.Count
@@ -75,5 +77,27 @@ public class ApplicationService : IApplicationService
         await _context.SaveChangesAsync();
 
         return (await GetByIdAsync(application.Id))!;
+    }
+
+    public async Task<ApplicationDto?> UpdateStatusAsync(int id, UpdateApplicationStatusRequest request, int currentUserId)
+    {
+        if (!ApplicationStatuses.All.Contains(request.Status))
+            throw new ArgumentException(
+                $"Статус должен быть одним из: {string.Join(", ", ApplicationStatuses.All)}");
+
+        var allowedSub = ApplicationStatuses.SubStatuses[request.Status];
+        if (!string.IsNullOrWhiteSpace(request.SubStatus) && !allowedSub.Contains(request.SubStatus))
+            throw new ArgumentException($"Недопустимый подстатус для статуса «{request.Status}»");
+
+        var application = await _context.Applications.FindAsync(id);
+        if (application == null) return null;
+
+        application.Status = request.Status;
+        application.SubStatus = string.IsNullOrWhiteSpace(request.SubStatus) ? null : request.SubStatus;
+        application.UpdatedAt = DateTime.UtcNow;
+        application.UpdatedById = currentUserId;
+        await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(id);
     }
 }

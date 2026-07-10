@@ -4,44 +4,49 @@ import ActivityTable from "../overview/components/ActivityTable/ActivityTable.js
 import Modal from "../../components/ui/Modal/Modal.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 import { IconSearch, IconPlus } from "../vacancies/icons.jsx";
-import { fetchUsers } from "../../api/users.js";
+import { fetchManagedUsers, changeUserRole, setUserActive } from "../../api/users.js";
+import { fetchPermissions } from "../../api/permissions.js";
 import { apiPost } from "../../api/client.js";
+import { formatDateTime } from "../../api/format.js";
 
 // роли бэка ↔ человекочитаемые подписи в UI
 const ROLE_LABELS = { HR: "HR-менеджер", Admin: "Администратор", DecisionMaker: "Согласующий" };
 const ROLE_CODES = { "HR-менеджер": "HR", "Администратор": "Admin", "Согласующий": "DecisionMaker" };
-
 const ROLES = ["HR-менеджер", "Администратор", "Согласующий"];
 
 const PAGE_SIZE = 8;
 
-const PERMISSIONS = [
-  "Удаление кандидатов",
-  "Редактирование кандидатов",
-  "Редактирование вакансий",
-  "Назначение интервью",
-  "Печать документов",
-  "Управление пользователями",
-  "Просмотр журнала активности",
-];
+// ключи прав бэка → подписи чеклиста (порядок сохраняем)
+const PERMISSION_LABELS = {
+  "candidates.edit": "Редактирование кандидатов",
+  "candidates.delete": "Удаление кандидатов",
+  "vacancies.edit": "Редактирование вакансий",
+  "interviews.schedule": "Назначение интервью",
+  "documents.print": "Печать документов",
+  "users.manage": "Управление пользователями",
+  "audit.view": "Просмотр журнала активности",
+};
+const PERMISSION_ORDER = Object.keys(PERMISSION_LABELS);
 
 function initials(name) {
   return name
     .split(" ")
     .slice(0, 2)
-    .map((word) => word[0])
+    .map((word) => word[0] || "")
     .join("")
     .toUpperCase();
 }
 
 export default function Admin() {
   const [users, setUsers] = useState([]);
+  const [permsByRole, setPermsByRole] = useState({});
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [query, setQuery] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [draftRole, setDraftRole] = useState("HR-менеджер");
-  const [permissions, setPermissions] = useState(["Удаление кандидатов"]);
   const [confirmSave, setConfirmSave] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmToggle, setConfirmToggle] = useState(false);
   const [confirmAdd, setConfirmAdd] = useState(false);
   const [newUserName, setNewUserName] = useState("");
   const [newUserLogin, setNewUserLogin] = useState("");
@@ -51,40 +56,40 @@ export default function Admin() {
   const [page, setPage] = useState(1);
 
   const loadUsers = () =>
-    fetchUsers()
+    fetchManagedUsers()
       .then((list) => {
         const mapped = list.map((user) => ({
           id: String(user.id),
           name: user.fullName,
-          email: "",
+          email: user.email || user.login,
+          roleCode: user.role,
           role: ROLE_LABELS[user.role] ?? user.role,
-          status: "—",
-          lastLogin: "—",
+          isActive: user.isActive,
+          status: user.isActive ? "Активен" : "Заблокирован",
+          lastLogin: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : "—",
         }));
         setUsers(mapped);
         setSelectedUserId((prev) => prev ?? mapped[0]?.id ?? null);
+        setLoadError("");
       })
-      .catch(() => {});
+      .catch((error) => setLoadError(error.message || "Нет доступа к управлению пользователями"));
 
   useEffect(() => {
     loadUsers();
+    fetchPermissions().then(setPermsByRole).catch(() => {});
   }, []);
 
   const selectedUser =
     users.find((user) => user.id === selectedUserId) ||
-    users[0] || { name: "—", email: "", role: draftRole };
+    users[0] || { name: "—", email: "", role: draftRole, roleCode: "HR", isActive: true };
 
   const visibleUsers = useMemo(() => {
     const search = query.trim().toLowerCase();
     if (!search) {
       return users;
     }
-
     return users.filter((user) =>
-      [user.name, user.email, user.role, user.status, user.lastLogin]
-        .join(" ")
-        .toLowerCase()
-        .includes(search)
+      [user.name, user.email, user.role, user.status].join(" ").toLowerCase().includes(search)
     );
   }, [query, users]);
 
@@ -92,10 +97,15 @@ export default function Admin() {
   const safePage = Math.min(page, totalPages);
   const pageUsers = visibleUsers.slice(0, safePage * PAGE_SIZE);
 
-  const changeUserRole = (userId, role) => {
-    setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, role } : user)));
-    if (userId === selectedUserId) {
-      setDraftRole(role);
+  const rolePerms = permsByRole[selectedUser.roleCode] || [];
+
+  const applyRole = async (userId, roleLabel) => {
+    setActionError("");
+    try {
+      await changeUserRole(userId, ROLE_CODES[roleLabel] ?? "HR");
+      await loadUsers();
+    } catch (error) {
+      setActionError(error.message || "Не удалось сменить роль");
     }
   };
 
@@ -104,17 +114,20 @@ export default function Admin() {
     setDraftRole(user.role);
   };
 
-  const togglePermission = (permission) => {
-    setPermissions((prev) =>
-      prev.includes(permission)
-        ? prev.filter((item) => item !== permission)
-        : [...prev, permission]
-    );
+  const saveRole = async () => {
+    setConfirmSave(false);
+    await applyRole(selectedUserId, draftRole);
   };
 
-  const saveRole = () => {
-    changeUserRole(selectedUserId, draftRole);
-    setConfirmSave(false);
+  const toggleActive = async () => {
+    setConfirmToggle(false);
+    setActionError("");
+    try {
+      await setUserActive(selectedUser.id, !selectedUser.isActive);
+      await loadUsers();
+    } catch (error) {
+      setActionError(error.message || "Не удалось изменить статус пользователя");
+    }
   };
 
   const addUser = async () => {
@@ -137,22 +150,11 @@ export default function Admin() {
     }
   };
 
-  const deleteUser = () => {
-    setUsers((prev) => {
-      const next = prev.filter((user) => user.id !== selectedUserId);
-      const fallback = next[0];
-      if (fallback) {
-        setSelectedUserId(fallback.id);
-        setDraftRole(fallback.role);
-      }
-      return next;
-    });
-    setConfirmDelete(false);
-  };
-
   return (
     <div className="admin-page">
       <h1 className="admin-title">Администрирование</h1>
+      {loadError && <div className="field-error" style={{ marginBottom: 12 }}>{loadError}</div>}
+      {actionError && <div className="field-error" style={{ marginBottom: 12 }}>{actionError}</div>}
 
       <div className="admin-grid">
         <section className="admin-users-card">
@@ -202,25 +204,19 @@ export default function Admin() {
                     <select
                       className={`admin-role-select admin-role-${user.role}`}
                       value={user.role}
-                      onChange={(event) => changeUserRole(user.id, event.target.value)}
+                      onChange={(event) => applyRole(user.id, event.target.value)}
                     >
                       {ROLES.map((role) => (
-                        <option key={role} value={role}>
-                          {role}
-                        </option>
+                        <option key={role} value={role}>{role}</option>
                       ))}
                     </select>
                   </td>
                   <td>
-                    <span className={`admin-status ${user.status === "Онлайн" ? "online" : "offline"}`}>
+                    <span className={`admin-status ${user.isActive ? "online" : "offline"}`}>
                       {user.status}
                     </span>
                   </td>
-                  <td className="admin-last-login">
-                    {user.lastLogin.split("\n").map((line) => (
-                      <span key={line}>{line}</span>
-                    ))}
-                  </td>
+                  <td className="admin-last-login">{user.lastLogin}</td>
                 </tr>
               ))}
             </tbody>
@@ -245,22 +241,16 @@ export default function Admin() {
             onChange={(event) => setDraftRole(event.target.value)}
           >
             {ROLES.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
+              <option key={role} value={role}>{role}</option>
             ))}
           </select>
 
-          <div className="admin-permissions-title">Права доступа</div>
+          <div className="admin-permissions-title">Права роли (задаются системно)</div>
           <div className="admin-permissions-list">
-            {PERMISSIONS.map((permission) => (
-              <label key={permission} className="admin-permission-row">
-                <input
-                  type="checkbox"
-                  checked={permissions.includes(permission)}
-                  onChange={() => togglePermission(permission)}
-                />
-                <span>{permission}</span>
+            {PERMISSION_ORDER.map((key) => (
+              <label key={key} className="admin-permission-row">
+                <input type="checkbox" checked={rolePerms.includes(key)} readOnly disabled />
+                <span>{PERMISSION_LABELS[key]}</span>
               </label>
             ))}
           </div>
@@ -269,9 +259,9 @@ export default function Admin() {
             <button
               type="button"
               className="admin-delete-btn"
-              onClick={() => setConfirmDelete(true)}
+              onClick={() => setConfirmToggle(true)}
             >
-              Удалить
+              {selectedUser.isActive ? "Заблокировать" : "Разблокировать"}
             </button>
             <div className="admin-role-actions-right">
               <button
@@ -281,12 +271,8 @@ export default function Admin() {
               >
                 Отмена
               </button>
-              <button
-                type="button"
-                className="admin-save-btn"
-                onClick={() => setConfirmSave(true)}
-              >
-                Сохранить
+              <button type="button" className="admin-save-btn" onClick={() => setConfirmSave(true)}>
+                Сохранить роль
               </button>
             </div>
           </div>
@@ -298,44 +284,19 @@ export default function Admin() {
       <Modal open={confirmAdd} onClose={() => setConfirmAdd(false)}>
         <p className="admin-modal-title">Добавить пользователя</p>
         <div className="admin-add-form">
-          <input
-            type="text"
-            placeholder="ФИО"
-            value={newUserName}
-            onChange={(event) => setNewUserName(event.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Логин"
-            value={newUserLogin}
-            onChange={(event) => setNewUserLogin(event.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Пароль (мин. 6 символов)"
-            value={newUserPassword}
-            onChange={(event) => setNewUserPassword(event.target.value)}
-          />
-          <select value={newUserRole} onChange={(event) => setNewUserRole(event.target.value)}>
+          <input type="text" placeholder="ФИО" value={newUserName} onChange={(e) => setNewUserName(e.target.value)} />
+          <input type="text" placeholder="Логин" value={newUserLogin} onChange={(e) => setNewUserLogin(e.target.value)} />
+          <input type="password" placeholder="Пароль (мин. 6 символов)" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} />
+          <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value)}>
             {ROLES.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
+              <option key={role} value={role}>{role}</option>
             ))}
           </select>
           {addError && <div className="field-error">{addError}</div>}
         </div>
         <div className="admin-modal-actions">
-          <button
-            type="button"
-            className="admin-ghost-btn"
-            onClick={() => setConfirmAdd(false)}
-          >
-            Отмена
-          </button>
-          <button type="button" className="admin-save-btn" onClick={addUser}>
-            Добавить
-          </button>
+          <button type="button" className="admin-ghost-btn" onClick={() => setConfirmAdd(false)}>Отмена</button>
+          <button type="button" className="admin-save-btn" onClick={addUser}>Добавить</button>
         </div>
       </Modal>
 
@@ -344,33 +305,19 @@ export default function Admin() {
           Сохранить роль «{draftRole}» для пользователя {selectedUser.name}?
         </p>
         <div className="admin-modal-actions">
-          <button
-            type="button"
-            className="admin-ghost-btn"
-            onClick={() => setConfirmSave(false)}
-          >
-            Отмена
-          </button>
-          <button type="button" className="admin-save-btn" onClick={saveRole}>
-            Сохранить
-          </button>
+          <button type="button" className="admin-ghost-btn" onClick={() => setConfirmSave(false)}>Отмена</button>
+          <button type="button" className="admin-save-btn" onClick={saveRole}>Сохранить</button>
         </div>
       </Modal>
 
-      <Modal open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+      <Modal open={confirmToggle} onClose={() => setConfirmToggle(false)}>
         <p className="admin-modal-title">
-          Удалить пользователя {selectedUser.name}?
+          {selectedUser.isActive ? "Заблокировать" : "Разблокировать"} пользователя {selectedUser.name}?
         </p>
         <div className="admin-modal-actions">
-          <button
-            type="button"
-            className="admin-ghost-btn"
-            onClick={() => setConfirmDelete(false)}
-          >
-            Отмена
-          </button>
-          <button type="button" className="admin-delete-btn" onClick={deleteUser}>
-            Удалить
+          <button type="button" className="admin-ghost-btn" onClick={() => setConfirmToggle(false)}>Отмена</button>
+          <button type="button" className="admin-delete-btn" onClick={toggleActive}>
+            {selectedUser.isActive ? "Заблокировать" : "Разблокировать"}
           </button>
         </div>
       </Modal>

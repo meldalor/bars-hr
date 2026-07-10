@@ -60,4 +60,19 @@ public class ApplicationsController : ControllerBase
             return Conflict(new { message = "Отклик этого кандидата на эту вакансию уже существует" });
         }
     }
+
+    [HttpPut("{id}/status")]
+    public async Task<ActionResult<ApplicationDto>> UpdateStatus(int id, [FromBody] UpdateApplicationStatusRequest request)
+    {
+        try
+        {
+            var updated = await _applicationService.UpdateStatusAsync(id, request, User.GetUserId());
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

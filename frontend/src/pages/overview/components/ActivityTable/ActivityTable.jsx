@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./ActivityTable.css";
-import { getActivityByVacancy } from "../../../../mocks/activity";
+import { fetchAudit } from "../../../../api/audit.js";
 import Pagination from "../../../../components/ui/Pagination/Pagination.jsx";
 
 import searchIcon from "../../../../assets/overview/search.svg";
@@ -45,7 +45,21 @@ function compareValues(a, b, key) {
 }
 
 function ActivityTable() {
-    const activity = useMemo(() => getActivityByVacancy(), []);
+    const [activity, setActivity] = useState([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetchAudit()
+            .then((rows) => {
+                if (!cancelled) {
+                    setActivity(rows);
+                }
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const [query, setQuery] = useState("");
     const [sort, setSort] = useState({ key: "datetime", direction: "desc" });

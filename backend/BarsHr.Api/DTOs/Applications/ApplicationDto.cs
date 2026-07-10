@@ -7,6 +7,7 @@ public record ApplicationDto(
     int VacancyId,
     string VacancyTitle,
     string Status,
+    string? SubStatus,
     string? Notes,
     DateTime AppliedAt,
     int InterviewsCount

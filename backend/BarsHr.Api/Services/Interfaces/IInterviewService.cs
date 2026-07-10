@@ -8,5 +8,7 @@ public interface IInterviewService
     Task<List<InterviewListItemDto>> GetAllAsync(string? scope = null, int? candidateId = null);
     Task<InterviewDto?> GetByIdAsync(int id);
     Task<InterviewDto> CreateAsync(CreateInterviewRequest request, int currentUserId);
+    Task<InterviewDto?> UpdateAsync(int id, UpdateInterviewRequest request, int currentUserId);
+    Task<bool> CancelAsync(int id, int currentUserId);
     Task<DecisionDto?> MakeDecisionAsync(int interviewId, CreateDecisionRequest request, int currentUserId);
 }

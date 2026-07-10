@@ -3,7 +3,7 @@ import "./interview.css";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { fetchInterview, saveEvaluations, makeDecision } from "../../api/interviews.js";
+import { fetchInterview, saveEvaluations, makeDecision, cancelInterview } from "../../api/interviews.js";
 import { fetchVacancy } from "../../api/vacancies.js";
 import { downloadInterviewProtocol } from "../../api/documents.js";
 import { formatDateTime } from "../../api/format.js";
@@ -46,6 +46,8 @@ export default function MeetingInterview() {
     const [decisionComment, setDecisionComment] = useState("");
     const [decisionError, setDecisionError] = useState("");
     const [confirm, setConfirm] = useState(null); // "Accepted" | "Rejected" | null
+    const [confirmCancel, setConfirmCancel] = useState(false);
+    const [cancelError, setCancelError] = useState("");
 
     useEffect(() => {
         let cancelled = false;
@@ -145,6 +147,17 @@ export default function MeetingInterview() {
         }
     };
 
+    const handleCancelMeeting = async () => {
+        setConfirmCancel(false);
+        setCancelError("");
+        try {
+            await cancelInterview(id);
+            navigate("/app/meetings");
+        } catch (error) {
+            setCancelError(error.message || "Не удалось отменить встречу");
+        }
+    };
+
     if (loading || !interview) {
         return (
             <div className="interview">
@@ -205,7 +218,28 @@ export default function MeetingInterview() {
                     >
                         Скачать протокол
                     </button>
+                    <button
+                        type="button"
+                        className="iv-btn primary"
+                        onClick={() =>
+                            navigate("/app/meetings", {
+                                state: { reschedule: { meetingId: interview.id } },
+                            })
+                        }
+                    >
+                        Изменить время
+                    </button>
+                    {!decision && (
+                        <button
+                            type="button"
+                            className="iv-btn danger"
+                            onClick={() => setConfirmCancel(true)}
+                        >
+                            Отменить встречу
+                        </button>
+                    )}
                 </div>
+                {cancelError && <div className="schedule-error">{cancelError}</div>}
             </div>
 
             {interview.plan && (
@@ -254,16 +288,34 @@ export default function MeetingInterview() {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        max={competency.maxScore}
-                                                        className="iv-input iv-score-input"
-                                                        value={scores[competency.id]?.score ?? ""}
-                                                        onChange={(event) =>
-                                                            setScore(competency.id, competency.maxScore, event.target.value)
-                                                        }
-                                                    />
+                                                    <div className="iv-stars" role="radiogroup">
+                                                        {Array.from(
+                                                            { length: competency.maxScore },
+                                                            (_, i) => i + 1
+                                                        ).map((value) => {
+                                                            const current =
+                                                                Number(scores[competency.id]?.score) || 0;
+                                                            return (
+                                                                <button
+                                                                    type="button"
+                                                                    key={value}
+                                                                    className={`iv-star${
+                                                                        value <= current ? " active" : ""
+                                                                    }`}
+                                                                    aria-label={`Оценка ${value}`}
+                                                                    onClick={() =>
+                                                                        setScore(
+                                                                            competency.id,
+                                                                            competency.maxScore,
+                                                                            value === current ? "" : value
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    ★
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <input
@@ -358,6 +410,18 @@ export default function MeetingInterview() {
                         onClick={handleDecision}
                     >
                         {confirm === "Accepted" ? "Принять" : "Отклонить"}
+                    </button>
+                </div>
+            </Modal>
+
+            <Modal open={confirmCancel} onClose={() => setConfirmCancel(false)}>
+                <p className="iv-modal-title">Отменить встречу с {interview.candidateName}?</p>
+                <div className="iv-modal-actions">
+                    <button type="button" className="iv-btn ghost" onClick={() => setConfirmCancel(false)}>
+                        Нет
+                    </button>
+                    <button type="button" className="iv-btn danger" onClick={handleCancelMeeting}>
+                        Отменить встречу
                     </button>
                 </div>
             </Modal>

@@ -1,27 +1,19 @@
 import "./vacancies.css";
 import "./vacancy_assessment.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { LANGUAGES, TAG_COLORS } from "../../mocks/vacancies.js";
 import { fetchVacancy, setCompetencies } from "../../api/vacancies.js";
-import { fetchSkills } from "../../api/skills.js";
+import CompetencyMatrix from "./CompetencyMatrix.jsx";
 import Modal from "../../components/ui/Modal/Modal.jsx";
-
-// матрица собирается из пула навыков бэка; типы — Hard/Soft/CultureFit
-const GROUPS = [
-    { type: "Hard", title: "A. Hard Skills (технические навыки)" },
-    { type: "Soft", title: "B. Soft Skills (личностные качества)" },
-    { type: "CultureFit", title: "C. Culture Fit (соответствие команде)" },
-];
 
 export default function VacancyAssessment() {
     const navigate = useNavigate();
     const { id } = useParams();
 
     const [vacancy, setVacancy] = useState(null);
-    const [skills, setSkills] = useState([]);
-    const [selected, setSelected] = useState({}); // skillId -> maxScore
+    const [selected, setSelected] = useState({});
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState("");
     const [saving, setSaving] = useState(false);
@@ -31,16 +23,15 @@ export default function VacancyAssessment() {
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
-        Promise.all([fetchVacancy(id), fetchSkills()])
-            .then(([loadedVacancy, pool]) => {
+        fetchVacancy(id)
+            .then((loadedVacancy) => {
                 if (cancelled) {
                     return;
                 }
                 setVacancy(loadedVacancy);
-                setSkills(pool);
                 const preset = {};
                 (loadedVacancy.competencies || []).forEach((competency) => {
-                    preset[competency.skillId] = competency.maxScore;
+                    preset[competency.skillId] = 5;
                 });
                 setSelected(preset);
                 setLoadError("");
@@ -60,40 +51,13 @@ export default function VacancyAssessment() {
         };
     }, [id]);
 
-    const skillsByType = useMemo(() => {
-        const map = { Hard: [], Soft: [], CultureFit: [] };
-        skills.forEach((skill) => {
-            if (map[skill.type]) {
-                map[skill.type].push(skill);
-            }
-        });
-        return map;
-    }, [skills]);
-
     const backToVacancy = () =>
         navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
 
-    const toggleSkill = (skillId) => {
-        setSelected((prev) => {
-            const next = { ...prev };
-            if (skillId in next) {
-                delete next[skillId];
-            } else {
-                next[skillId] = 5;
-            }
-            return next;
-        });
-    };
-
-    const changeScore = (skillId, value) => {
-        const score = Math.max(1, Math.min(100, Number(value) || 1));
-        setSelected((prev) => ({ ...prev, [skillId]: score }));
-    };
-
     const doSave = async () => {
-        const items = Object.entries(selected).map(([skillId, maxScore]) => ({
+        const items = Object.keys(selected).map((skillId) => ({
             skillId: Number(skillId),
-            maxScore,
+            maxScore: 5,
         }));
 
         setSaving(true);
@@ -148,52 +112,9 @@ export default function VacancyAssessment() {
 
                     <h2 className="va-subtitle">Матрица компетенций</h2>
 
-                    <div className="va-card">
-                        {GROUPS.map((group) => (
-                            <div className="va-group" key={group.type}>
-                                <h4 className="va-group-title">{group.title}</h4>
+                    <CompetencyMatrix value={selected} onChange={setSelected} />
 
-                                {skillsByType[group.type].length === 0 ? (
-                                    <div className="va-skill-desc">
-                                        В пуле нет навыков этой категории
-                                    </div>
-                                ) : (
-                                    skillsByType[group.type].map((skill) => {
-                                        const active = skill.id in selected;
-                                        return (
-                                            <label className="va-skill" key={skill.id}>
-                                                <div className="va-skill-body">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={active}
-                                                        onChange={() => toggleSkill(skill.id)}
-                                                    />
-                                                    <span className="va-skill-name">{skill.name}</span>
-                                                </div>
-                                                {active && (
-                                                    <span className="va-skill-score">
-                                                        Макс. балл:
-                                                        <input
-                                                            type="number"
-                                                            min={1}
-                                                            max={100}
-                                                            className="va-input va-score-input"
-                                                            value={selected[skill.id]}
-                                                            onChange={(event) =>
-                                                                changeScore(skill.id, event.target.value)
-                                                            }
-                                                        />
-                                                    </span>
-                                                )}
-                                            </label>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        ))}
-
-                        {saveError && <div className="va-error-note">{saveError}</div>}
-                    </div>
+                    {saveError && <div className="va-error-note">{saveError}</div>}
 
                     <div className="va-footer va-footer-end">
                         <button type="button" className="va-btn danger" onClick={backToVacancy}>
