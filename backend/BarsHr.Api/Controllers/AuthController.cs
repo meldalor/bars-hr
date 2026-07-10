@@ -60,14 +60,14 @@ namespace BarsHr.Api.Controllers
         public async Task<IActionResult> Login(LoginDto model)
         {
             if (model == null || string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
-                return BadRequest("Логин и пароль обязательны");
+                return BadRequest(new { message = "Логин и пароль обязательны" });
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == model.Username);
 
             // Ответ одинаковый для «нет пользователя» и «неверный пароль» —
             // чтобы перебором нельзя было выяснить существующие логины
-            if (user == null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
-                return Unauthorized("Неверный логин или пароль");
+            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+                return Unauthorized(new { message = "Неверный логин или пароль" });
 
             user.LastLoginAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();

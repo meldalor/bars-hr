@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import "./Admin.css";
 import ActivityTable from "../overview/components/ActivityTable/ActivityTable.jsx";
 import Modal from "../../components/ui/Modal/Modal.jsx";
+import Select from "../../components/ui/Select/Select.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 import { IconSearch, IconPlus } from "../vacancies/icons.jsx";
-import { fetchManagedUsers, changeUserRole, setUserActive } from "../../api/users.js";
-import { fetchPermissions } from "../../api/permissions.js";
+import { fetchManagedUsers, changeUserRole } from "../../api/users.js";
 import { apiPost } from "../../api/client.js";
 import { formatDateTime } from "../../api/format.js";
+import { getSession } from "../../auth/session.js";
 
 // роли бэка ↔ человекочитаемые подписи в UI
 const ROLE_LABELS = { HR: "HR-менеджер", Admin: "Администратор", DecisionMaker: "Согласующий" };
@@ -15,18 +17,6 @@ const ROLE_CODES = { "HR-менеджер": "HR", "Администратор": 
 const ROLES = ["HR-менеджер", "Администратор", "Согласующий"];
 
 const PAGE_SIZE = 8;
-
-// ключи прав бэка → подписи чеклиста (порядок сохраняем)
-const PERMISSION_LABELS = {
-  "candidates.edit": "Редактирование кандидатов",
-  "candidates.delete": "Удаление кандидатов",
-  "vacancies.edit": "Редактирование вакансий",
-  "interviews.schedule": "Назначение интервью",
-  "documents.print": "Печать документов",
-  "users.manage": "Управление пользователями",
-  "audit.view": "Просмотр журнала активности",
-};
-const PERMISSION_ORDER = Object.keys(PERMISSION_LABELS);
 
 function initials(name) {
   return name
@@ -37,16 +27,25 @@ function initials(name) {
     .toUpperCase();
 }
 
+// выпадающий список ролей в едином стиле платформы
+function RoleSelect({ value, onChange, className = "" }) {
+  return (
+    <Select value={value} onChange={onChange} className={`admin-role-select ${className}`}>
+      {ROLES.map((role) => (
+        <option key={role} value={role}>{role}</option>
+      ))}
+    </Select>
+  );
+}
+
 export default function Admin() {
   const [users, setUsers] = useState([]);
-  const [permsByRole, setPermsByRole] = useState({});
   const [loadError, setLoadError] = useState("");
   const [actionError, setActionError] = useState("");
   const [query, setQuery] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [draftRole, setDraftRole] = useState("HR-менеджер");
   const [confirmSave, setConfirmSave] = useState(false);
-  const [confirmToggle, setConfirmToggle] = useState(false);
   const [confirmAdd, setConfirmAdd] = useState(false);
   const [newUserName, setNewUserName] = useState("");
   const [newUserLogin, setNewUserLogin] = useState("");
@@ -54,6 +53,8 @@ export default function Admin() {
   const [newUserRole, setNewUserRole] = useState("HR-менеджер");
   const [addError, setAddError] = useState("");
   const [page, setPage] = useState(1);
+
+  const isAdmin = getSession()?.role === "Admin";
 
   const loadUsers = () =>
     fetchManagedUsers()
@@ -64,8 +65,6 @@ export default function Admin() {
           email: user.email || user.login,
           roleCode: user.role,
           role: ROLE_LABELS[user.role] ?? user.role,
-          isActive: user.isActive,
-          status: user.isActive ? "Активен" : "Заблокирован",
           lastLogin: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : "—",
         }));
         setUsers(mapped);
@@ -75,13 +74,14 @@ export default function Admin() {
       .catch((error) => setLoadError(error.message || "Нет доступа к управлению пользователями"));
 
   useEffect(() => {
-    loadUsers();
-    fetchPermissions().then(setPermsByRole).catch(() => {});
-  }, []);
+    if (isAdmin) {
+      loadUsers();
+    }
+  }, [isAdmin]);
 
   const selectedUser =
     users.find((user) => user.id === selectedUserId) ||
-    users[0] || { name: "—", email: "", role: draftRole, roleCode: "HR", isActive: true };
+    users[0] || { name: "—", email: "", role: draftRole, roleCode: "HR" };
 
   const visibleUsers = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -89,15 +89,13 @@ export default function Admin() {
       return users;
     }
     return users.filter((user) =>
-      [user.name, user.email, user.role, user.status].join(" ").toLowerCase().includes(search)
+      [user.name, user.email, user.role].join(" ").toLowerCase().includes(search)
     );
   }, [query, users]);
 
   const totalPages = Math.max(1, Math.ceil(visibleUsers.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageUsers = visibleUsers.slice(0, safePage * PAGE_SIZE);
-
-  const rolePerms = permsByRole[selectedUser.roleCode] || [];
 
   const applyRole = async (userId, roleLabel) => {
     setActionError("");
@@ -119,17 +117,6 @@ export default function Admin() {
     await applyRole(selectedUserId, draftRole);
   };
 
-  const toggleActive = async () => {
-    setConfirmToggle(false);
-    setActionError("");
-    try {
-      await setUserActive(selectedUser.id, !selectedUser.isActive);
-      await loadUsers();
-    } catch (error) {
-      setActionError(error.message || "Не удалось изменить статус пользователя");
-    }
-  };
-
   const addUser = async () => {
     setAddError("");
     try {
@@ -149,6 +136,11 @@ export default function Admin() {
       setAddError(error.message || "Не удалось добавить пользователя");
     }
   };
+
+  // страница администрирования доступна только администратору
+  if (!isAdmin) {
+    return <Navigate to="/app/overview" replace />;
+  }
 
   return (
     <div className="admin-page">
@@ -180,7 +172,6 @@ export default function Admin() {
               <tr>
                 <th>Пользователь</th>
                 <th>Роль</th>
-                <th>Статус</th>
                 <th>Последний вход</th>
               </tr>
             </thead>
@@ -201,20 +192,10 @@ export default function Admin() {
                     </div>
                   </td>
                   <td onClick={(event) => event.stopPropagation()}>
-                    <select
-                      className={`admin-role-select admin-role-${user.role}`}
+                    <RoleSelect
                       value={user.role}
                       onChange={(event) => applyRole(user.id, event.target.value)}
-                    >
-                      {ROLES.map((role) => (
-                        <option key={role} value={role}>{role}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <span className={`admin-status ${user.isActive ? "online" : "offline"}`}>
-                      {user.status}
-                    </span>
+                    />
                   </td>
                   <td className="admin-last-login">{user.lastLogin}</td>
                 </tr>
@@ -235,34 +216,12 @@ export default function Admin() {
             </div>
           </div>
 
-          <select
-            className={`admin-role-select admin-role-${draftRole}`}
+          <RoleSelect
             value={draftRole}
             onChange={(event) => setDraftRole(event.target.value)}
-          >
-            {ROLES.map((role) => (
-              <option key={role} value={role}>{role}</option>
-            ))}
-          </select>
-
-          <div className="admin-permissions-title">Права роли (задаются системно)</div>
-          <div className="admin-permissions-list">
-            {PERMISSION_ORDER.map((key) => (
-              <label key={key} className="admin-permission-row">
-                <input type="checkbox" checked={rolePerms.includes(key)} readOnly disabled />
-                <span>{PERMISSION_LABELS[key]}</span>
-              </label>
-            ))}
-          </div>
+          />
 
           <div className="admin-role-actions">
-            <button
-              type="button"
-              className="admin-delete-btn"
-              onClick={() => setConfirmToggle(true)}
-            >
-              {selectedUser.isActive ? "Заблокировать" : "Разблокировать"}
-            </button>
             <div className="admin-role-actions-right">
               <button
                 type="button"
@@ -287,11 +246,7 @@ export default function Admin() {
           <input type="text" placeholder="ФИО" value={newUserName} onChange={(e) => setNewUserName(e.target.value)} />
           <input type="text" placeholder="Логин" value={newUserLogin} onChange={(e) => setNewUserLogin(e.target.value)} />
           <input type="password" placeholder="Пароль (мин. 6 символов)" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} />
-          <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value)}>
-            {ROLES.map((role) => (
-              <option key={role} value={role}>{role}</option>
-            ))}
-          </select>
+          <RoleSelect value={newUserRole} onChange={(e) => setNewUserRole(e.target.value)} />
           {addError && <div className="field-error">{addError}</div>}
         </div>
         <div className="admin-modal-actions">
@@ -307,18 +262,6 @@ export default function Admin() {
         <div className="admin-modal-actions">
           <button type="button" className="admin-ghost-btn" onClick={() => setConfirmSave(false)}>Отмена</button>
           <button type="button" className="admin-save-btn" onClick={saveRole}>Сохранить</button>
-        </div>
-      </Modal>
-
-      <Modal open={confirmToggle} onClose={() => setConfirmToggle(false)}>
-        <p className="admin-modal-title">
-          {selectedUser.isActive ? "Заблокировать" : "Разблокировать"} пользователя {selectedUser.name}?
-        </p>
-        <div className="admin-modal-actions">
-          <button type="button" className="admin-ghost-btn" onClick={() => setConfirmToggle(false)}>Отмена</button>
-          <button type="button" className="admin-delete-btn" onClick={toggleActive}>
-            {selectedUser.isActive ? "Заблокировать" : "Разблокировать"}
-          </button>
         </div>
       </Modal>
     </div>

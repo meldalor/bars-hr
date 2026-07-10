@@ -70,9 +70,9 @@ public class InterviewService : IInterviewService
         if (request.InterviewerId.HasValue)
         {
             var interviewerOk = await _context.Users
-                .AnyAsync(u => u.Id == request.InterviewerId.Value && u.IsActive);
+                .AnyAsync(u => u.Id == request.InterviewerId.Value);
             if (!interviewerOk)
-                throw new ArgumentException("Интервьюер не найден или заблокирован");
+                throw new ArgumentException("Интервьюер не найден");
         }
 
         var interview = request.ToEntity(currentUserId);
@@ -98,9 +98,9 @@ public class InterviewService : IInterviewService
         if (request.InterviewerId.HasValue)
         {
             var interviewerOk = await _context.Users
-                .AnyAsync(u => u.Id == request.InterviewerId.Value && u.IsActive);
+                .AnyAsync(u => u.Id == request.InterviewerId.Value);
             if (!interviewerOk)
-                throw new ArgumentException("Интервьюер не найден или заблокирован");
+                throw new ArgumentException("Интервьюер не найден");
             interview.InterviewerId = request.InterviewerId;
         }
 

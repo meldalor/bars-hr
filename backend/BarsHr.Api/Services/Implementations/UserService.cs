@@ -15,21 +15,14 @@ public class UserService : IUserService
         _context = context;
     }
 
-    public async Task<List<UserDropdownDto>> GetActiveUsersForDropdownAsync()
+    public async Task<List<UserDropdownDto>> GetUsersForDropdownAsync()
     {
         return await _context.Users
-
             .AsNoTracking()
-
-            .Where(u => u.IsActive)
-
             .OrderBy(u => u.FullName)
-
             .Select(u => new UserDropdownDto(
                 u.Id,
-
                 u.FullName ?? u.Login,
-
                 u.Role
             ))
             .ToListAsync();
@@ -46,7 +39,6 @@ public class UserService : IUserService
                 u.Login,
                 u.Email,
                 u.Role,
-                u.IsActive,
                 u.LastLoginAt,
                 u.CreatedAt
             ))
@@ -66,13 +58,4 @@ public class UserService : IUserService
         return true;
     }
 
-    public async Task<bool> SetActiveAsync(int id, bool active)
-    {
-        var user = await _context.Users.FindAsync(id);
-        if (user == null) return false;
-
-        user.IsActive = active;
-        await _context.SaveChangesAsync();
-        return true;
-    }
 }
