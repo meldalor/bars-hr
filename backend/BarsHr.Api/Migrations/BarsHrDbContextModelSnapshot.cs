@@ -152,6 +152,10 @@ namespace BarsHr.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AdditionalInfo")
+                        .HasColumnType("text")
+                        .HasColumnName("additional_info");
+
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -191,6 +195,16 @@ namespace BarsHr.Api.Migrations
                     b.Property<string>("Skills")
                         .HasColumnType("text")
                         .HasColumnName("skills");
+
+                    b.Property<string>("Specialty")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("specialty");
+
+                    b.Property<string>("Telegram")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("telegram");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -425,6 +439,10 @@ namespace BarsHr.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("created_by");
 
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
                     b.Property<string>("GeneralNotes")
                         .HasColumnType("text")
                         .HasColumnName("general_notes");
@@ -490,6 +508,11 @@ namespace BarsHr.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("description");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -536,10 +559,6 @@ namespace BarsHr.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("full_name");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
 
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("timestamp with time zone")

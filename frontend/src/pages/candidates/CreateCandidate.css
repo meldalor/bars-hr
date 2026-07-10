@@ -342,7 +342,8 @@
   color: var(--cc-muted);
   font-size: 14px;
   flex-shrink: 0;
-  margin-top: 22px;
+  /* без ручного сдвига — тире центрируется флексом по высоте строки */
+  align-self: center;
 }
 
 /* --- НАВЫКИ --- */
@@ -491,7 +492,7 @@
 
 .cf-modal-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
 }
 

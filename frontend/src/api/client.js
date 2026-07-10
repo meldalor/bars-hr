@@ -19,8 +19,9 @@ function buildHeaders(hasBody) {
 
 // Общая проверка ответа: 401 → чистим сессию и уходим на логин; иначе
 // бросаем сообщение бэка. На успехе возвращает сам Response.
-async function ensureOk(response) {
-    if (response.status === 401) {
+// 401 от самого логина — это неверные учётные данные, а не истёкшая сессия.
+async function ensureOk(response, path = "") {
+    if (response.status === 401 && !path.startsWith("/auth/login")) {
         clearSession();
         if (window.location.pathname !== "/login") {
             window.location.assign("/login");
@@ -54,7 +55,7 @@ async function request(path, { method = "GET", body } = {}) {
         body: hasBody ? JSON.stringify(body) : undefined,
     });
 
-    await ensureOk(response);
+    await ensureOk(response, path);
 
     if (response.status === 204) {
         return null;

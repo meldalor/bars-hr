@@ -39,6 +39,7 @@ public class InterviewService : IInterviewService
                 i.Application!.Candidate!.FullName,
                 i.Application!.Vacancy!.Title,
                 i.ScheduledAt,
+                i.DurationMinutes,
                 i.Status,
                 i.Interviewer != null ? i.Interviewer.FullName : null
             ))
@@ -69,17 +70,20 @@ public class InterviewService : IInterviewService
         if (request.InterviewerId.HasValue)
         {
             var interviewerOk = await _context.Users
-                .AnyAsync(u => u.Id == request.InterviewerId.Value && u.IsActive);
+                .AnyAsync(u => u.Id == request.InterviewerId.Value);
             if (!interviewerOk)
-                throw new ArgumentException("Интервьюер не найден или заблокирован");
+                throw new ArgumentException("Интервьюер не найден");
         }
 
         var interview = request.ToEntity(currentUserId);
         _context.Interviews.Add(interview);
 
-        // назначение интервью двигает отклик на стадию «Интервью»
-        if (application.Status is ApplicationStatuses.New or ApplicationStatuses.Testing)
+        // назначение интервью двигает отклик на стадию «Интервью» с подстатусом «Интервью назначено»
+        if (application.Status is ApplicationStatuses.New or ApplicationStatuses.Testing or ApplicationStatuses.Interview)
+        {
             application.Status = ApplicationStatuses.Interview;
+            application.SubStatus = "Интервью назначено";
+        }
 
         await _context.SaveChangesAsync();
 
@@ -94,13 +98,14 @@ public class InterviewService : IInterviewService
         if (request.InterviewerId.HasValue)
         {
             var interviewerOk = await _context.Users
-                .AnyAsync(u => u.Id == request.InterviewerId.Value && u.IsActive);
+                .AnyAsync(u => u.Id == request.InterviewerId.Value);
             if (!interviewerOk)
-                throw new ArgumentException("Интервьюер не найден или заблокирован");
+                throw new ArgumentException("Интервьюер не найден");
             interview.InterviewerId = request.InterviewerId;
         }
 
         if (request.ScheduledAt.HasValue) interview.ScheduledAt = request.ScheduledAt.Value;
+        if (request.DurationMinutes is > 0) interview.DurationMinutes = request.DurationMinutes.Value;
         if (request.Plan != null) interview.Plan = request.Plan;
 
         interview.UpdatedAt = DateTime.UtcNow;
@@ -122,13 +127,13 @@ public class InterviewService : IInterviewService
         if (interview.Decision != null)
             throw new InvalidOperationException("Нельзя отменить интервью с вынесенным решением");
 
-        // откат отклика со стадии «Интервью», если других интервью на нём не осталось
+        // если других интервью не осталось — отклик остаётся на стадии «Интервью», но ждёт нового назначения
         if (interview.Application is { Status: ApplicationStatuses.Interview })
         {
             var hasOther = await _context.Interviews
                 .AnyAsync(i => i.ApplicationId == interview.ApplicationId && i.Id != id);
             if (!hasOther)
-                interview.Application.Status = ApplicationStatuses.New;
+                interview.Application.SubStatus = ApplicationStatuses.DefaultSubStatus(ApplicationStatuses.Interview);
         }
 
         _context.Interviews.Remove(interview);
@@ -174,10 +179,14 @@ public class InterviewService : IInterviewService
         interview.Status = request.DecisionType == DecisionTypes.Accepted ? "Completed" : "Rejected";
         interview.UpdatedAt = DateTime.UtcNow;
 
-        // решение по интервью двигает статус отклика в финальный
+        // решение по интервью двигает статус отклика в финальный, подстатус у финальных пуст
         if (interview.Application != null)
-            interview.Application.Status =
-                request.DecisionType == DecisionTypes.Accepted ? "Approved" : "Rejected";
+        {
+            interview.Application.Status = request.DecisionType == DecisionTypes.Accepted
+                ? ApplicationStatuses.Approved
+                : ApplicationStatuses.Rejected;
+            interview.Application.SubStatus = null;
+        }
 
         await _context.SaveChangesAsync();
 

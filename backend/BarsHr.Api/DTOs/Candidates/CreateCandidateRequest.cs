@@ -8,6 +8,9 @@ public record CreateCandidateRequest(
 
     string? Phone,
     string? City,
+    string? Telegram,
+    string? Specialty,
+    string? AdditionalInfo,
     string? Education,
     string? PreviousWork,
     string? Skills

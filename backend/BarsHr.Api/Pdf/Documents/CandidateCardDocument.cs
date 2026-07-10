@@ -4,7 +4,7 @@ using QuestPDF.Infrastructure;
 
 namespace BarsHr.Api.Pdf.Documents;
 
-// карточка-досье кандидата: контакты, образование, опыт, навыки и история откликов
+// резюме кандидата: контакты, образование, опыт, навыки и история откликов
 public class CandidateCardDocument : IDocument
 {
     private readonly CandidateCardModel _model;
@@ -13,7 +13,7 @@ public class CandidateCardDocument : IDocument
 
     public void Compose(IDocumentContainer container)
     {
-        PdfLayout.Page(container, "Карточка кандидата", body =>
+        PdfLayout.Page(container, "Резюме кандидата", body =>
         {
             body.Column(col =>
             {
@@ -22,8 +22,10 @@ public class CandidateCardDocument : IDocument
                 col.Item().Column(head =>
                 {
                     head.Item().Text(_model.FullName).FontSize(PdfTheme.TitleSize).Bold();
+                    if (!string.IsNullOrWhiteSpace(_model.Specialty))
+                        head.Item().Text(_model.Specialty);
                     var contacts = string.Join("  ·  ",
-                        new[] { _model.City, _model.Phone }.Where(x => !string.IsNullOrWhiteSpace(x)));
+                        new[] { _model.City, _model.Phone, _model.Telegram }.Where(x => !string.IsNullOrWhiteSpace(x)));
                     if (!string.IsNullOrWhiteSpace(contacts))
                         head.Item().Text(contacts).FontColor(PdfTheme.Muted);
                 });
@@ -33,6 +35,9 @@ public class CandidateCardDocument : IDocument
 
                 if (!string.IsNullOrWhiteSpace(_model.PreviousWork))
                     TextSection(col, "Опыт работы", _model.PreviousWork);
+
+                if (!string.IsNullOrWhiteSpace(_model.AdditionalInfo))
+                    TextSection(col, "Дополнительная информация", _model.AdditionalInfo);
 
                 if (_model.Skills.Count > 0)
                     col.Item().Column(section =>

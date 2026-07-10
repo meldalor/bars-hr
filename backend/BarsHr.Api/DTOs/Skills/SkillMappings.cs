@@ -9,13 +9,15 @@ public static class SkillMappings
         s.Id,
         s.Name,
         s.Type,
+        s.Description,
         s.IsActive
     );
 
     public static Skill ToEntity(this CreateSkillRequest request) => new()
     {
         Name = Required(request.Name, "Название навыка"),
-        Type = ValidType(request.Type)
+        Type = ValidType(request.Type),
+        Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim()
     };
 
     // null в запросе означает «поле не менять» — частичное обновление
@@ -23,6 +25,8 @@ public static class SkillMappings
     {
         if (request.Name != null) skill.Name = Required(request.Name, "Название навыка");
         if (request.Type != null) skill.Type = ValidType(request.Type);
+        if (request.Description != null)
+            skill.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
     }
 
     private static string Required(string? value, string field) =>

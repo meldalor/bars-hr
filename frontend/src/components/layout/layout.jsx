@@ -107,10 +107,12 @@ function Layout() {
               onItemClick={handleItemClick}
             />
 
-            {/* Круглая кнопка Настройки */}
-            <button className="header-btn" aria-label="Настройки" onClick={() => navigate("/app/admin")}>
-              <img src={settingsIcon} alt="Настройки" className="header-btn-icon" />
-            </button>
+            {/* Круглая кнопка Настройки — админка доступна только администратору */}
+            {session?.role === "Admin" && (
+              <button className="header-btn" aria-label="Настройки" onClick={() => navigate("/app/admin")}>
+                <img src={settingsIcon} alt="Настройки" className="header-btn-icon" />
+              </button>
+            )}
 
             {/* Круглая кнопка Уведомления */}
             <button className="header-btn" aria-label="Уведомления">

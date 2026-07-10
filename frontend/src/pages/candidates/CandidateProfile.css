@@ -119,6 +119,11 @@
   border-radius: 999px;
   font-size: 16px;
   font-weight: 500;
+  /* иконка и текст по одной оси, а не по базовой линии */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .cp-soft-btn {
@@ -524,6 +529,120 @@
   color: #111111;
   font-size: 42px;
   font-weight: 500;
+}
+
+/* --- специальность, иконки кнопок и секций --- */
+.cp-specialty {
+  margin-top: 4px;
+  color: #6c6c6c;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.cp-btn-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.cp-contact-icon {
+  height: 20px;
+  object-fit: contain;
+}
+
+.cp-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cp-section-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.cp-exp-total {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fff3e0;
+  color: #b45309;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* --- структурные строки образования/опыта --- */
+.cp-row-main {
+  min-width: 0;
+}
+
+.cp-row-sub {
+  margin-top: 4px;
+  color: #6c6c6c;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.cp-row-period {
+  /* по центру строки, а не прижат к верху/низу */
+  align-self: center;
+  flex-shrink: 0;
+  color: #6c6c6c;
+  white-space: nowrap;
+}
+
+.cp-additional-info {
+  margin: 0;
+  color: #111111;
+  font-size: 16px;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+/* --- оценки и комментарии из интервью --- */
+.cp-review + .cp-review {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ececec;
+}
+
+.cp-review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cp-review-author {
+  font-weight: 600;
+  color: #111111;
+}
+
+.cp-review-score {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e6f6ec;
+  color: #16a34a;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cp-review-meta {
+  margin-top: 2px;
+  color: #6c6c6c;
+  font-size: 14px;
+}
+
+.cp-review-text {
+  margin: 8px 0 0;
+  color: #111111;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.cp-review-decision {
+  color: #6c6c6c;
 }
 
 @media (max-width: 1350px) {

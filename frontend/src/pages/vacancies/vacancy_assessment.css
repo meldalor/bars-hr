@@ -180,8 +180,37 @@
     color: #8a94a6;
 }
 
+/* описание под названием навыка — с отступом под чекбокс */
+.va-skill-desc-indent {
+    padding-left: 28px;
+}
+
 .va-skill .va-del {
     align-self: center;
+}
+
+/* крестик удаления навыка из пула */
+.va-skill-delete {
+    align-self: center;
+    flex-shrink: 0;
+
+    width: 26px;
+    height: 26px;
+
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+
+    color: #8a94a6;
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.va-skill-delete:hover {
+    background: #fbeaea;
+    color: #dc2626;
 }
 
 .va-add-form {

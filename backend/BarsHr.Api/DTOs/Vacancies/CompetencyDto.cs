@@ -6,6 +6,7 @@ public record CompetencyDto(
     int SkillId,
     string SkillName,
     string SkillType,
+    string? SkillDescription,
     int MaxScore
 );
 

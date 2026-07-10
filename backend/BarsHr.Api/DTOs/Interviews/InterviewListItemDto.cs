@@ -6,6 +6,7 @@ public record InterviewListItemDto(
     string CandidateFullName,
     string VacancyTitle,
     DateTime ScheduledAt,
+    int DurationMinutes,
     string Status,
     string? InterviewerName
 );

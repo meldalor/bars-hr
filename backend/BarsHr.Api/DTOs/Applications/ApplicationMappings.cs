@@ -23,6 +23,7 @@ public static class ApplicationMappings
         CandidateId = r.CandidateId,
         VacancyId = r.VacancyId,
         Notes = r.Notes,
+        SubStatus = Domain.ApplicationStatuses.DefaultSubStatus(Domain.ApplicationStatuses.New),
         CreatedById = currentUserId
     };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./candidates.css";
 
 import { STATUSES, STATUS_ORDER } from "../../mocks/candidates.js";
@@ -8,6 +8,7 @@ import {
   archiveCandidate,
   restoreCandidate,
 } from "../../api/candidates.js";
+import { fetchApplications, createApplication } from "../../api/applications.js";
 import {
   IconSearch,
   IconFilter,
@@ -31,6 +32,7 @@ const STATUS_ICONS = {
   in_progress: IconClock,
   testing: IconFlask,
   interview: IconPhone,
+  pending: IconClock,
   offer: IconMail,
   accepted: IconCheckCircle,
   rejected: IconXCircle,
@@ -109,6 +111,16 @@ function CandidateStatus({ candidate }) {
 
 export default function Candidates() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // переход с плитки статуса на «Обзоре» сразу включает нужный фильтр
+  const initialStatus =
+    location.state?.status && STATUS_ORDER.includes(location.state.status)
+      ? location.state.status
+      : "all";
+  // режим выбора кандидатов на вакансию (переход со страницы вакансии)
+  const selectForVacancy = location.state?.selectForVacancy ?? null;
+  const [existingIds, setExistingIds] = useState(() => new Set());
+  const [addError, setAddError] = useState("");
   const [allCandidates, setAllCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -129,16 +141,38 @@ export default function Candidates() {
     loadCandidates();
   }, []);
 
+  // в режиме выбора прячем тех, кто уже добавлен на эту вакансию
+  useEffect(() => {
+    if (!selectForVacancy) {
+      return undefined;
+    }
+    let cancelled = false;
+    fetchApplications({ vacancyId: selectForVacancy })
+      .then((list) => {
+        if (!cancelled) {
+          setExistingIds(new Set(list.map((app) => app.candidateId)));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [selectForVacancy]);
+
   const candidates = useMemo(
-    () => allCandidates.filter((candidate) => !candidate.isArchived),
-    [allCandidates]
+    () =>
+      allCandidates.filter(
+        (candidate) =>
+          !candidate.isArchived && !(selectForVacancy && existingIds.has(candidate.id))
+      ),
+    [allCandidates, selectForVacancy, existingIds]
   );
   const archivedCandidates = useMemo(
     () => allCandidates.filter((candidate) => candidate.isArchived),
     [allCandidates]
   );
   const [query, setQuery] = useState("");
-  const [activeStatus, setActiveStatus] = useState("all");
+  const [activeStatus, setActiveStatus] = useState(initialStatus);
   const [selected, setSelected] = useState(() => new Set());
   const [sort, setSort] = useState({ key: "date", direction: "desc" });
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -307,7 +341,26 @@ export default function Candidates() {
     setCurrentPage(1);
   };
 
-  const title = showArchive ? "Архив кандидатов" : "База кандидатов";
+  // режим выбора: отмеченные чекбоксами добавляются откликами на вакансию
+  const addSelectedToVacancy = async () => {
+    setAddError("");
+    try {
+      await Promise.all(
+        [...selected].map((candidateId) =>
+          createApplication({ candidateId, vacancyId: selectForVacancy })
+        )
+      );
+      navigate(`/app/vacancies/${selectForVacancy}`);
+    } catch (error) {
+      setAddError(error.message || "Не удалось добавить кандидатов");
+    }
+  };
+
+  const title = selectForVacancy
+    ? "Выбор кандидатов на вакансию"
+    : showArchive
+    ? "Архив кандидатов"
+    : "База кандидатов";
   const actionText = showArchive ? "Вернуть из архива" : "Перенести в архив";
   const confirmText = showArchive
     ? `Вернуть выбранных кандидатов (${selected.size}) из архива?`
@@ -428,37 +481,66 @@ export default function Candidates() {
           )}
         </div>
 
-        <button
-          type="button"
-          className={`candidates-toolbar-btn ${showArchive ? "dark" : ""}`}
-          onClick={() => {
-            setShowArchive((value) => !value);
-            setSelected(new Set());
-            setCurrentPage(1);
-          }}
-        >
-          {showArchive ? "Кандидаты" : "Архив"}
-        </button>
+        {selectForVacancy ? (
+          <>
+            <button
+              type="button"
+              className="candidates-toolbar-btn"
+              onClick={() => navigate(`/app/vacancies/${selectForVacancy}`)}
+            >
+              Отмена
+            </button>
+            <button
+              type="button"
+              className="candidates-toolbar-btn primary"
+              disabled={selected.size === 0}
+              onClick={addSelectedToVacancy}
+            >
+              <IconPlus size={20} />
+              Добавить ({selected.size})
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className={`candidates-toolbar-btn ${showArchive ? "active" : ""}`}
+              onClick={() => {
+                setShowArchive((value) => !value);
+                setSelected(new Set());
+                setCurrentPage(1);
+              }}
+            >
+              Архив
+            </button>
 
-        <button
-          type="button"
-          className="candidates-toolbar-btn primary"
-          onClick={() => navigate("/app/candidates/create")}
-        >
-          <IconPlus size={20} />
-          Добавить кандидата
-        </button>
+            <button
+              type="button"
+              className="candidates-toolbar-btn primary"
+              onClick={() => navigate("/app/candidates/create")}
+            >
+              <IconPlus size={20} />
+              Добавить кандидата
+            </button>
 
-        {selected.size > 0 && (
-          <button
-            type="button"
-            className="candidates-toolbar-btn danger"
-            onClick={() => setConfirmAction(true)}
-          >
-            {actionText} ({selected.size})
-          </button>
+            {selected.size > 0 && (
+              <button
+                type="button"
+                className="candidates-toolbar-btn danger"
+                onClick={() => setConfirmAction(true)}
+              >
+                {actionText} ({selected.size})
+              </button>
+            )}
+          </>
         )}
       </div>
+
+      {addError && (
+        <div role="alert" style={{ color: "#dc2626", fontSize: 14, marginBottom: 10 }}>
+          {addError}
+        </div>
+      )}
 
       <div className="candidates-table-card">
         <table className="candidates-table">

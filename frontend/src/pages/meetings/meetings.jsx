@@ -225,10 +225,13 @@ function Meetings() {
     }
   };
 
-  const handleRescheduleSaved = async ({ date, startTime }) => {
+  const handleRescheduleSaved = async ({ date, startTime, durationMinutes }) => {
     setScheduleError("");
     try {
-      await updateInterview(reschedule.meetingId, { scheduledAt: slotToIso(parseISO(date), startTime) });
+      await updateInterview(reschedule.meetingId, {
+        scheduledAt: slotToIso(parseISO(date), startTime),
+        durationMinutes,
+      });
       await loadMeetings();
       setEditTime(false);
     } catch (error) {

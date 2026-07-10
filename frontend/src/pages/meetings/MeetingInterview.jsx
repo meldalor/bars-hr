@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { fetchInterview, saveEvaluations, makeDecision, cancelInterview } from "../../api/interviews.js";
+import { updateApplicationStatus } from "../../api/applications.js";
 import { fetchVacancy } from "../../api/vacancies.js";
-import { downloadInterviewProtocol } from "../../api/documents.js";
+import { downloadInterviewProtocol, downloadCandidateCard } from "../../api/documents.js";
 import { formatDateTime } from "../../api/format.js";
 import { getSession } from "../../auth/session.js";
 import { IconCalendar } from "../vacancies/icons.jsx";
@@ -48,6 +49,8 @@ export default function MeetingInterview() {
     const [confirm, setConfirm] = useState(null); // "Accepted" | "Rejected" | null
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [cancelError, setCancelError] = useState("");
+    const [approvalSent, setApprovalSent] = useState(false);
+    const [approvalError, setApprovalError] = useState("");
 
     useEffect(() => {
         let cancelled = false;
@@ -147,6 +150,17 @@ export default function MeetingInterview() {
         }
     };
 
+    // HR провёл собеседование → отклик уходит в статус «В ожидании» решения
+    const handleSendForApproval = async () => {
+        setApprovalError("");
+        try {
+            await updateApplicationStatus(interview.applicationId, { status: "Pending" });
+            setApprovalSent(true);
+        } catch (error) {
+            setApprovalError(error.message || "Не удалось отправить на согласование");
+        }
+    };
+
     const handleCancelMeeting = async () => {
         setConfirmCancel(false);
         setCancelError("");
@@ -220,6 +234,15 @@ export default function MeetingInterview() {
                     </button>
                     <button
                         type="button"
+                        className="iv-btn ghost"
+                        onClick={() =>
+                            downloadCandidateCard(interview.candidateId).catch(() => {})
+                        }
+                    >
+                        Скачать резюме кандидата
+                    </button>
+                    <button
+                        type="button"
                         className="iv-btn primary"
                         onClick={() =>
                             navigate("/app/meetings", {
@@ -283,9 +306,9 @@ export default function MeetingInterview() {
                                             <tr key={competency.id}>
                                                 <td>
                                                     <div className="iv-comp-name">{competency.skillName}</div>
-                                                    <div className="iv-comp-desc">
-                                                        макс. {competency.maxScore}
-                                                    </div>
+                                                    {competency.skillDescription && (
+                                                        <div className="iv-comp-desc">{competency.skillDescription}</div>
+                                                    )}
                                                 </td>
                                                 <td>
                                                     <div className="iv-stars" role="radiogroup">
@@ -318,8 +341,9 @@ export default function MeetingInterview() {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <input
+                                                    <textarea
                                                         className="iv-comp-comment"
+                                                        rows={3}
                                                         placeholder="Написать..."
                                                         value={scores[competency.id]?.comment ?? ""}
                                                         onChange={(event) =>
@@ -392,7 +416,21 @@ export default function MeetingInterview() {
                         </div>
                     </>
                 ) : (
-                    <p className="cp-muted">Итоговое решение выносит руководитель направления.</p>
+                    <>
+                        <p className="cp-muted">Итоговое решение выносит руководитель направления.</p>
+                        {approvalError && <div className="schedule-error">{approvalError}</div>}
+                        {approvalSent && <div className="iv-save-ok">Кандидат отправлен на согласование</div>}
+                        <div className="iv-footer iv-footer-end">
+                            <button
+                                type="button"
+                                className="iv-btn primary"
+                                onClick={handleSendForApproval}
+                                disabled={approvalSent}
+                            >
+                                Отправить на согласование
+                            </button>
+                        </div>
+                    </>
                 )}
             </div>
 

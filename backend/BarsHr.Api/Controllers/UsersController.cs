@@ -21,9 +21,9 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<UserDropdownDto>>> GetActiveUsers()
+    public async Task<ActionResult<List<UserDropdownDto>>> GetUsers()
     {
-        var users = await _userService.GetActiveUsersForDropdownAsync();
+        var users = await _userService.GetUsersForDropdownAsync();
         return Ok(users);
     }
 
@@ -52,26 +52,5 @@ public class UsersController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-    }
-
-    [HttpPost("{id}/deactivate")]
-    [RequirePermission(Permissions.UsersManage)]
-    public async Task<IActionResult> Deactivate(int id)
-    {
-        if (id == User.GetUserId())
-            return BadRequest(new { message = "Нельзя заблокировать самого себя" });
-
-        var found = await _userService.SetActiveAsync(id, active: false);
-        if (!found) return NotFound();
-        return NoContent();
-    }
-
-    [HttpPost("{id}/activate")]
-    [RequirePermission(Permissions.UsersManage)]
-    public async Task<IActionResult> Activate(int id)
-    {
-        var found = await _userService.SetActiveAsync(id, active: true);
-        if (!found) return NotFound();
-        return NoContent();
     }
 }

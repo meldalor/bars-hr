@@ -6,7 +6,6 @@ public record UserAdminDto(
     string Login,
     string? Email,
     string Role,
-    bool IsActive,
     DateTime? LastLoginAt,
     DateTime CreatedAt
 );

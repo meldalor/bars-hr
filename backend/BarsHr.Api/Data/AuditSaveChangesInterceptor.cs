@@ -58,6 +58,11 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
             if (entry.Entity is AuditLog) continue;
             if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)) continue;
 
+            // отметка времени входа — не изменение данных, журнал ею не засоряем
+            if (entry.Entity is User && entry.State == EntityState.Modified &&
+                entry.Properties.Where(p => p.IsModified).All(p => p.Metadata.Name == nameof(User.LastLoginAt)))
+                continue;
+
             var action = entry.State switch
             {
                 EntityState.Added => "Created",

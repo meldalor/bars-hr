@@ -161,52 +161,13 @@
   line-height: 1.2;
 }
 
+/* размерные поправки к платформенному .select в таблице и карточке роли */
 .admin-role-select {
-  min-width: 150px;
-  height: 32px;
-  padding: 0 28px 0 12px;
-  border: none;
-  border-radius: 10px;
-  font-family: inherit;
+  width: auto;
+  min-width: 170px;
+  height: 36px;
   font-size: 15px;
   font-weight: 500;
-  outline: none;
-  cursor: pointer;
-}
-
-.admin-role-HR-менеджер {
-  background: #e7f0ff;
-  color: #106aff;
-}
-
-.admin-role-Администратор {
-  background: #f1e6ff;
-  color: #7c2de8;
-}
-
-.admin-role-Согласующий {
-  background: #fff0cc;
-  color: #ba7500;
-}
-
-.admin-status {
-  min-height: 30px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 12px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.admin-status.online {
-  background: #e9fbdc;
-  color: #56a414;
-}
-
-.admin-status.offline {
-  background: #d6d6d6;
-  color: #555555;
 }
 
 .admin-last-login span {
@@ -239,39 +200,9 @@
   margin-bottom: 16px;
 }
 
-.admin-permissions-title {
-  margin-bottom: 8px;
-  color: #111111;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.admin-permissions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.admin-permission-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #111111;
-  font-size: 17px;
-  line-height: 1.25;
-  cursor: pointer;
-}
-
-.admin-permission-row input {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  accent-color: #106aff;
-}
-
 .admin-role-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 12px;
   margin-top: 24px;
@@ -301,23 +232,6 @@
 
 .admin-save-btn {
   background: #106aff;
-}
-
-.admin-delete-btn {
-  height: 42px;
-  padding: 0 22px;
-  border: none;
-  border-radius: 999px;
-  background: #e40004;
-  color: #ffffff;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.admin-delete-btn:hover {
-  background: #c40003;
 }
 
 .admin-ghost-btn {
@@ -352,8 +266,7 @@
   gap: 12px;
 }
 
-.admin-modal-actions .admin-save-btn,
-.admin-modal-actions .admin-delete-btn {
+.admin-modal-actions .admin-save-btn {
   min-width: 120px;
 }
 
@@ -399,14 +312,6 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-}
-
-.admin-permissions-list {
-  flex: 1;
-}
-
-.admin-permission-row input {
-  background: #ffffff;
 }
 
 .admin-add-form {

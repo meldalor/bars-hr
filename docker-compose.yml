@@ -18,6 +18,30 @@ services:
       timeout: 3s
       retries: 10
 
+  api:
+    build: ./backend
+    container_name: barshr-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=barshr;Username=barshr;Password=barshr_dev"
+    ports:
+      - "5080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api
+    container_name: barshr-web
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: barshr-pgadmin

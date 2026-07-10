@@ -27,7 +27,7 @@ public class SkillService : ISkillService
         return await query
             .OrderBy(s => s.Type)
             .ThenBy(s => s.Name)
-            .Select(s => new SkillDto(s.Id, s.Name, s.Type, s.IsActive))
+            .Select(s => new SkillDto(s.Id, s.Name, s.Type, s.Description, s.IsActive))
             .ToListAsync();
     }
 

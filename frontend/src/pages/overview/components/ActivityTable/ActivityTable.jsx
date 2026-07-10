@@ -44,12 +44,13 @@ function compareValues(a, b, key) {
     });
 }
 
-function ActivityTable() {
+// без пропсов — общий журнал; candidateId/vacancyId — журнал сущности; mine — действия текущего пользователя
+function ActivityTable({ candidateId = null, vacancyId = null, mine = false }) {
     const [activity, setActivity] = useState([]);
 
     useEffect(() => {
         let cancelled = false;
-        fetchAudit()
+        fetchAudit({ candidateId, vacancyId, mine })
             .then((rows) => {
                 if (!cancelled) {
                     setActivity(rows);
@@ -59,7 +60,7 @@ function ActivityTable() {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [candidateId, vacancyId, mine]);
 
     const [query, setQuery] = useState("");
     const [sort, setSort] = useState({ key: "datetime", direction: "desc" });

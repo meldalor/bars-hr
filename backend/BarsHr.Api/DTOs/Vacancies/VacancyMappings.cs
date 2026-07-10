@@ -32,7 +32,7 @@ public static class VacancyMappings
         // матрица оценки: только активные компетенции, навык подгружен через Include
         v.Competencies
             .Where(c => c.IsActive)
-            .Select(c => new CompetencyDto(c.Id, c.SkillId, c.Skill!.Name, c.Skill.Type, c.MaxScore))
+            .Select(c => new CompetencyDto(c.Id, c.SkillId, c.Skill!.Name, c.Skill.Type, c.Skill.Description, c.MaxScore))
             .ToList()
     );
 

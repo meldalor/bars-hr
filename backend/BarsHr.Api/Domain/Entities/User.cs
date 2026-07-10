@@ -36,9 +36,6 @@ public class User
     [Column("role")]
     public string Role { get; set; } = "HR";
 
-    [Column("is_active")]
-    public bool IsActive { get; set; } = true;
-
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

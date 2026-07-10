@@ -1,17 +1,26 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import CandidateForm from "../../components/forms/CandidateForm";
 import { createCandidate, buildCandidateRequest } from "../../api/candidates.js";
+import { createApplication } from "../../api/applications.js";
 import "./CreateCandidate.css";
 
 function CreateCandidate() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // создание со страницы вакансии: сразу привязываем кандидата откликом и возвращаемся к вакансии
+  const vacancyId = location.state?.vacancyId ?? null;
   const [error, setError] = useState("");
 
   const handleSubmit = async (data) => {
     try {
       const created = await createCandidate(buildCandidateRequest(data));
-      navigate(`/app/candidates/${created.id}`);
+      if (vacancyId) {
+        await createApplication({ candidateId: created.id, vacancyId });
+        navigate(`/app/vacancies/${vacancyId}`);
+      } else {
+        navigate(`/app/candidates/${created.id}`);
+      }
     } catch (submitError) {
       setError(submitError.message || "Не удалось создать кандидата");
     }

@@ -1,6 +1,6 @@
-import { apiGet, apiPost, apiPut } from "./client.js";
+import { apiGet, apiPut } from "./client.js";
 
-// Активные пользователи для выпадающих списков (например, выбор интервьюера).
+// Пользователи для выпадающих списков (например, выбор интервьюера).
 export function fetchUsers() {
     return apiGet("/users");
 }
@@ -12,8 +12,4 @@ export function fetchManagedUsers() {
 
 export function changeUserRole(id, role) {
     return apiPut(`/users/${id}/role`, { role });
-}
-
-export function setUserActive(id, active) {
-    return apiPost(`/users/${id}/${active ? "activate" : "deactivate"}`);
 }

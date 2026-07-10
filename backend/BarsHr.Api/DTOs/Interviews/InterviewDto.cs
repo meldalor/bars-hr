@@ -11,6 +11,7 @@ public record InterviewDto(
     int VacancyId,
     string VacancyTitle,
     DateTime ScheduledAt,
+    int DurationMinutes,
     string Status,
     string? Plan,
     decimal? OverallScore,

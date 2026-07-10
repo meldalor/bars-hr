@@ -29,6 +29,7 @@ const STATUS_TO_KEY = {
     New: "in_progress",
     Testing: "testing",
     Interview: "interview",
+    Pending: "pending",
     Offer: "offer",
     Approved: "accepted",
     Rejected: "rejected",
@@ -39,6 +40,7 @@ const KEY_TO_STATUS = {
     in_progress: "New",
     testing: "Testing",
     interview: "Interview",
+    pending: "Pending",
     offer: "Offer",
     accepted: "Approved",
     rejected: "Rejected",
@@ -53,7 +55,7 @@ export function backendStatus(key) {
     return KEY_TO_STATUS[key] ?? "New";
 }
 
-// элемент списка кандидатов под таблицу candidates.jsx (богатые поля упрощены)
+// элемент списка кандидатов под таблицу candidates.jsx
 export function mapCandidateListItem(dto) {
     return {
         id: String(dto.id),
@@ -61,17 +63,55 @@ export function mapCandidateListItem(dto) {
         fullName: dto.fullName,
         city: dto.city ?? "",
         phone: "",
-        rating: null,
-        specialty: "",
+        // оценка из интервью «определяющего» отклика, до одного знака
+        rating: dto.rating != null ? Math.round(Number(dto.rating) * 10) / 10 : null,
+        specialty: dto.specialty ?? "",
         date: formatDateShort(dto.createdAt),
         time: formatTimeShort(dto.createdAt),
         status: statusKey(dto.status),
-        substatus: null,
+        substatus: dto.subStatus ?? null,
         skills: parseSkills(dto.skills),
         applicationsCount: dto.applicationsCount ?? 0,
         interviewsCount: dto.interviewsCount ?? 0,
         isArchived: Boolean(dto.isArchived),
     };
+}
+
+// образование/опыт хранятся на бэке JSON-массивами записей; легаси-строки превращаем в одну запись
+function parseEntries(raw, emptyRow, legacyField) {
+    if (!raw) {
+        return [];
+    }
+    try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+            return parsed.map((row, index) => ({
+                ...emptyRow,
+                ...Object.fromEntries(
+                    Object.keys(emptyRow).map((key) => [key, typeof row?.[key] === "string" ? row[key] : ""])
+                ),
+                id: `row-${index}`,
+            }));
+        }
+    } catch {
+        // не JSON — старый плоский текст
+    }
+    return raw
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line, index) => ({ ...emptyRow, [legacyField]: line, id: `row-${index}` }));
+}
+
+const EDUCATION_ROW = { level: "", institution: "", faculty: "", start: "", end: "" };
+const EXPERIENCE_ROW = { company: "", position: "", start: "", end: "", info: "" };
+
+export function parseEducationList(raw) {
+    return parseEntries(raw, EDUCATION_ROW, "institution");
+}
+
+export function parseExperienceList(raw) {
+    return parseEntries(raw, EXPERIENCE_ROW, "company");
 }
 
 // полная карточка кандидата (профиль)
@@ -81,8 +121,11 @@ export function mapCandidate(dto) {
         fullName: dto.fullName,
         phone: dto.phone ?? "",
         city: dto.city ?? "",
-        education: dto.education ?? "",
-        previousWork: dto.previousWork ?? "",
+        telegram: dto.telegram ?? "",
+        specialty: dto.specialty ?? "",
+        additionalInfo: dto.additionalInfo ?? "",
+        education: parseEducationList(dto.education),
+        experience: parseExperienceList(dto.previousWork),
         skills: parseSkills(dto.skills),
         isArchived: Boolean(dto.isArchived),
         createdAt: dto.createdAt,
@@ -110,37 +153,34 @@ export async function updateCandidate(id, body) {
     return mapCandidate(dto);
 }
 
-// строку образования/опыта храним читаемым текстом (её же печатает PDF-карточка)
-function formatEducationRow(row) {
-    const head = [row.level, row.institution, row.faculty].map((v) => (v || "").trim()).filter(Boolean).join(", ");
-    const period = [row.start, row.end].map((v) => (v || "").trim()).filter(Boolean).join(" – ");
-    return period ? `${head} (${period})`.trim() : head;
+// оставляем только записи, где заполнено хоть одно поле; служебный id формы отбрасываем
+function cleanEntries(list, template) {
+    return (list || [])
+        .map((row) =>
+            Object.fromEntries(Object.keys(template).map((key) => [key, (row?.[key] || "").trim()]))
+        )
+        .filter((row) => Object.values(row).some(Boolean));
 }
 
-function formatExperienceRow(row) {
-    const head = [row.company, row.position].map((v) => (v || "").trim()).filter(Boolean).join(" — ");
-    const period = [row.start, row.end].map((v) => (v || "").trim()).filter(Boolean).join(" – ");
-    const line = period ? `${head} (${period})`.trim() : head;
-    const info = (row.info || "").trim();
-    return info ? `${line}${line ? ": " : ""}${info}` : line;
-}
-
-// форма кандидата (ФИО + образование/опыт списками) → тело запроса бэка (плоские поля)
+// форма кандидата → тело запроса бэка; пустая строка означает «очистить поле» (null бэк не меняет)
 export function buildCandidateRequest({ formData, education, experience }) {
     const fullName = [formData.lastName, formData.firstName, formData.middleName]
         .map((part) => (part || "").trim())
         .filter(Boolean)
         .join(" ");
 
-    const educationText = (education || []).map(formatEducationRow).filter(Boolean).join("\n");
-    const previousWorkText = (experience || []).map(formatExperienceRow).filter(Boolean).join("\n");
+    const educationRows = cleanEntries(education, EDUCATION_ROW);
+    const experienceRows = cleanEntries(experience, EXPERIENCE_ROW);
 
     return {
         fullName,
-        phone: formData.phone || null,
-        city: formData.city || null,
-        education: educationText || null,
-        previousWork: previousWorkText || null,
+        phone: (formData.phone || "").trim(),
+        city: (formData.city || "").trim(),
+        telegram: (formData.telegram || "").trim(),
+        specialty: (formData.vacancy || "").trim(),
+        additionalInfo: (formData.info || "").trim(),
+        education: educationRows.length ? JSON.stringify(educationRows) : "",
+        previousWork: experienceRows.length ? JSON.stringify(experienceRows) : "",
         skills: serializeSkills(formData.selectedSkills),
     };
 }
