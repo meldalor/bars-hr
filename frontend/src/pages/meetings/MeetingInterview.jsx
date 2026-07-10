@@ -306,9 +306,9 @@ export default function MeetingInterview() {
                                             <tr key={competency.id}>
                                                 <td>
                                                     <div className="iv-comp-name">{competency.skillName}</div>
-                                                    <div className="iv-comp-desc">
-                                                        макс. {competency.maxScore}
-                                                    </div>
+                                                    {competency.skillDescription && (
+                                                        <div className="iv-comp-desc">{competency.skillDescription}</div>
+                                                    )}
                                                 </td>
                                                 <td>
                                                     <div className="iv-stars" role="radiogroup">

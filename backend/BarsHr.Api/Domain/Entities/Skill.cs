@@ -22,6 +22,11 @@ public class Skill
     [Column("type")]
     public string Type { get; set; } = string.Empty; // Hard / Soft / CultureFit (см. SkillTypes)
 
+    // короткая расшифровка навыка, показывается под названием в матрице и на интервью
+    [MaxLength(300)]
+    [Column("description")]
+    public string? Description { get; set; }
+
     [Column("is_active")]
     public bool IsActive { get; set; } = true;
 

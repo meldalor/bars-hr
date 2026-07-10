@@ -180,6 +180,11 @@
     color: #8a94a6;
 }
 
+/* описание под названием навыка — с отступом под чекбокс */
+.va-skill-desc-indent {
+    padding-left: 28px;
+}
+
 .va-skill .va-del {
     align-self: center;
 }

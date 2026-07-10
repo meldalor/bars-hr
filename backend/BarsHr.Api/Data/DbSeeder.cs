@@ -38,18 +38,26 @@ public static class DbSeeder
 
         if (!await context.Skills.AnyAsync())
         {
-            var hardSkills = new[] { "C#", "SQL", "Алгоритмы и структуры данных", "Git" };
-            var softSkills = new[] { "Коммуникация", "Работа в команде", "Самостоятельность", "Обучаемость" };
-            var cultureFitSkills = new[] { "Совпадение ценностей", "Гибкость", "Инициативность", "Клиентоориентированность" };
+            // дефолтный пул компетенций — по макету «Этап 2: Матрица компетенций»
+            var pool = new (string Type, string Name, string Description)[]
+            {
+                (SkillTypes.Hard, "Знание Java (базовые концепции)", "ООП, коллекции, исключения"),
+                (SkillTypes.Hard, "Алгоритмы и структуры данных", "Массивы, списки, карты, сложность"),
+                (SkillTypes.Hard, "SQL (базовый уровень)", "SELECT, JOIN, WHERE, GROUP BY"),
+                (SkillTypes.Hard, "Git (базовый уровень)", "Commit, push, pull, branch"),
+                (SkillTypes.Hard, "Spring (базовые знания)", "Spring Boot, REST, DI"),
+                (SkillTypes.Soft, "Обучаемость", "Способность быстро учиться"),
+                (SkillTypes.Soft, "Коммуникация", "Умение объяснять и слушать"),
+                (SkillTypes.Soft, "Решение проблем", "Логика и подход к задачам"),
+                (SkillTypes.Soft, "Реакция на фидбек", "Восприятие обратной связи"),
+                (SkillTypes.CultureFit, "Мотивация и интерес к работе", "Искренний интерес, а не зарплата"),
+                (SkillTypes.CultureFit, "Командный игрок", "Умение помогать и договариваться"),
+                (SkillTypes.CultureFit, "Ответственность", "Умение признавать ошибки"),
+                (SkillTypes.CultureFit, "Ценности компании", "Разделяет взгляды компании"),
+            };
 
-            foreach (var name in hardSkills)
-                context.Skills.Add(new Skill { Name = name, Type = SkillTypes.Hard });
-
-            foreach (var name in softSkills)
-                context.Skills.Add(new Skill { Name = name, Type = SkillTypes.Soft });
-
-            foreach (var name in cultureFitSkills)
-                context.Skills.Add(new Skill { Name = name, Type = SkillTypes.CultureFit });
+            foreach (var (type, name, description) in pool)
+                context.Skills.Add(new Skill { Name = name, Type = type, Description = description });
 
             await context.SaveChangesAsync();
         }
@@ -59,15 +67,15 @@ public static class DbSeeder
             .Select(u => u.Id)
             .FirstAsync();
 
-        var csharpSkill = await context.Skills.FirstAsync(s => s.Name == "C#");
-        var sqlSkill = await context.Skills.FirstAsync(s => s.Name == "SQL");
+        var javaSkill = await context.Skills.FirstAsync(s => s.Name == "Знание Java (базовые концепции)");
+        var sqlSkill = await context.Skills.FirstAsync(s => s.Name == "SQL (базовый уровень)");
         var algoSkill = await context.Skills.FirstAsync(s => s.Name == "Алгоритмы и структуры данных");
-        var gitSkill = await context.Skills.FirstAsync(s => s.Name == "Git");
+        var gitSkill = await context.Skills.FirstAsync(s => s.Name == "Git (базовый уровень)");
+        var springSkill = await context.Skills.FirstAsync(s => s.Name == "Spring (базовые знания)");
         var communicationSkill = await context.Skills.FirstAsync(s => s.Name == "Коммуникация");
-        var teamworkSkill = await context.Skills.FirstAsync(s => s.Name == "Работа в команде");
-        var selfDriveSkill = await context.Skills.FirstAsync(s => s.Name == "Самостоятельность");
-        var valuesSkill = await context.Skills.FirstAsync(s => s.Name == "Совпадение ценностей");
-        var initiativeSkill = await context.Skills.FirstAsync(s => s.Name == "Инициативность");
+        var teamworkSkill = await context.Skills.FirstAsync(s => s.Name == "Командный игрок");
+        var responsibilitySkill = await context.Skills.FirstAsync(s => s.Name == "Ответственность");
+        var valuesSkill = await context.Skills.FirstAsync(s => s.Name == "Ценности компании");
 
         static Competency Comp(int skillId) => new() { SkillId = skillId, MaxScore = 5, IsActive = true };
 
@@ -91,8 +99,9 @@ public static class DbSeeder
                 CreatedById = adminId,
                 Competencies =
                 {
-                    Comp(csharpSkill.Id),
+                    Comp(javaSkill.Id),
                     Comp(sqlSkill.Id),
+                    Comp(gitSkill.Id),
                     Comp(communicationSkill.Id)
                 }
             });
@@ -118,7 +127,7 @@ public static class DbSeeder
                 CreatedById = adminId,
                 Competencies =
                 {
-                    Comp(csharpSkill.Id),
+                    Comp(javaSkill.Id),
                     Comp(sqlSkill.Id),
                     Comp(algoSkill.Id),
                     Comp(gitSkill.Id),
@@ -148,15 +157,15 @@ public static class DbSeeder
                 CreatedById = adminId,
                 Competencies =
                 {
-                    Comp(csharpSkill.Id),
+                    Comp(javaSkill.Id),
                     Comp(sqlSkill.Id),
                     Comp(algoSkill.Id),
                     Comp(gitSkill.Id),
+                    Comp(springSkill.Id),
                     Comp(communicationSkill.Id),
                     Comp(teamworkSkill.Id),
-                    Comp(selfDriveSkill.Id),
-                    Comp(valuesSkill.Id),
-                    Comp(initiativeSkill.Id)
+                    Comp(responsibilitySkill.Id),
+                    Comp(valuesSkill.Id)
                 }
             });
         }

@@ -10,7 +10,8 @@ const GROUPS = [
     { type: "CultureFit", title: "C. Culture Fit (соответствие команде)" },
 ];
 
-const DEFAULT_PER_GROUP = 4;
+// сколько навыков предзаполнять в новой вакансии — как на макете «Этап 2»
+const DEFAULT_PER_GROUP = { Hard: 5, Soft: 4, CultureFit: 4 };
 
 function groupByType(pool) {
     const map = { Hard: [], Soft: [], CultureFit: [] };
@@ -111,7 +112,7 @@ export default function CompetencyMatrix({ value, onChange, defaultFill = false 
                     const grouped = groupByType(pool);
                     const preset = {};
                     GROUPS.forEach((group) => {
-                        grouped[group.type].slice(0, DEFAULT_PER_GROUP).forEach((skill) => {
+                        grouped[group.type].slice(0, DEFAULT_PER_GROUP[group.type]).forEach((skill) => {
                             preset[skill.id] = 5;
                         });
                     });
@@ -185,13 +186,20 @@ export default function CompetencyMatrix({ value, onChange, defaultFill = false 
                         ) : (
                             grouped[group.type].map((skill) => (
                                 <label className="va-skill" key={skill.id}>
-                                    <div className="va-skill-body va-skill-check">
-                                        <input
-                                            type="checkbox"
-                                            checked={skill.id in value}
-                                            onChange={() => toggle(skill.id)}
-                                        />
-                                        <span className="va-skill-name">{skill.name}</span>
+                                    <div className="va-skill-body">
+                                        <div className="va-skill-check">
+                                            <input
+                                                type="checkbox"
+                                                checked={skill.id in value}
+                                                onChange={() => toggle(skill.id)}
+                                            />
+                                            <span className="va-skill-name">{skill.name}</span>
+                                        </div>
+                                        {skill.description && (
+                                            <div className="va-skill-desc va-skill-desc-indent">
+                                                {skill.description}
+                                            </div>
+                                        )}
                                     </div>
                                     <button
                                         type="button"

@@ -405,32 +405,6 @@
     color: #475467;
 }
 
-.iv-stars {
-    display: inline-flex;
-    gap: 6px;
-}
-
-.iv-star {
-    border: none;
-    background: transparent;
-    padding: 0;
-
-    color: #d1d5db;
-    font-size: 36px;
-    line-height: 1;
-
-    cursor: pointer;
-    transition: color 0.15s ease;
-}
-
-.iv-star.on {
-    color: #2563eb;
-}
-
-.iv-star:hover {
-    color: #2563eb;
-}
-
 .iv-textarea-wrap {
     position: relative;
 }
@@ -747,9 +721,10 @@
     font-size: 16px;
 }
 
+/* звёзды оценки — крупные и синие, по макету «Этап 2: Матрица компетенций» */
 .iv-stars {
     display: inline-flex;
-    gap: 2px;
+    gap: 6px;
     white-space: nowrap;
 }
 
@@ -757,7 +732,7 @@
     padding: 0;
     border: none;
     background: transparent;
-    font-size: 24px;
+    font-size: 32px;
     line-height: 1;
     color: #d1d5db;
     cursor: pointer;
@@ -765,11 +740,12 @@
 }
 
 .iv-star:hover {
-    transform: scale(1.15);
+    color: #2563eb;
+    transform: scale(1.1);
 }
 
 .iv-star.active {
-    color: #f5b301;
+    color: #2563eb;
 }
 
 .iv-th-score {
