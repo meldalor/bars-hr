@@ -55,7 +55,7 @@ export function backendStatus(key) {
     return KEY_TO_STATUS[key] ?? "New";
 }
 
-// элемент списка кандидатов под таблицу candidates.jsx (богатые поля упрощены)
+// элемент списка кандидатов под таблицу candidates.jsx
 export function mapCandidateListItem(dto) {
     return {
         id: String(dto.id),
@@ -63,12 +63,13 @@ export function mapCandidateListItem(dto) {
         fullName: dto.fullName,
         city: dto.city ?? "",
         phone: "",
-        rating: null,
-        specialty: "",
+        // оценка из интервью «определяющего» отклика, до одного знака
+        rating: dto.rating != null ? Math.round(Number(dto.rating) * 10) / 10 : null,
+        specialty: dto.specialty ?? "",
         date: formatDateShort(dto.createdAt),
         time: formatTimeShort(dto.createdAt),
         status: statusKey(dto.status),
-        substatus: null,
+        substatus: dto.subStatus ?? null,
         skills: parseSkills(dto.skills),
         applicationsCount: dto.applicationsCount ?? 0,
         interviewsCount: dto.interviewsCount ?? 0,

@@ -31,32 +31,65 @@ public class CandidateService : ICandidateService
         if (!string.IsNullOrWhiteSpace(status))
             query = query.Where(c => c.Applications.Any(a => a.Status == status));
 
-        // проекция в SQL, а не маппер: иначе EF затянет все отклики в память ради счётчиков
-        return await query
+        // компактная SQL-проекция; «определяющий» отклик выбирается уже в памяти
+        var rows = await query
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(c => new CandidateListItemDto(
+            .Select(c => new
+            {
                 c.Id,
                 c.FullName,
                 c.City,
-                c.Applications.Count,
-                c.Applications.SelectMany(a => a.Interviews).Count(),
+                c.Specialty,
                 c.CreatedAt,
-                // сводный статус кандидата: самый «продвинутый» из активных откликов, отказ — в последнюю очередь
-                c.Applications.Any(a => a.Status == "Offer") ? "Offer"
-                    : c.Applications.Any(a => a.Status == "Approved") ? "Approved"
-                    : c.Applications.Any(a => a.Status == "Pending") ? "Pending"
-                    : c.Applications.Any(a => a.Status == "Interview") ? "Interview"
-                    : c.Applications.Any(a => a.Status == "Testing") ? "Testing"
-                    : c.Applications.Any(a => a.Status == "New") ? "New"
-                    : c.Applications.Any(a => a.Status == "Rejected") ? "Rejected"
-                    : "Free",
                 c.Skills,
-                c.IsArchived
-            ))
+                c.IsArchived,
+                InterviewsCount = c.Applications.SelectMany(a => a.Interviews).Count(),
+                Apps = c.Applications.Select(a => new
+                {
+                    a.Status,
+                    a.SubStatus,
+                    // последняя выставленная оценка по интервью этого отклика
+                    Score = a.Interviews
+                        .Where(i => i.OverallScore != null)
+                        .OrderByDescending(i => i.ScheduledAt)
+                        .Select(i => i.OverallScore)
+                        .FirstOrDefault()
+                }).ToList()
+            })
             .ToListAsync();
+
+        return rows.Select(row =>
+        {
+            // сводный статус кандидата: самый «продвинутый» из откликов, отказ — в последнюю очередь;
+            // подстатус и оценка берутся из того же отклика, что определил статус
+            var top = StatusPriority
+                .Select(status => row.Apps
+                    .Where(a => a.Status == status)
+                    .OrderByDescending(a => a.Score.HasValue)
+                    .FirstOrDefault())
+                .FirstOrDefault(app => app != null);
+
+            return new CandidateListItemDto(
+                row.Id,
+                row.FullName,
+                row.City,
+                row.Specialty,
+                row.Apps.Count,
+                row.InterviewsCount,
+                row.CreatedAt,
+                top?.Status ?? "Free",
+                top?.SubStatus,
+                top?.Score,
+                row.Skills,
+                row.IsArchived
+            );
+        }).ToList();
     }
+
+    private static readonly string[] StatusPriority =
+        { "Offer", "Approved", "Pending", "Interview", "Testing", "New", "Rejected" };
 
     public async Task<CandidateDto?> GetByIdAsync(int id)
     {
