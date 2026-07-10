@@ -85,10 +85,26 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // стартовые пользователи и демо-данные: без них на чистой БД невозможно войти
-using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<BarsHrDbContext>();
-    await DbSeeder.SeedAsync(db);
+    var seedOptions = new DbContextOptionsBuilder<BarsHrDbContext>()
+        .UseNpgsql(app.Configuration.GetConnectionString("Default"))
+        .Options;
+    await using var seedDb = new BarsHrDbContext(seedOptions);
+
+    for (var attempt = 1; ; attempt++)
+    {
+        try
+        {
+            await seedDb.Database.MigrateAsync();
+            break;
+        }
+        catch (Npgsql.NpgsqlException) when (attempt < 10)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3));
+        }
+    }
+
+    await DbSeeder.SeedAsync(seedDb);
 }
 
 if (app.Environment.IsDevelopment())

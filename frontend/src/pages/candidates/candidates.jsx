@@ -32,6 +32,7 @@ const STATUS_ICONS = {
   in_progress: IconClock,
   testing: IconFlask,
   interview: IconPhone,
+  pending: IconClock,
   offer: IconMail,
   accepted: IconCheckCircle,
   rejected: IconXCircle,
