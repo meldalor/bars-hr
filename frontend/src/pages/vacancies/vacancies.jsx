@@ -3,13 +3,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-    VACANCIES,
     LANGUAGES,
     TAG_COLORS,
     formatSalary,
     plural,
     requirementStyle,
 } from "../../mocks/vacancies.js";
+import { fetchVacancies } from "../../api/vacancies.js";
 
 import {
     IconArrowUpRight,
@@ -47,27 +47,6 @@ const SORT_OPTIONS = [
     { id: "salary-desc", label: "Выше зарплата" },
 ];
 
-function parseVacancyDate(value) {
-    const months = {
-        января: 0,
-        февраля: 1,
-        марта: 2,
-        апреля: 3,
-        мая: 4,
-        июня: 5,
-        июля: 6,
-        августа: 7,
-        сентября: 8,
-        октября: 9,
-        ноября: 10,
-        декабря: 11,
-    };
-
-    const [dayRaw, monthRaw, timeRaw = "00:00"] = value.split(" ");
-    const [hours, minutes] = timeRaw.split(":").map(Number);
-    return new Date(2026, months[monthRaw] ?? 0, Number(dayRaw), hours, minutes);
-}
-
 function toggleFilterValue(value, setter) {
     setter((prev) =>
         prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
@@ -87,6 +66,34 @@ export default function Vacancies() {
     const [languageFilters, setLanguageFilters] = useState([]);
     const [experienceFilters, setExperienceFilters] = useState([]);
     const [sortMode, setSortMode] = useState("created-desc");
+    const [vacancies, setVacancies] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
+
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        fetchVacancies()
+            .then((items) => {
+                if (!cancelled) {
+                    setVacancies(items);
+                    setLoadError("");
+                }
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    setLoadError(error.message || "Не удалось загрузить вакансии");
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         const handleOutsideClick = (event) => {
@@ -102,7 +109,7 @@ export default function Vacancies() {
         return () => document.removeEventListener("mousedown", handleOutsideClick);
     }, []);
 
-    const byStatus = VACANCIES.filter((vacancy) => vacancy.status === tab);
+    const byStatus = vacancies.filter((vacancy) => vacancy.status === tab);
 
     const cities = useMemo(
         () => [...new Set(byStatus.map((vacancy) => vacancy.city))].sort((a, b) => a.localeCompare(b, "ru")),
@@ -148,7 +155,7 @@ export default function Vacancies() {
             .filter((vacancy) => experienceFilters.length === 0 || experienceFilters.includes(vacancy.experience))
             .sort((a, b) => {
                 if (sortMode === "created-asc") {
-                    return parseVacancyDate(a.createdAt) - parseVacancyDate(b.createdAt);
+                    return new Date(a.createdAtIso) - new Date(b.createdAtIso);
                 }
                 if (sortMode === "title-asc") {
                     return a.title.localeCompare(b.title, "ru", { sensitivity: "base" });
@@ -162,7 +169,7 @@ export default function Vacancies() {
                 if (sortMode === "salary-desc") {
                     return b.salaryTo - a.salaryTo;
                 }
-                return parseVacancyDate(b.createdAt) - parseVacancyDate(a.createdAt);
+                return new Date(b.createdAtIso) - new Date(a.createdAtIso);
             });
     }, [byStatus, cityFilters, experienceFilters, languageFilters, query, sortMode]);
 
@@ -302,7 +309,11 @@ export default function Vacancies() {
                 </button>
             </div>
 
-            {visible.length === 0 ? (
+            {loading ? (
+                <div className="vac-empty">Загрузка…</div>
+            ) : loadError ? (
+                <div className="vac-empty">{loadError}</div>
+            ) : visible.length === 0 ? (
                 <div className="vac-empty">Ничего не найдено</div>
             ) : (
                 <div className="vac-grid">

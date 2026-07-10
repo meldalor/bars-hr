@@ -1,37 +1,51 @@
 import "./vacancies.css";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
-import { getVacancyById, LANGUAGES, TAG_COLORS } from "../../mocks/vacancies.js";
-import { STATUS_ORDER, STATUSES, getCandidatesByVacancy } from "../../mocks/candidates.js";
+import { LANGUAGES, TAG_COLORS } from "../../mocks/vacancies.js";
+import { fetchVacancy } from "../../api/vacancies.js";
 
 import Navigation_Bar from "../../components/ui/Navigation_Bar/Navigation_Bar";
-import CandidatesTable from "./CandidatesTable.jsx";
 import VacancyDescription from "./VacancyDescription.jsx";
-import { IconInfo } from "./icons.jsx";
 
 export default function VacancyDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
-    const vacancy = getVacancyById(id);
+    const [vacancy, setVacancy] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
+    const [activeTab, setActiveTab] = useState(() =>
+        location.state?.tab === "candidates" ? "candidates" : "description"
+    );
 
-    const [candidates, setCandidates] = useState(() => getCandidatesByVacancy(id));
-    const [activeTab, setActiveTab] = useState(() => location.state?.tab || "description");
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        fetchVacancy(id)
+            .then((data) => {
+                if (!cancelled) {
+                    setVacancy(data);
+                    setLoadError("");
+                }
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    setLoadError(error.message || "Не удалось загрузить вакансию");
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [id]);
 
-    const counts = useMemo(() => {
-        const result = { all: candidates.length };
-        STATUS_ORDER.forEach((key) => {
-            result[key] = 0;
-        });
-        candidates.forEach((candidate) => {
-            result[candidate.status] += 1;
-        });
-        return result;
-    }, [candidates]);
-
-    if (!vacancy) {
+    if (loading || !vacancy) {
         return (
             <div className="vacancies">
                 <button
@@ -41,19 +55,18 @@ export default function VacancyDetail() {
                 >
                     ← Назад к вакансиям
                 </button>
-                <h1 className="vac-detail-title">Вакансия не найдена</h1>
+                <h1 className="vac-detail-title">
+                    {loading ? "Загрузка…" : loadError || "Вакансия не найдена"}
+                </h1>
             </div>
         );
     }
 
     const lang = LANGUAGES[vacancy.lang];
 
-    const statusTabs = [
-        { id: "all", label: `Все ${counts.all}` },
-        ...STATUS_ORDER.map((key) => ({
-            id: key,
-            label: `${STATUSES[key].label} ${counts[key]}`,
-        })),
+    const tabs = [
+        { id: "description", label: "Описание" },
+        { id: "candidates", label: "Кандидаты" },
     ];
 
     return (
@@ -91,31 +104,19 @@ export default function VacancyDetail() {
             <div className="vd-tabs-row">
                 <div className="vd-tabs">
                     <Navigation_Bar
-                        items={statusTabs}
-                        activeItem={activeTab === "description" ? "" : activeTab}
+                        items={tabs}
+                        activeItem={activeTab}
                         onItemClick={setActiveTab}
                     />
                 </div>
-
-                <button
-                    type="button"
-                    className={`vd-desc-btn ${activeTab === "description" ? "active" : ""}`}
-                    onClick={() => setActiveTab("description")}
-                >
-                    <IconInfo size={16} />
-                    Описание вакансии
-                </button>
             </div>
 
             {activeTab === "description" ? (
                 <VacancyDescription vacancy={vacancy} />
             ) : (
-                <CandidatesTable
-                    candidates={candidates}
-                    setCandidates={setCandidates}
-                    statusFilter={activeTab}
-                    vacancy={vacancy}
-                />
+                <div className="vac-empty">
+                    Список кандидатов по вакансии подключается на следующем шаге интеграции.
+                </div>
             )}
         </div>
     );

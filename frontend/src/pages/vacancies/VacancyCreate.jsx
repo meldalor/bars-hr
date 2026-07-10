@@ -1,18 +1,13 @@
 import "./vacancies.css";
 import "./vacancy_create.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import Input from "../../components/ui/Input/Input.jsx";
 import Select from "../../components/ui/Select/Select.jsx";
 import Modal from "../../components/ui/Modal/Modal.jsx";
 
-import {
-    addVacancy,
-    updateVacancy,
-    getVacancyById,
-    LANG_BY_REQUIREMENT,
-} from "../../mocks/vacancies.js";
+import { createVacancy, saveVacancy, fetchVacancy } from "../../api/vacancies.js";
 import { IconPlus, IconXCircle, IconCheckCircle } from "./icons.jsx";
 
 const REQUIRED_FIELDS = [
@@ -39,22 +34,6 @@ const EMPTY_FORM = {
     description: "",
     responsibilities: "",
 };
-
-function deriveLang(requirements) {
-    for (const requirement of requirements) {
-        if (LANG_BY_REQUIREMENT[requirement]) {
-            return LANG_BY_REQUIREMENT[requirement];
-        }
-    }
-    return null;
-}
-
-function nowStamp() {
-    const now = new Date();
-    const date = now.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
-    const time = now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
-    return `${date} ${time}`;
-}
 
 function formFromVacancy(vacancy) {
     return {
@@ -88,20 +67,39 @@ export default function VacancyCreate() {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    const source = id ? getVacancyById(id) : null;
-    const editing = Boolean(source);
+    const editing = Boolean(id);
 
-    const [form, setForm] = useState(() =>
-        source ? formFromVacancy(source) : { ...EMPTY_FORM }
-    );
-    const [requirements, setRequirements] = useState(() =>
-        source ? [...source.requirements] : []
-    );
+    const [form, setForm] = useState({ ...EMPTY_FORM });
+    const [requirements, setRequirements] = useState([]);
     const [adding, setAdding] = useState(false);
     const [newReq, setNewReq] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [errors, setErrors] = useState({});
     const [confirmSave, setConfirmSave] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState("");
+
+    useEffect(() => {
+        if (!id) {
+            return undefined;
+        }
+        let cancelled = false;
+        fetchVacancy(id)
+            .then((vacancy) => {
+                if (!cancelled) {
+                    setForm(formFromVacancy(vacancy));
+                    setRequirements([...vacancy.requirements]);
+                }
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    setSaveError(error.message || "Не удалось загрузить вакансию");
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [id]);
 
     const goBack = () =>
         editing
@@ -149,10 +147,8 @@ export default function VacancyCreate() {
         setConfirmSave(true);
     };
 
-    const doSave = () => {
-        const stamp = nowStamp();
+    const doSave = async () => {
         const data = {
-            lang: deriveLang(requirements),
             title: form.title.trim(),
             experience: form.experience,
             employment: form.employment,
@@ -160,7 +156,7 @@ export default function VacancyCreate() {
             salaryFrom: Number(form.salaryFrom),
             salaryTo: Number(form.salaryTo),
             format: form.format,
-            department: form.department.trim() || "—",
+            department: form.department.trim(),
             peopleCount: Number(form.peopleCount),
             requirements,
             description: form.description.trim(),
@@ -170,14 +166,23 @@ export default function VacancyCreate() {
                 .filter(Boolean),
         };
 
-        setConfirmSave(false);
+        setSaving(true);
+        setSaveError("");
 
-        if (editing) {
-            updateVacancy(id, { ...data, updatedAt: stamp });
-            navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
-        } else {
-            addVacancy({ ...data, createdAt: stamp, updatedAt: stamp });
-            navigate("/app/vacancies");
+        try {
+            if (editing) {
+                await saveVacancy(id, data);
+                setConfirmSave(false);
+                navigate(`/app/vacancies/${id}`, { state: { tab: "description" } });
+            } else {
+                const created = await createVacancy(data);
+                setConfirmSave(false);
+                navigate(`/app/vacancies/${created.id}`, { state: { tab: "description" } });
+            }
+        } catch (error) {
+            setConfirmSave(false);
+            setSaveError(error.message || "Не удалось сохранить вакансию");
+            setSaving(false);
         }
     };
 
@@ -381,6 +386,8 @@ export default function VacancyCreate() {
                     </div>
                 )}
 
+                {saveError && <div className="vcreate-error-note">{saveError}</div>}
+
                 <div className="vcreate-actions">
                     <button
                         type="button"
@@ -435,8 +442,9 @@ export default function VacancyCreate() {
                         type="button"
                         className="vcreate-btn primary"
                         onClick={doSave}
+                        disabled={saving}
                     >
-                        {editing ? "Сохранить" : "Создать вакансию"}
+                        {saving ? "Сохранение…" : editing ? "Сохранить" : "Создать вакансию"}
                     </button>
                 </div>
             </Modal>

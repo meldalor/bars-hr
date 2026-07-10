@@ -574,3 +574,30 @@
 .cp-hero-actions {
   justify-content: flex-end;
 }
+
+.cp-doc-error {
+  margin-top: 8px;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.cp-doc-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.cp-doc-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px solid #e3e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #4f4949;
+  cursor: pointer;
+}
+
+.cp-doc-btn:hover {
+  background: #f6f4f4;
+}

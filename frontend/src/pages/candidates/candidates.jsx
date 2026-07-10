@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./candidates.css";
 
+import { STATUSES, STATUS_ORDER } from "../../mocks/candidates.js";
 import {
-  getAllCandidates,
-  STATUSES,
-  STATUS_ORDER,
-} from "../../mocks/candidates.js";
+  fetchCandidates,
+  archiveCandidate,
+  restoreCandidate,
+} from "../../api/candidates.js";
 import {
   IconSearch,
   IconFilter,
@@ -108,9 +109,34 @@ function CandidateStatus({ candidate }) {
 
 export default function Candidates() {
   const navigate = useNavigate();
-  const [candidates, setCandidates] = useState(() => getAllCandidates());
-  const [archivedCandidates, setArchivedCandidates] = useState([]);
+  const [allCandidates, setAllCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [showArchive, setShowArchive] = useState(false);
+
+  const loadCandidates = () => {
+    setLoading(true);
+    return fetchCandidates()
+      .then((items) => {
+        setAllCandidates(items);
+        setLoadError("");
+      })
+      .catch((error) => setLoadError(error.message || "Не удалось загрузить кандидатов"))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadCandidates();
+  }, []);
+
+  const candidates = useMemo(
+    () => allCandidates.filter((candidate) => !candidate.isArchived),
+    [allCandidates]
+  );
+  const archivedCandidates = useMemo(
+    () => allCandidates.filter((candidate) => candidate.isArchived),
+    [allCandidates]
+  );
   const [query, setQuery] = useState("");
   const [activeStatus, setActiveStatus] = useState("all");
   const [selected, setSelected] = useState(() => new Set());
@@ -256,16 +282,21 @@ export default function Candidates() {
     }));
   };
 
-  const handleBulkAction = () => {
-    if (showArchive) {
-      setArchivedCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
-    } else {
-      const moving = candidates.filter((candidate) => selected.has(candidate.id));
-      setCandidates((prev) => prev.filter((candidate) => !selected.has(candidate.id)));
-      setArchivedCandidates((prev) => [...moving, ...prev]);
+  const handleBulkAction = async () => {
+    const ids = [...selected];
+    try {
+      if (showArchive) {
+        await Promise.all(ids.map((id) => restoreCandidate(id)));
+      } else {
+        await Promise.all(ids.map((id) => archiveCandidate(id)));
+      }
+      setSelected(new Set());
+      setConfirmAction(false);
+      await loadCandidates();
+    } catch (error) {
+      setLoadError(error.message || "Не удалось выполнить действие");
+      setConfirmAction(false);
     }
-    setSelected(new Set());
-    setConfirmAction(false);
   };
 
   const clearFilters = () => {
@@ -277,9 +308,9 @@ export default function Candidates() {
   };
 
   const title = showArchive ? "Архив кандидатов" : "База кандидатов";
-  const actionText = showArchive ? "Удалить" : "Перенести в архив";
+  const actionText = showArchive ? "Вернуть из архива" : "Перенести в архив";
   const confirmText = showArchive
-    ? `Удалить выбранных кандидатов (${selected.size}) из архива?`
+    ? `Вернуть выбранных кандидатов (${selected.size}) из архива?`
     : `Перенести выбранных кандидатов (${selected.size}) в архив?`;
 
   return (
@@ -465,7 +496,13 @@ export default function Candidates() {
             {pageRows.length === 0 ? (
               <tr>
                 <td className="candidates-empty" colSpan={6}>
-                  {showArchive ? "В архиве нет кандидатов" : "Кандидаты не найдены"}
+                  {loading
+                    ? "Загрузка…"
+                    : loadError
+                    ? loadError
+                    : showArchive
+                    ? "В архиве нет кандидатов"
+                    : "Кандидаты не найдены"}
                 </td>
               </tr>
             ) : (

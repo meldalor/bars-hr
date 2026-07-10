@@ -1,52 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./Admin.css";
 import ActivityTable from "../overview/components/ActivityTable/ActivityTable.jsx";
 import Modal from "../../components/ui/Modal/Modal.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 import { IconSearch, IconPlus } from "../vacancies/icons.jsx";
+import { fetchUsers } from "../../api/users.js";
+import { apiPost } from "../../api/client.js";
 
-const INITIAL_USERS = [
-  {
-    id: "u1",
-    name: "Скворцова Арина",
-    email: "qwerty@yandex.ru",
-    role: "HR-менеджер",
-    status: "Онлайн",
-    lastLogin: "30.06.26\n17:35",
-  },
-  {
-    id: "u2",
-    name: "Скворцова Арина",
-    email: "qwerty@yandex.ru",
-    role: "Администратор",
-    status: "Оффлайн",
-    lastLogin: "30.06.26\n17:35",
-  },
-  {
-    id: "u3",
-    name: "Скворцова Арина",
-    email: "qwerty@yandex.ru",
-    role: "Согласующий",
-    status: "Онлайн",
-    lastLogin: "30.06.26\n17:35",
-  },
-  {
-    id: "u4",
-    name: "Скворцова Арина",
-    email: "qwerty@yandex.ru",
-    role: "HR-менеджер",
-    status: "Онлайн",
-    lastLogin: "30.06.26\n17:35",
-  },
-  {
-    id: "u5",
-    name: "Скворцова Арина",
-    email: "qwerty@yandex.ru",
-    role: "HR-менеджер",
-    status: "Онлайн",
-    lastLogin: "30.06.26\n17:35",
-  },
-];
+// роли бэка ↔ человекочитаемые подписи в UI
+const ROLE_LABELS = { HR: "HR-менеджер", Admin: "Администратор", DecisionMaker: "Согласующий" };
+const ROLE_CODES = { "HR-менеджер": "HR", "Администратор": "Admin", "Согласующий": "DecisionMaker" };
 
 const ROLES = ["HR-менеджер", "Администратор", "Согласующий"];
 
@@ -72,19 +35,44 @@ function initials(name) {
 }
 
 export default function Admin() {
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState([]);
   const [query, setQuery] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState(INITIAL_USERS[0].id);
-  const [draftRole, setDraftRole] = useState(INITIAL_USERS[0].role);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [draftRole, setDraftRole] = useState("HR-менеджер");
   const [permissions, setPermissions] = useState(["Удаление кандидатов"]);
   const [confirmSave, setConfirmSave] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmAdd, setConfirmAdd] = useState(false);
   const [newUserName, setNewUserName] = useState("");
-  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserLogin, setNewUserLogin] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserRole, setNewUserRole] = useState("HR-менеджер");
+  const [addError, setAddError] = useState("");
   const [page, setPage] = useState(1);
 
-  const selectedUser = users.find((user) => user.id === selectedUserId) || users[0];
+  const loadUsers = () =>
+    fetchUsers()
+      .then((list) => {
+        const mapped = list.map((user) => ({
+          id: String(user.id),
+          name: user.fullName,
+          email: "",
+          role: ROLE_LABELS[user.role] ?? user.role,
+          status: "—",
+          lastLogin: "—",
+        }));
+        setUsers(mapped);
+        setSelectedUserId((prev) => prev ?? mapped[0]?.id ?? null);
+      })
+      .catch(() => {});
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const selectedUser =
+    users.find((user) => user.id === selectedUserId) ||
+    users[0] || { name: "—", email: "", role: draftRole };
 
   const visibleUsers = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -129,24 +117,24 @@ export default function Admin() {
     setConfirmSave(false);
   };
 
-  const addUser = () => {
-    const name = newUserName.trim() || "Новый пользователь";
-    const email = newUserEmail.trim() || "user@example.com";
-    const user = {
-      id: `u${Date.now()}`,
-      name,
-      email,
-      role: "HR-менеджер",
-      status: "Оффлайн",
-      lastLogin: "—",
-    };
-
-    setUsers((prev) => [user, ...prev]);
-    setSelectedUserId(user.id);
-    setDraftRole(user.role);
-    setNewUserName("");
-    setNewUserEmail("");
-    setConfirmAdd(false);
+  const addUser = async () => {
+    setAddError("");
+    try {
+      await apiPost("/auth/register", {
+        username: newUserLogin.trim(),
+        password: newUserPassword,
+        fullName: newUserName.trim() || newUserLogin.trim(),
+        role: ROLE_CODES[newUserRole] ?? "HR",
+      });
+      setNewUserName("");
+      setNewUserLogin("");
+      setNewUserPassword("");
+      setNewUserRole("HR-менеджер");
+      setConfirmAdd(false);
+      await loadUsers();
+    } catch (error) {
+      setAddError(error.message || "Не удалось добавить пользователя");
+    }
   };
 
   const deleteUser = () => {
@@ -312,16 +300,30 @@ export default function Admin() {
         <div className="admin-add-form">
           <input
             type="text"
-            placeholder="Имя пользователя"
+            placeholder="ФИО"
             value={newUserName}
             onChange={(event) => setNewUserName(event.target.value)}
           />
           <input
-            type="email"
-            placeholder="Email"
-            value={newUserEmail}
-            onChange={(event) => setNewUserEmail(event.target.value)}
+            type="text"
+            placeholder="Логин"
+            value={newUserLogin}
+            onChange={(event) => setNewUserLogin(event.target.value)}
           />
+          <input
+            type="password"
+            placeholder="Пароль (мин. 6 символов)"
+            value={newUserPassword}
+            onChange={(event) => setNewUserPassword(event.target.value)}
+          />
+          <select value={newUserRole} onChange={(event) => setNewUserRole(event.target.value)}>
+            {ROLES.map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
+          </select>
+          {addError && <div className="field-error">{addError}</div>}
         </div>
         <div className="admin-modal-actions">
           <button

@@ -1,11 +1,19 @@
 import "./ProfileCard.css";
 
+import { getSession } from "../../../../auth/session.js";
 import profileImage from "../../../../assets/overview/profile.jpg";
-import phoneIcon from "../../../../assets/overview/phone.svg";
-import mailIcon from "../../../../assets/overview/plane.svg";
-import placeIcon from "../../../../assets/overview/place.png";
+
+const ROLE_LABELS = {
+    Admin: "Администратор",
+    HR: "HR-менеджер",
+    DecisionMaker: "Руководитель направления",
+};
 
 function ProfileCard() {
+    const session = getSession();
+    const fullName = session?.fullName ?? "Пользователь";
+    const roleLabel = ROLE_LABELS[session?.role] ?? session?.role ?? "";
+
     return (
         <section className="profile-card">
             <div className="profile-photo">
@@ -13,33 +21,11 @@ function ProfileCard() {
             </div>
 
             <div className="profile-content">
-                <h2>Петрова Арина</h2>
-                <p className="profile-position">
-                    HR-менеджер
-                </p>
+                <h2>{fullName}</h2>
+                <p className="profile-position">{roleLabel}</p>
 
-                <div className="profile-contacts">
-                    <div className="profile-contact">
-                        <img src={phoneIcon} alt="" />
-                        <span>8 (939) 343-32-23</span>
-                    </div>
-
-                    <div className="profile-contact">
-                        <img src={mailIcon} alt="" />
-                        <span>arina@yandex.ru</span>
-                    </div>
-
-                    <div className="profile-contact">
-                        <img src={placeIcon} alt="" />
-                        <span>Казань</span>
-                    </div>
-                </div>
-
-                <p className="profile-date">
-                    В системе с марта 2024
-                </p>
+                <p className="profile-date">Вы вошли в систему БАРС Груп</p>
             </div>
-
         </section>
     );
 }

@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./InterviewsCard.css";
-import { getMeetings } from "../../../../mocks/meetings";
+import { fetchInterviews, mapInterviewToMeeting } from "../../../../api/interviews.js";
 
 const MAX_INTERVIEWS = 2; // ИЗМЕНЕНО: теперь максимум 2
 
@@ -45,20 +45,27 @@ function groupByDay(interviews) {
 function InterviewsCard() {
     const navigate = useNavigate();
 
-    const groups = useMemo(() => {
-        const today = startOfDay(new Date());
-        
-        // Получаем встречи, фильтруем только те, которые сегодня или в будущем
-        const interviews = getMeetings()
-            .filter((meeting) => {
-                const meetingDate = startOfDay(new Date(meeting.date));
-                return meetingDate >= today;
-            })
-            .slice()
-            .sort((a, b) => new Date(a.date) - new Date(b.date))
-            .slice(0, MAX_INTERVIEWS);
+    const [groups, setGroups] = useState([]);
 
-        return groupByDay(interviews);
+    useEffect(() => {
+        let cancelled = false;
+        const today = startOfDay(new Date());
+        fetchInterviews({ scope: "upcoming" })
+            .then((list) => {
+                if (cancelled) {
+                    return;
+                }
+                const interviews = list
+                    .map(mapInterviewToMeeting)
+                    .filter((meeting) => startOfDay(new Date(meeting.date)) >= today)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .slice(0, MAX_INTERVIEWS);
+                setGroups(groupByDay(interviews));
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const openMeeting = (meeting) => {

@@ -4,11 +4,8 @@ import "./vacancy_description.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-    formatSalaryFull,
-    updateVacancy,
-    duplicateVacancy,
-} from "../../mocks/vacancies.js";
+import { formatSalaryFull } from "../../mocks/vacancies.js";
+import { closeVacancy, duplicateVacancy } from "../../api/vacancies.js";
 import { getActivityByVacancy } from "../../mocks/activity.js";
 
 import Modal from "../../components/ui/Modal/Modal.jsx";
@@ -80,14 +77,14 @@ export default function VacancyDescription({ vacancy }) {
     const [confirmCopy, setConfirmCopy] = useState(false);
     const [page, setPage] = useState(1);
 
-    const handleClose = () => {
-        updateVacancy(vacancy.id, { status: "completed" });
+    const handleClose = async () => {
+        await closeVacancy(vacancy.id);
         setConfirmClose(false);
         navigate("/app/vacancies");
     };
 
-    const handleCopy = () => {
-        duplicateVacancy(vacancy.id);
+    const handleCopy = async () => {
+        await duplicateVacancy(vacancy.id);
         setConfirmCopy(false);
         navigate("/app/vacancies");
     };
@@ -243,7 +240,7 @@ export default function VacancyDescription({ vacancy }) {
                         className="vdesc-btn primary"
                         onClick={handleQuestions}
                     >
-                        Настроить вопросы
+                        Матрица компетенций
                     </button>
                     <button
                         type="button"
