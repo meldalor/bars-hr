@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./CandidateProfile.css";
 
 import { STATUSES } from "../../mocks/candidates.js";
-import { fetchCandidate, archiveCandidate } from "../../api/candidates.js";
+import { fetchCandidate, archiveCandidate, restoreCandidate } from "../../api/candidates.js";
 import { fetchApplications } from "../../api/applications.js";
 import { fetchInterview } from "../../api/interviews.js";
 import { apiGet } from "../../api/client.js";
@@ -16,6 +16,7 @@ import {
 } from "../../api/documents.js";
 import { calculateTotalExperience } from "../../utils/experience.js";
 import Modal from "../../components/ui/Modal/Modal.jsx";
+import ActivityTable from "../overview/components/ActivityTable/ActivityTable.jsx";
 import { IconArrowUpRight } from "../vacancies/icons.jsx";
 
 import locationIcon from "../../assets/candidate/location.svg";
@@ -132,10 +133,17 @@ export default function CandidateProfile() {
     [candidate]
   );
 
-  const archiveCandidateAndLeave = async () => {
-    await archiveCandidate(id);
-    setConfirmArchive(false);
-    navigate("/app/candidates");
+  // архивация уводит к списку; восстановление оставляет на профиле с обновлённым состоянием
+  const toggleArchive = async () => {
+    if (candidate.isArchived) {
+      await restoreCandidate(id);
+      setConfirmArchive(false);
+      setCandidate((prev) => ({ ...prev, isArchived: false }));
+    } else {
+      await archiveCandidate(id);
+      setConfirmArchive(false);
+      navigate("/app/candidates");
+    }
   };
 
   if (loading || !candidate) {
@@ -182,7 +190,7 @@ export default function CandidateProfile() {
                 onClick={() => setConfirmArchive(true)}
               >
                 <img className="cp-btn-icon" src={archiveIcon} alt="" />
-                В архив
+                {candidate.isArchived ? "Вернуть из архива" : "В архив"}
               </button>
               <button
                 type="button"
@@ -388,8 +396,15 @@ export default function CandidateProfile() {
         </aside>
       </div>
 
+      {/* журнал в самом низу — только события, связанные с этим кандидатом */}
+      <ActivityTable candidateId={id} />
+
       <Modal open={confirmArchive} onClose={() => setConfirmArchive(false)}>
-        <p className="cp-modal-title">Перенести кандидата {candidate.fullName} в архив?</p>
+        <p className="cp-modal-title">
+          {candidate.isArchived
+            ? `Вернуть кандидата ${candidate.fullName} из архива?`
+            : `Перенести кандидата ${candidate.fullName} в архив?`}
+        </p>
         <div className="cp-modal-actions">
           <button
             type="button"
@@ -398,8 +413,12 @@ export default function CandidateProfile() {
           >
             Отмена
           </button>
-          <button type="button" className="cp-danger-btn" onClick={archiveCandidateAndLeave}>
-            В архив
+          <button
+            type="button"
+            className={candidate.isArchived ? "cp-primary-btn" : "cp-danger-btn"}
+            onClick={toggleArchive}
+          >
+            {candidate.isArchived ? "Вернуть" : "В архив"}
           </button>
         </div>
       </Modal>

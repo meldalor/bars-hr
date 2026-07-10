@@ -17,7 +17,8 @@ function Overview() {
 
             <StatisticsCards />
 
-            <ActivityTable />
+            {/* на обзоре — только действия текущего пользователя */}
+            <ActivityTable mine />
         </main>
     );
 }

@@ -1,6 +1,7 @@
 using BarsHr.Api.Authorization;
 using BarsHr.Api.Domain;
 using BarsHr.Api.DTOs.Audit;
+using BarsHr.Api.Extensions;
 using BarsHr.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,12 +26,20 @@ public class AuditController : ControllerBase
         [FromQuery] string? entityName,
         [FromQuery] string? action,
         [FromQuery] int? userId,
-        [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to,
+        [FromQuery] int? candidateId,
+        [FromQuery] int? vacancyId,
+        [FromQuery] bool mine = false,
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
-        var result = await _auditService.GetAsync(entityName, action, userId, from, to, page, pageSize);
+        // mine — личный журнал на «Обзоре»: id пользователя берём из токена, а не из query
+        if (mine)
+            userId = User.GetUserId();
+
+        var result = await _auditService.GetAsync(
+            entityName, action, userId, candidateId, vacancyId, from, to, page, pageSize);
         return Ok(result);
     }
 }

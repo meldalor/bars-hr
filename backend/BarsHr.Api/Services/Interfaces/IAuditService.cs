@@ -8,6 +8,8 @@ public interface IAuditService
         string? entityName = null,
         string? action = null,
         int? userId = null,
+        int? candidateId = null,
+        int? vacancyId = null,
         DateTime? from = null,
         DateTime? to = null,
         int page = 1,

@@ -33,4 +33,17 @@ public static class ApplicationStatuses
 
     public static string? DefaultSubStatus(string status) =>
         SubStatuses.TryGetValue(status, out var subs) && subs.Length > 0 ? subs[0] : null;
+
+    // русские подписи статусов — для человекочитаемых деталей в журнале активности
+    public static readonly IReadOnlyDictionary<string, string> RuLabels =
+        new Dictionary<string, string>
+        {
+            [New] = "В работе",
+            [Testing] = "Тестирование",
+            [Interview] = "Интервью",
+            [Pending] = "В ожидании",
+            [Approved] = "Принят",
+            [Rejected] = "Отказ",
+            [Offer] = "Оффер",
+        };
 }
